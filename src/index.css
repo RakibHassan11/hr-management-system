@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #C9F2E7; /* Soft Mint background */
+    --foreground: #1FB77F; /* Vibrant Green foreground */
+    --card: #FFFFFF; /* White for card backgrounds */
+    --card-foreground: #1FB77F; /* Green text on card */
+    --popover: #FFFFFF; /* White popover background */
+    --popover-foreground: #1FB77F; /* Green popover text */
+    --primary: #1FB77F; /* Primary color for buttons, links */
+    --primary-foreground: #FFFFFF; /* White text on primary color */
+    --secondary: #189962; /* Darker green for secondary actions */
+    --secondary-foreground: #FFFFFF; /* White text for secondary actions */
+    --muted: #C9F2E7; /* Soft mint muted elements */
+    --muted-foreground: #1FB77F; /* Green muted text */
+    --accent: #189962; /* Secondary accent color */
+    --accent-foreground: #FFFFFF; /* White text on accent */
+    --destructive: #FF4D4F; /* Red for destructive actions */
+    --destructive-foreground: #FFFFFF; /* White text on destructive actions */
+    --border: #1FB77F; /* Green borders */
+    --input: #FFFFFF; /* White input backgrounds */
+    --ring: #189962; /* Darker green for focus rings */
+    --radius: 0.5rem; /* Rounded corners */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar for Webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1FB77F; /* Use the vibrant green for the thumb */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #189962; /* Darker green on hover */
+}
