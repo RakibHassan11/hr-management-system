@@ -60,115 +60,121 @@ const TeamPage = () => {
     <Layout>
       <div className="animate-fadeIn p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-[#1FB77F]">Team Members</h1>
-          <Button className="bg-[#1FB77F] hover:bg-[#189962] text-white px-5 py-2 shadow-md">
+          <h1 className="text-3xl font-bold text-[#1F2328]">Team Members</h1>
+          <Button className="bg-[#F97316] text-white hover:bg-[#EA580C]">
             Add New Member
           </Button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1FB77F]/30">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1F2328]/30">
           <Table>
             <TableHeader>
-              <TableRow className="bg-[#1FB77F]/10">
-                <TableHead className="text-[#1FB77F] font-semibold">Name</TableHead>
-                <TableHead className="text-[#1FB77F] font-semibold">Role</TableHead>
-                <TableHead className="text-[#1FB77F] font-semibold">Department</TableHead>
-                <TableHead className="text-[#1FB77F] font-semibold">Email</TableHead>
-                <TableHead className="text-[#1FB77F] font-semibold text-right">Actions</TableHead>
+              <TableRow className="bg-[#E0E0E0]">
+                <TableHead className="text-[#1F2328] font-semibold">Name</TableHead>
+                <TableHead className="text-[#1F2328] font-semibold">Role</TableHead>
+                <TableHead className="text-[#1F2328] font-semibold">Department</TableHead>
+                <TableHead className="text-[#1F2328] font-semibold">Email</TableHead>
+                <TableHead className="text-[#1F2328] font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {teamMembers.map((member) => (
                 <TableRow key={member.id}>
-                  <TableCell className="font-medium text-gray-800">{member.name}</TableCell>
-                  <TableCell className="text-gray-700">{member.role}</TableCell>
-                  <TableCell className="text-gray-700">{member.department}</TableCell>
-                  <TableCell className="text-gray-700">{member.email}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{member.name}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{member.role}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{member.department}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{member.email}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-3">
+                      
+                      {/* ✅ Edit Modal (Includes Cancel Button) */}
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="hover:bg-[#1FB77F]/10 text-[#1FB77F]"
+                            className="text-black"
                             onClick={() => handleEdit(member)}
                           >
                             <Edit className="h-5 w-5" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px]">
+                        <DialogContent className="sm:max-w-[425px] bg-white text-black">
                           <DialogHeader>
-                            <DialogTitle className="text-[#1FB77F]">Edit Team Member</DialogTitle>
-                            <DialogDescription className="text-gray-500">
+                            <DialogTitle className="text-[#1F2328]">Edit Team Member</DialogTitle>
+                            <DialogDescription className="text-[#1F2328]">
                               Update the details of this team member.
                             </DialogDescription>
                           </DialogHeader>
-                          {editingMember && (
-                            <div className="grid gap-4 py-4">
-                              <div className="grid gap-2">
-                                <label className="text-sm text-gray-600">Name</label>
-                                <Input
-                                  value={editingMember.name}
-                                  onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
-                                  className="border-[#1FB77F]/50"
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <label className="text-sm text-gray-600">Role</label>
-                                <Input
-                                  value={editingMember.role}
-                                  onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
-                                  className="border-[#1FB77F]/50"
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <label className="text-sm text-gray-600">Department</label>
-                                <Input
-                                  value={editingMember.department}
-                                  onChange={(e) => setEditingMember({ ...editingMember, department: e.target.value })}
-                                  className="border-[#1FB77F]/50"
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <label className="text-sm text-gray-600">Email</label>
-                                <Input
-                                  value={editingMember.email}
-                                  onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
-                                  className="border-[#1FB77F]/50"
-                                />
-                              </div>
-                            </div>
-                          )}
+                          <div className="grid gap-4 py-4">
+                            <Input
+                              type="text"
+                              value={editingMember?.name || ""}
+                              onChange={(e) => setEditingMember({ ...editingMember!, name: e.target.value })}
+                              placeholder="Name"
+                              className="border border-gray-300"
+                            />
+                            <Input
+                              type="text"
+                              value={editingMember?.role || ""}
+                              onChange={(e) => setEditingMember({ ...editingMember!, role: e.target.value })}
+                              placeholder="Role"
+                              className="border border-gray-300"
+                            />
+                            <Input
+                              type="text"
+                              value={editingMember?.department || ""}
+                              onChange={(e) => setEditingMember({ ...editingMember!, department: e.target.value })}
+                              placeholder="Department"
+                              className="border border-gray-300"
+                            />
+                            <Input
+                              type="email"
+                              value={editingMember?.email || ""}
+                              onChange={(e) => setEditingMember({ ...editingMember!, email: e.target.value })}
+                              placeholder="Email"
+                              className="border border-gray-300"
+                            />
+                          </div>
                           <DialogFooter>
-                            <Button onClick={handleSave} className="bg-[#1FB77F] hover:bg-[#189962] text-white">
+                            <Button className="bg-gray-300 text-[#1F2328] hover:bg-gray-400" onClick={() => setEditingMember(null)}>
+                              Cancel
+                            </Button>
+                            <Button className="bg-[#F97316] text-white hover:bg-[#EA580C]" onClick={handleSave}>
                               Save Changes
                             </Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>
 
+                      {/* ✅ Delete Modal (Now Includes Cancel Button) */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="hover:bg-red-50 text-red-500">
+                          <Button variant="ghost" size="icon" className="text-black">
                             <Trash2 className="h-5 w-5" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="sm:max-w-[400px] bg-white text-black">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-gray-900">Delete Team Member</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Are you sure you want to delete this team member? This action cannot be undone.
+                            <AlertDialogTitle className="text-[#1F2328]">Delete Team Member</AlertDialogTitle>
+                            <AlertDialogDescription className="text-[#1F2328]">
+                              Are you sure you want to remove this team member? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-gray-300 text-gray-600">Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(member.id)} className="bg-red-500 hover:bg-red-600 text-white">
+                            <AlertDialogCancel className="bg-gray-300 text-[#1F2328] hover:bg-gray-400">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction 
+                              className="bg-[#F97316] text-white hover:bg-[#EA580C]" 
+                              onClick={() => handleDelete(member.id)}
+                            >
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+
                     </div>
                   </TableCell>
                 </TableRow>

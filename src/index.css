@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: #C9F2E7; /* Soft Mint background */
-    --foreground: #1FB77F; /* Vibrant Green foreground */
+    --background: #F3F4F6; /* Light gray background */
+    --foreground: #1F2937; /* Dark gray foreground */
     --card: #FFFFFF; /* White for card backgrounds */
-    --card-foreground: #1FB77F; /* Green text on card */
+    --card-foreground: #1F2937; /* Dark gray text on card */
     --popover: #FFFFFF; /* White popover background */
-    --popover-foreground: #1FB77F; /* Green popover text */
-    --primary: #1FB77F; /* Primary color for buttons, links */
+    --popover-foreground: #1F2937; /* Dark gray popover text */
+    --primary: #F97316; /* Orange primary color */
     --primary-foreground: #FFFFFF; /* White text on primary color */
-    --secondary: #189962; /* Darker green for secondary actions */
+    --secondary: #FB923C; /* Lighter orange for secondary actions */
     --secondary-foreground: #FFFFFF; /* White text for secondary actions */
-    --muted: #C9F2E7; /* Soft mint muted elements */
-    --muted-foreground: #1FB77F; /* Green muted text */
-    --accent: #189962; /* Secondary accent color */
+    --muted: #FEE2E2; /* Soft light red muted elements */
+    --muted-foreground: #9CA3AF; /* Muted gray text */
+    --accent: #FBBF24; /* Accent orange color */
     --accent-foreground: #FFFFFF; /* White text on accent */
-    --destructive: #FF4D4F; /* Red for destructive actions */
+    --destructive: #DC2626; /* Red for destructive actions */
     --destructive-foreground: #FFFFFF; /* White text on destructive actions */
-    --border: #1FB77F; /* Green borders */
+    --border: #FBBF24; /* Accent orange border */
     --input: #FFFFFF; /* White input backgrounds */
-    --ring: #189962; /* Darker green for focus rings */
+    --ring: #F97316; /* Orange focus rings */
     --radius: 0.5rem; /* Rounded corners */
   }
 }
@@ -44,15 +44,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #FEE2E2; /* Soft light red background */
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1FB77F; /* Use the vibrant green for the thumb */
+  background: #F97316; /* Orange for the thumb */
   border-radius: 4px;
+  border: 2px solid #F97316; /* Orange border around the thumb */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #189962; /* Darker green on hover */
+  background: #EA580C; /* Darker orange on hover */
 }

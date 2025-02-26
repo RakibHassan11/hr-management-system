@@ -1,16 +1,22 @@
+import { ChevronLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, User, Clock, FileText, Users, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, User, Clock, FileEdit, Plane, Calendar, HardDrive, Link as LinkIcon, Users, Building2, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
+import logo from '../lovable-uploads/orangetoolz-logo-orange.png'
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/' },
-  { icon: Calendar, label: 'Attendance Report', path: '/attendance' },
   { icon: User, label: 'Profile', path: '/profile' },
   { icon: Clock, label: 'View Attendance', path: '/view-attendance' },
-  { icon: FileText, label: 'Apply for Time Update', path: '/time-update' },
-  { icon: Users, label: 'Team', path: '/teampage' },  // UPDATED PATH TO MATCH ROUTE IN App.tsx
-  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: FileEdit, label: 'Apply for Time Update', path: '/time-update' },
+  { icon: Plane, label: 'View Leave', path: '/view-leave' },
+  { icon: FileEdit, label: 'Apply for Leave', path: '/apply-leave' },
+  { icon: Calendar, label: 'Holidays', path: '/holidays' },
+  { icon: HardDrive, label: 'MAC Address', path: '/mac-address' },
+  { icon: LinkIcon, label: 'Important Links', path: '/important-links' },
+  { icon: Building2, label: 'Employee', path: '/employee' },
+  { icon: Users, label: 'Team', path: '/team' },
 ];
 
 export function Sidebar() {
@@ -18,25 +24,33 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className={`relative hidden lg:flex flex-col ${isCollapsed ? 'w-20' : 'w-64'} min-h-screen shadow-lg transition-all duration-300`}>
-      <div className="p-4 border-b border-[#1FB77F]/30">
+    <div 
+      className={`relative flex flex-col ${
+        isCollapsed ? 'w-20' : 'w-64'
+      } min-h-screen bg-white shadow-sm transition-all duration-500 ease-in-out`}
+    >
+      <Button
+      variant="ghost"
+      size="icon"
+      className="absolute -right-5 top-6 z-50 rounded-full bg-white shadow-md hover:bg-gray-200 transition-all"
+      onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
+      </Button>
+
+      
+      <div className="p-4 ">
         <Link to="/" className="flex items-center space-x-2">
-          <img src="/lovable-uploads/a93f6f91-35cb-4bfa-bfb4-441228ad1560.png" alt="Logo" className="h-8 w-8" />
-          {!isCollapsed && <span className="text-xl font-semibold text-[#1FB77F]">Orange Toolz</span>}
+          <img 
+            src={logo} 
+            alt="Logo" 
+            className="h-17 transition-transform duration-500" 
+          />
         </Link>
       </div>
       
-      <Button
-        variant="secondary"
-        size="icon"
-        className="absolute -right-4 top-20 bg-white border border-[#1FB77F]/30 rounded-full shadow-lg z-50 hover:bg-[#1FB77F]/20"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4 text-[#1FB77F]" /> : <ChevronLeft className="h-4 w-4 text-[#1FB77F]" />}
-      </Button>
-
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 p-4 overflow-y-auto">
+        <ul className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -44,20 +58,32 @@ export function Sidebar() {
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3 px-4'} py-3 rounded-lg transition-colors ${
+                  className={`flex items-center ${
+                    isCollapsed ? 'justify-center px-2' : 'space-x-3 px-4'
+                  } py-3 rounded-lg transition-all duration-300 ${
                     isActive
-                      ? 'bg-[#1FB77F]/20 text-[#1FB77F]'
-                      : 'text-[#1FB77F]/80 hover:bg-[#1FB77F]/10 hover:text-[#1FB77F]'
+                      ? 'bg-[#F97316] text-white'
+                      : 'text-[#1F2328] hover:bg-[#F97316]/10 hover:text-[#F97316]'
                   }`}
                 >
-                  <Icon className="h-5 w-5 text-[#1FB77F]" />
-                  {!isCollapsed && <span className="text-[#1FB77F]">{item.label}</span>}
+                  <Icon className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'scale-110' : ''}`} />
+                  <span 
+                    className={`whitespace-nowrap transition-all duration-500 ${
+                      isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
                 </Link>
               </li>
             );
           })}
         </ul>
       </nav>
+      
+      <div className={`p-4  transition-opacity duration-500 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+        <p className="text-xs text-[#1F2328]">Copyright © 2023 - 2025 - All Rights Reserved</p>
+      </div>
     </div>
   );
 }

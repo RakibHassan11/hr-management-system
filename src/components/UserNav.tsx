@@ -1,5 +1,3 @@
-
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,30 +7,49 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom"; // ✅ React Router for navigation
+import drop from '../lovable-uploads/pet.jpg';
 
 export function UserNav() {
+  const navigate = useNavigate(); // ✅ React Router Navigation
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <button 
+          className="relative h-10 w-10 rounded-full bg-[#F97316] text-white hover:bg-[#EA580C] transition-colors"
+        >
           <Avatar className="h-10 w-10">
-            <AvatarImage src="/lovable-uploads/d720f2ae-6e6d-4aae-a200-6fc390b33f0b.png" alt="User" />
+            <AvatarImage src={drop} alt="User" />
             <AvatarFallback>RZ</AvatarFallback>
           </Avatar>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56 bg-white border border-[rgb(74,182,201,0.2)] shadow-lg" align="end">
         <DropdownMenuLabel className="bg-white">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium text-[rgb(74,182,201)]">Rakib Uz Zaman</p>
-            <p className="text-xs text-[rgb(74,182,201,0.8)]">HR Assistant Manager</p>
+            <p className="text-sm font-medium text-[#1F2328]">Rakib Uz Zaman</p>
+            <p className="text-xs text-[#1F2328]">HR Assistant Manager</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
-        <DropdownMenuItem className="text-[rgb(74,182,201)] hover:bg-[rgb(74,182,201,0.1)]">Profile</DropdownMenuItem>
-        <DropdownMenuItem className="text-[rgb(74,182,201)] hover:bg-[rgb(74,182,201,0.1)]">Settings</DropdownMenuItem>
+        <DropdownMenuItem 
+          className="text-[#1F2328] hover:bg-[#F97316] hover:text-white"
+          onClick={() => navigate("/profile")} // ✅ Takes user to Profile
+        >
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => navigate("/profile")} // ✅ Edit Profile also takes to Profile
+        >
+          Edit Profile
+        </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
-        <DropdownMenuItem className="text-[rgb(74,182,201)] hover:bg-[rgb(74,182,201,0.1)]">Log out</DropdownMenuItem>
+        <DropdownMenuItem 
+        onClick={()=>navigate("/login")}
+        >
+          Log out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
