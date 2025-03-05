@@ -44,16 +44,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #FEE2E2; /* Soft light red background */
+  background: #FEE2E2; 
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #F97316; /* Orange for the thumb */
+  background: #F97316; 
   border-radius: 4px;
-  border: 2px solid #F97316; /* Orange border around the thumb */
+  border: 2px solid #F97316; 
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #EA580C; /* Darker orange on hover */
+  background: #EA580C; 
 }

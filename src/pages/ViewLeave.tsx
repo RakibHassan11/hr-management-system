@@ -18,10 +18,10 @@ export default function ViewLeave() {
         <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
           <div className="grid grid-cols-3 gap-4 mb-4">
             <Select>
-              <SelectTrigger className="border border-gray-300 bg-white"> {/* Ensures white background */}
+              <SelectTrigger className="border border-gray-300 bg-white"> 
                 <SelectValue placeholder="Leave Type" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-300 shadow-md"> {/* White background for dropdown */}
+              <SelectContent className="bg-white border border-gray-300 shadow-md"> 
                 <SelectItem value="annual">Annual Leave</SelectItem>
                 <SelectItem value="sick">Sick Leave</SelectItem>
                 <SelectItem value="unpaid">Unpaid Leave</SelectItem>

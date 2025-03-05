@@ -1,3 +1,4 @@
+// src/components/UserNav.tsx
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,11 +8,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNavigate } from "react-router-dom"; // ✅ React Router for navigation
+import { useNavigate } from "react-router-dom";
 import drop from '../lovable-uploads/pet.jpg';
 
 export function UserNav() {
-  const navigate = useNavigate(); // ✅ React Router Navigation
+  const navigate = useNavigate(); 
+
+  const handleLogout = () => {
+    // Clear the token from localStorage
+    localStorage.removeItem("token");
+    // Navigate to the login page
+    navigate("/login");
+  };
 
   return (
     <DropdownMenu>
@@ -35,18 +43,19 @@ export function UserNav() {
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
         <DropdownMenuItem 
           className="text-[#1F2328] hover:bg-[#F97316] hover:text-white"
-          onClick={() => navigate("/profile")} // ✅ Takes user to Profile
+          onClick={() => navigate("/profile")} 
         >
           Profile
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => navigate("/profile")} // ✅ Edit Profile also takes to Profile
+          onClick={() => navigate("/profile")} 
         >
           Edit Profile
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
         <DropdownMenuItem 
-        onClick={()=>navigate("/login")}
+          onClick={handleLogout} 
+          className="text-[#1F2328] hover:bg-[#F97316] hover:text-white"
         >
           Log out
         </DropdownMenuItem>

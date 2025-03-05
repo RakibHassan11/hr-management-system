@@ -14,7 +14,7 @@ export default function ViewAttendance() {
             Submit
           </Button>
         </div>
-        
+       
         <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
           <div className="grid grid-cols-3 gap-4 mb-4">
           <Select>

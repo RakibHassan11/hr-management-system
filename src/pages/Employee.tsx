@@ -15,10 +15,10 @@ export default function Employee() {
             <Input placeholder="Search by name..." className="border border-gray-300" />
             
             <Select>
-              <SelectTrigger className="border border-gray-300 bg-white"> {/* Ensures white background */}
+              <SelectTrigger className="border border-gray-300 bg-white"> 
                 <SelectValue placeholder="Blood Group" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-300 shadow-md"> {/* White background for dropdown */}
+              <SelectContent className="bg-white border border-gray-300 shadow-md">
                 <SelectItem value="A+">A+</SelectItem>
                 <SelectItem value="A-">A-</SelectItem>
                 <SelectItem value="B+">B+</SelectItem>
@@ -29,10 +29,10 @@ export default function Employee() {
             </Select>
             
             <Select>
-              <SelectTrigger className="border border-gray-300 bg-white"> {/* Ensures white background */}
+              <SelectTrigger className="border border-gray-300 bg-white">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-300 shadow-md"> {/* White background for dropdown */}
+              <SelectContent className="bg-white border border-gray-300 shadow-md"> 
                 <SelectItem value="HR">HR</SelectItem>
                 <SelectItem value="Development">Development</SelectItem>
                 <SelectItem value="Support">Support</SelectItem>

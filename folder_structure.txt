@@ -1,0 +1,50 @@
+.
+├── bun.lockb
+├── components.json
+├── eslint.config.js
+├── folder_structure.txt
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── README.md
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── components
+│   │   ├── Layout.tsx
+│   │   ├── Sidebar.tsx
+│   │   └── UserNav.tsx
+│   ├── hooks
+│   │   ├── use-mobile.tsx
+│   │   └── use-toast.ts
+│   ├── index.css
+│   ├── lib
+│   │   └── utils.ts
+│   ├── lovable-uploads
+│   │   ├── orangetoolz-logo-orange.png
+│   │   └── pet.jpg
+│   ├── main.tsx
+│   ├── pages
+│   │   ├── ApplyLeave.tsx
+│   │   ├── Employee.tsx
+│   │   ├── Holidays.tsx
+│   │   ├── Home.tsx
+│   │   ├── ImportantLinks.tsx
+│   │   ├── Index.tsx
+│   │   ├── Login.tsx
+│   │   ├── MacAddress.tsx
+│   │   ├── NotFound.tsx
+│   │   ├── Profile.tsx
+│   │   ├── Team.tsx
+│   │   ├── TimeUpdate.tsx
+│   │   ├── ViewAttendance.tsx
+│   │   └── ViewLeave.tsx
+│   └── vite-env.d.ts
+├── tailwind.config.ts
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+7 directories, 41 files
