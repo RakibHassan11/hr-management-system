@@ -2,33 +2,68 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Logo from "../lovable-uploads/orangetoolz-logo-orange.png"; // ✅ Import OrangeToolz logo
-import axios from "axios"; // Import Axios
+import Logo from "../lovable-uploads/orangetoolz-logo-orange.png";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../store/authSlice";
+
+// Define the User type
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // State for handling errors
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Define the base URL from the environment variable with a fallback
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password,
-      });
-
-      // If login is successful, store the token (if returned) and navigate to the home page
-      localStorage.setItem("token", response.data.access_token); // Store JWT token
-      navigate("/"); // Navigate to home page after login
-    } catch (err) {
-      // Handle errors (e.g., invalid credentials)
+    // Mock authentication logic
+    if (email === "admin@orangetoolz.com" && password === "admin123") {
+      const mockResponse = {
+        user: {
+          id: "1",
+          name: "Admin User",
+          email: email,
+          role: "admin",
+        },
+        accessToken: "mock-token-admin",
+      };
+      const { user, accessToken } = mockResponse;
+      handleLogin(user, accessToken, "/admin");
+    } else if (email && password) {
+      const mockResponse = {
+        user: {
+          id: "2",
+          name: "Regular User",
+          email: email,
+          role: "user",
+        },
+        accessToken: "mock-token-user",
+      };
+      const { user, accessToken } = mockResponse;
+      handleLogin(user, accessToken, "/user");
+    } else {
       setError("Invalid email or password. Please try again.");
+    }
+  };
+
+  const handleLogin = (user: User, accessToken: string, path: string) => {
+    try {
+      dispatch(setCredentials({ user, accessToken }));
+      localStorage.setItem("token", accessToken);
+      localStorage.setItem("userInfo", JSON.stringify(user));
+      localStorage.setItem("mockRole", user.role);
+      setTimeout(() => navigate(path), 0);
+    } catch (err) {
+      setError("Failed to log in. Please try again.");
+      console.error("Dispatch error:", err);
     }
   };
 
@@ -36,13 +71,12 @@ const Login = () => {
     <div className="min-h-screen bg-[#F0F0F0] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-xl border border-[#1F2328]/20 animate-fadeIn">
-          {/* ✅ OrangeToolz Logo */}
           <div className="flex justify-center mb-6">
             <img src={Logo} alt="OrangeToolz" className="h-14" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <p className="text-red-500 text-sm">{error}</p>} {/* Display error message */}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-[#1F2328]" htmlFor="email">
@@ -79,6 +113,13 @@ const Login = () => {
               className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold py-2 rounded-md"
             >
               LOGIN
+            </Button>
+            <Button
+              variant="link"
+              onClick={() => navigate("/adminlogin")}
+              className="w-full text-[#EA580C]"
+            >
+              Login as Super Admin
             </Button>
           </form>
         </div>

@@ -1,9 +1,7 @@
-import { Layout } from '@/components/Layout';
 import ima from '../lovable-uploads/pet.jpg';
 
 export default function Home() {
   return (
-    <Layout>
       <div className="animate-fadeIn p-6 flex flex-col gap-6">
         <div className="flex gap-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328] flex-1">
@@ -96,6 +94,5 @@ export default function Home() {
           </table>
         </div>
       </div>
-    </Layout>
   );
 }

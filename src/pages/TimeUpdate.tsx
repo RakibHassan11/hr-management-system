@@ -1,4 +1,4 @@
-import { Layout } from '@/components/Layout';
+import {Layout} from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 export default function TimeUpdate() {
   return (
-  <Layout>
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">New Time Update Request</h1>
@@ -82,6 +81,5 @@ export default function TimeUpdate() {
         </div>
       </div>
     </div>
-  </Layout>
   );
 }

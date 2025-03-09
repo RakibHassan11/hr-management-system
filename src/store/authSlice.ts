@@ -1,41 +1,87 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+// src/store/authSlice.ts
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Define async thunk to handle login
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (credentials: { email: string, password: string }) => {
-    const response = await axios.post('http://localhost:4000/auth/login', credentials);
-    return response.data;  // Assuming response contains accessToken and userInfo
-  }
-);
+interface Admin {
+  id: number;
+  full_name: string;
+  email: string;
+}
 
-const initialState = {
-  user: null,
-  token: null,
+interface AuthState {
+  admin: Admin | null;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: AuthState = {
+  admin: localStorage.getItem('adminInfo')
+    ? JSON.parse(localStorage.getItem('adminInfo')!)
+    : null,
+  token: localStorage.getItem('token') || null,
   loading: false,
   error: null,
 };
 
+export const loginSuperAdmin = createAsyncThunk(
+  'auth/loginSuperAdmin',
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        'https://api.allinall.social/api/otz-hrm/auth/super-admin/login',
+        credentials,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      if (response.data.success) {
+        const { access, admin } = response.data.data;
+        // Persist admin info and token to localStorage
+        localStorage.setItem('adminInfo', JSON.stringify(admin));
+        localStorage.setItem('token', access.token);
+        return { admin, token: access.token };
+      } else {
+        return rejectWithValue(response.data.message || 'Failed to log in');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error.response ? error.response.data : error);
+      return rejectWithValue(error.response?.data?.message || 'Failed to log in');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {},
+  reducers: {
+    // Export setCredentials to allow manually setting the credentials if needed
+    setCredentials: (state, action) => {
+      state.admin = action.payload.admin;
+      state.token = action.payload.token;
+    },
+    logout: (state) => {
+      state.admin = null;
+      state.token = null;
+      localStorage.removeItem('adminInfo');
+      localStorage.removeItem('token');
+    }
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, (state) => {
+      .addCase(loginSuperAdmin.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(loginSuperAdmin.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.accessToken;
-        state.user = action.payload.userInfo;
+        state.admin = action.payload.admin;
+        state.token = action.payload.token;
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(loginSuperAdmin.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
+        state.error = action.payload as string;
       });
-  },
+  }
 });
 
+export const { setCredentials, logout } = authSlice.actions;
 export default authSlice.reducer;

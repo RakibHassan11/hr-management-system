@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 
 export default function MacAddress() {
   return (
-    <Layout>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <h1 className="text-2xl font-bold mb-6">View/Edit Mac Address</h1>
         
@@ -45,6 +44,5 @@ export default function MacAddress() {
           </div>
         </div>
       </div>
-    </Layout>
   );
 }

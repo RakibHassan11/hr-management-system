@@ -1,4 +1,4 @@
-import { Layout } from '@/components/Layout';
+import {Layout} from '@/components/Layout';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useState } from 'react';
 
@@ -25,7 +25,7 @@ export default function Holidays() {
   };
 
   return (
-    <Layout>
+    <>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         {/* Flex container for header and button */}
         <div className="flex items-center justify-between mb-4">
@@ -124,6 +124,6 @@ export default function Holidays() {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 }

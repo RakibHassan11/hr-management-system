@@ -57,7 +57,6 @@ const TeamPage = () => {
   };
 
   return (
-<Layout>
 <div className="animate-fadeIn p-6">
   <div className="flex justify-between items-center mb-6">
     <h1 className="text-3xl font-bold text-[#1F2328]">Team Members</h1>
@@ -182,7 +181,6 @@ const TeamPage = () => {
 </Table>
 </div>
 </div>
-</Layout>
   );
 };
 

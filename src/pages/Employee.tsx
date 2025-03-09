@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function Employee() {
   return (
-    <Layout>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Employee List</h1>
         
@@ -68,6 +67,5 @@ export default function Employee() {
           </Table>
         </div>
       </div>
-    </Layout>
   );
 }
