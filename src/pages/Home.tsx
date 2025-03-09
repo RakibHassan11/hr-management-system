@@ -1,5 +1,4 @@
 import ima from '../lovable-uploads/pet.jpg';
-
 export default function Home() {
   return (
       <div className="animate-fadeIn p-6 flex flex-col gap-6">
