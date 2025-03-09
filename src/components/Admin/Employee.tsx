@@ -63,7 +63,6 @@ const AdminEmployee = () => {
         setLoading(false);
       }
     };
-
     fetchEmployees();
   }, []);
 
