@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export default function ImportantLinks() {
   return (
-    <Layout>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <h1 className="text-2xl font-bold mb-4">Important Links</h1>
         
@@ -57,6 +56,5 @@ export default function ImportantLinks() {
           </Table>
         </div>
       </div>
-    </Layout>
   );
 }

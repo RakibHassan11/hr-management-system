@@ -1,25 +1,16 @@
 import { ChevronLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Clock, FileEdit, Plane, Calendar, HardDrive, Link as LinkIcon, Users, Building2, Menu } from 'lucide-react';
+import { Home, Building2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from './ui/button';
-import logo from '../lovable-uploads/orangetoolz-logo-orange.png';
+import { Button } from '../ui/button';
+import logo from '../../lovable-uploads/orangetoolz-logo-orange.png';
 
 const menuItems = [
-  { icon: Home, label: 'Home', path: '/user/home' },
-  { icon: User, label: 'Profile', path: '/user/profile' },
-  { icon: Clock, label: 'View Attendance', path: '/user/view-attendance' },
-  { icon: FileEdit, label: 'Apply for Time Update', path: '/user/time-update' },
-  { icon: Plane, label: 'View Leave', path: '/user/view-leave' },
-  { icon: FileEdit, label: 'Apply for Leave', path: '/user/apply-leave' },
-  { icon: Calendar, label: 'Holidays', path: '/user/holidays' },
-  { icon: HardDrive, label: 'MAC Address', path: '/user/mac-address' },
-  { icon: LinkIcon, label: 'Important Links', path: '/user/important-links' },
-  { icon: Building2, label: 'Employee', path: '/user/employee' },
-  { icon: Users, label: 'Team', path: '/user/team' },
+  { icon: Home, label: 'Home', path: '/admin/home' },
+  { icon: Building2, label: 'Employee List', path: '/admin/employee' },
 ];
 
-export function Sidebar() {
+export function AdminSidebar() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -38,8 +29,8 @@ export function Sidebar() {
         <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
       </Button>
 
-      <div className="p-4 ">
-        <Link to="/user" className="flex items-center space-x-2">
+      <div className="p-4">
+        <Link to="/admin" className="flex items-center space-x-2">
           <img 
             src={logo} 
             alt="Logo" 
@@ -80,7 +71,7 @@ export function Sidebar() {
         </ul>
       </nav>
       
-      <div className={`p-4  transition-opacity duration-500 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`p-4 transition-opacity duration-500 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
         <p className="text-xs text-[#1F2328]">Copyright © 2023 - 2025 - All Rights Reserved</p>
       </div>
     </div>

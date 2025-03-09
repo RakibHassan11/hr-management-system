@@ -12,8 +12,65 @@
 │   ├── App.css
 │   ├── App.tsx
 │   ├── components
+│   │   ├── Admin
+│   │   │   ├── AdminLayout.tsx
+│   │   │   ├── AdminSidebar.tsx
+│   │   │   ├── AdminUserNav.tsx
+│   │   │   ├── Employee.tsx
+│   │   │   └── Home.tsx
 │   │   ├── Layout.tsx
+│   │   ├── PrivateRoute.tsx
 │   │   ├── Sidebar.tsx
+│   │   ├── ui
+│   │   │   ├── accordion.tsx
+│   │   │   ├── alert-dialog.tsx
+│   │   │   ├── alert.tsx
+│   │   │   ├── aspect-ratio.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── breadcrumb.tsx
+│   │   │   ├── button.tsx
+│   │   │   ├── calendar.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── carousel.tsx
+│   │   │   ├── chart.tsx
+│   │   │   ├── checkbox.tsx
+│   │   │   ├── collapsible.tsx
+│   │   │   ├── command.tsx
+│   │   │   ├── context-menu.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── drawer.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── form.tsx
+│   │   │   ├── hover-card.tsx
+│   │   │   ├── input-otp.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── label.tsx
+│   │   │   ├── menubar.tsx
+│   │   │   ├── navigation-menu.tsx
+│   │   │   ├── pagination.tsx
+│   │   │   ├── popover.tsx
+│   │   │   ├── progress.tsx
+│   │   │   ├── radio-group.tsx
+│   │   │   ├── resizable.tsx
+│   │   │   ├── scroll-area.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── separator.tsx
+│   │   │   ├── sheet.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── skeleton.tsx
+│   │   │   ├── slider.tsx
+│   │   │   ├── sonner.tsx
+│   │   │   ├── switch.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── textarea.tsx
+│   │   │   ├── toaster.tsx
+│   │   │   ├── toast.tsx
+│   │   │   ├── toggle-group.tsx
+│   │   │   ├── toggle.tsx
+│   │   │   ├── tooltip.tsx
+│   │   │   └── use-toast.ts
 │   │   └── UserNav.tsx
 │   ├── hooks
 │   │   ├── use-mobile.tsx
@@ -36,10 +93,15 @@
 │   │   ├── MacAddress.tsx
 │   │   ├── NotFound.tsx
 │   │   ├── Profile.tsx
+│   │   ├── SuperAdminLogin.tsx
 │   │   ├── Team.tsx
 │   │   ├── TimeUpdate.tsx
 │   │   ├── ViewAttendance.tsx
 │   │   └── ViewLeave.tsx
+│   ├── store
+│   │   ├── authSlice.ts
+│   │   ├── index.ts
+│   │   └── store.ts
 │   └── vite-env.d.ts
 ├── tailwind.config.ts
 ├── tsconfig.app.json
@@ -47,4 +109,4 @@
 ├── tsconfig.node.json
 └── vite.config.ts
 
-7 directories, 41 files
+10 directories, 100 files

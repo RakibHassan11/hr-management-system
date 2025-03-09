@@ -1,4 +1,4 @@
-import { Layout } from '@/components/Layout';
+import  {Layout} from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 export default function ApplyLeave() {
   return (
-    <Layout>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Apply for Leave</h1>
@@ -52,6 +51,5 @@ export default function ApplyLeave() {
           </div>
         </div>
       </div>
-    </Layout>
   );
 }
