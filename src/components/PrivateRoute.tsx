@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { FC } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
@@ -8,13 +8,26 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: FC<PrivateRouteProps> = ({ element }) => {
+  const location = useLocation(); 
   const authState = useSelector((state: RootState) => {
-    console.log('PrivateRoute Redux state:', state); // Debug log
     return state.auth;
   });
-  const token = authState?.token ?? null;
 
-  return token ? element : <Navigate to="/adminlogin" replace />;
+  const isAuthenticatedUser = authState?.isAuthenticatedUser ?? false;
+  const isAuthenticatedAdmin = authState?.isAuthenticatedAdmin ?? false;
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isUserRoute = location.pathname.startsWith('/user');
+
+  if (isAdminRoute) {
+    return isAuthenticatedAdmin ? element : <Navigate to="/adminlogin" state={{ from: location }} replace />;
+  }
+
+  if (isUserRoute) {
+    return isAuthenticatedUser ? element : <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <Navigate to="/login" state={{ from: location }} replace />;
 };
 
 export default PrivateRoute;

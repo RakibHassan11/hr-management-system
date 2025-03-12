@@ -1,0 +1,781 @@
+import { useLocation } from 'react-router-dom';
+import { Fragment, useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from "@/components/ui/textarea";
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import toast from 'react-hot-toast'; 
+
+function EmployeeProfile() {
+  const [employee, setEmployee] = useState(null);
+  const [formData, setFormData] = useState(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL;
+  const token = useSelector((state: RootState) => state.auth.userToken);
+
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+  const id = queryParams.get('id');
+
+  useEffect(() => {
+    if (!token) return;
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const fetchOptions = async () => {
+      try {
+        const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes] = await Promise.all([
+          axios.get(`${API_URL}/divisions/list`, config),
+          axios.get(`${API_URL}/departments/list`, config),
+          axios.get(`${API_URL}/sub-departments/list`, config),
+          axios.get(`${API_URL}/units/list`, config)
+        ]);
+
+        console.log(divisionsRes)
+
+        const divisions = divisionsRes.data.data.map(division => ({
+          id: division.id,
+          title: [division.title] 
+        }));
+        
+        // const departments = departmentsRes.data.data.map(department => ({
+        //   id: department.id,
+        //   title: [department.title]
+        // }));
+        
+        // const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+        //   id: subDept.id,
+        //   title: [subDept.title]
+        // }));
+        
+        // const units = unitsRes.data.data.map(unit => ({
+        //   id: unit.id,
+        //   title: [unit.title]
+        // }));
+        
+        setFormData(prevData => ({
+          ...prevData,
+          division_id: {
+            selected: prevData?.division_id?.selected || null,
+            options: divisions
+          },
+          // department_id: {
+          //   selected: prevData?.department_id?.selected || null,
+          //   options: departments
+          // },
+          // sub_department_id: {
+          //   selected: prevData?.sub_department_id?.selected || null,
+          //   options: subDepartments
+          // },
+          // unit_id: {
+          //   selected: prevData?.unit_id?.selected || null,
+          //   options: units
+          // }
+        }))
+      } catch (error) {
+        console.error('Error fetching options:', error);
+      }
+    };
+
+    fetchOptions();
+  }, [API_URL, token]);
+  
+  console.log(formData)
+
+  let toastId;
+  useEffect(() => {
+    if (!id) {
+      toastId = toast("No changes made!")
+      return;
+    }
+
+    const fetchEmployeeProfile = async () => {
+      try {
+        const response = await fetch(`${API_URL}/employee/my-profile?id=${id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch employee profile');
+        }
+
+        const data = await response.json();
+        setEmployee(data.data);
+        setFormData(data.data);
+      } catch (err) {
+        toast.error("Fetching profile error:" + err.message, { id: toastId });
+      }
+    };
+
+    fetchEmployeeProfile();
+  }, [API_URL, token, id]);
+
+  const getDiff = (original, updated) => {
+    const diff = {};
+    Object.keys(updated).forEach((key) => {
+      if (updated[key] !== original[key]) {
+        diff[key] = updated[key];
+      }
+    });
+    return diff;
+  };
+
+  const handleSaveProfile = async () => {
+    const updatedFields = getDiff(employee, formData);
+    if (Object.keys(updatedFields).length === 0) {
+      toastId = toast("No changes made!")
+      setIsEditing(false);
+      return;
+    }
+    const req_body = { ...updatedFields, id: Number(id) };
+    try {
+      setUpdating(true);
+      toastId = toast.loading("Saving profile...");
+      const response = await fetch(`${API_URL}/employee/update-profile-by-id`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(req_body),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      const data = await response.json();
+      toast.success(data.message, { id: toastId });
+      const updatedEmployee = { ...employee, ...updatedFields };
+      
+      setEmployee(updatedEmployee);
+      setFormData(updatedEmployee);
+      setIsEditing(false);
+    } catch (err) {
+      toast.error("Error updating profile" + err.message, { id: toastId });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  console.log(formData)
+  
+  return (
+    <Fragment>
+      {formData !== null ?
+      (<div className="animate-fadeIn">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-[#1F2328]">Employee Profile</h1>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="w-full mb-6 bg-gray-100 p-2 flex justify-evenly">
+              <TabsTrigger
+                value="basic"
+                className="flex-1 text-center font-bold text-md text-[#1F2328] data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Basic
+              </TabsTrigger>
+              <TabsTrigger
+                value="device"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Device
+              </TabsTrigger>
+              <TabsTrigger
+                value="personal"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Personal
+              </TabsTrigger>
+              <TabsTrigger
+                value="official"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Official
+              </TabsTrigger>
+              <TabsTrigger
+                value="social"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Social
+              </TabsTrigger>
+              <TabsTrigger
+                value="meal"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Meal
+              </TabsTrigger>
+              <TabsTrigger
+                value="leave"
+                className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
+              >
+                Leave
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Employee ID</label>
+                    <Input
+                      value={Number(id) + 1000 || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, employee_id: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                      className="bg-gray-50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Name</label>
+                    <Input
+                      value={formData?.name || ''}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Username</label>
+                    <Input
+                      value={formData?.username || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Email</label>
+                    <Input
+                      value={formData?.email || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Phone</label>
+                    <Input
+                      value={formData?.phone || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Designation</label>
+                    <Input
+                      value={formData?.designation || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, designation: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Division</label>
+                    <Select
+                      value={formData?.division_id?.selected?.id || ''}
+                      onValueChange={(value) => {
+                        const selectedDivision = formData?.division_id?.options?.find(
+                          division => division.id === value
+                        );
+                        setFormData({
+                          ...formData,
+                          division_id: {
+                            ...formData.division_id,
+                            selected: selectedDivision
+                          }
+                        });
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select division" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        {formData?.division_id?.options?.map(division => (
+                          <SelectItem key={division.id} value={division.id}>
+                            {division.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Department</label>
+                    <Select
+                      value={formData?.department_id?.selected?.id || ''}
+                      onValueChange={(value) => {
+                        const selectedDepartment = formData?.department_id?.options?.find(
+                          department => department.id === value
+                        );
+                        setFormData({
+                          ...formData,
+                          department_id: {
+                            ...formData.department_id,
+                            selected: selectedDepartment
+                          }
+                        });
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        {formData?.department_id?.options?.map(department => (
+                          <SelectItem key={department.id} value={department.id}>
+                            {department.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
+                    <Select
+                      value={formData?.sub_department_id?.selected?.id || ''}
+                      onValueChange={(value) => {
+                        const selectedSubDepartment = formData?.sub_department_id?.options?.find(
+                          subDepartment => subDepartment.id === value
+                        );
+                        setFormData({
+                          ...formData,
+                          sub_department_id: {
+                            ...formData.sub_department_id,
+                            selected: selectedSubDepartment
+                          }
+                        });
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select sub department" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        {formData?.sub_department_id?.options?.map(subDepartment => (
+                          <SelectItem key={subDepartment.id} value={subDepartment.id}>
+                            {subDepartment.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Unit</label>
+                    <Select
+                      value={formData?.unit_id?.selected?.id || ''}
+                      onValueChange={(value) => {
+                        const selectedUnit = formData?.unit_id?.options?.find(
+                          unit => unit.id === value
+                        );
+                        setFormData({
+                          ...formData,
+                          unit_id: {
+                            ...formData.unit_id,
+                            selected: selectedUnit
+                          }
+                        });
+                      }}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        {formData?.unit_id?.options?.map(unit => (
+                          <SelectItem key={unit.id} value={unit.id}>
+                            {unit.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
+                    <Input value={formData?.line_manager_id || ''} readOnly />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Joining Date</label>
+                    <Input
+                      type="date"
+                      value={
+                        formData?.joining_date
+                          ? formData.joining_date.split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, joining_date: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Confirmed</label>
+                    <Input
+                      value={formData?.confirmed || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, confirmed: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Confirmation Date</label>
+                    <Input
+                      type="date"
+                      value={
+                        formData?.confirmation_date
+                          ? formData.confirmation_date.split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, confirmation_date: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Default Shift</label>
+                    <Input
+                      value={formData?.default_shift || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, default_shift: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Employment Type</label>
+                    <Input
+                      value={formData?.emp_type || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, emp_type: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="device" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-black">Official Laptop's Mac</label>
+                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-black">Personal Device's Mac</label>
+                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="personal" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Gender</label>
+                    <Select
+                      value={formData?.gender || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, gender: value })
+                      }
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Religion</label>
+                    <Select
+                      value={formData?.religion || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, religion: value })
+                      }
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        <SelectItem value="islam">Islam</SelectItem>
+                        <SelectItem value="hinduism">Hinduism</SelectItem>
+                        <SelectItem value="christianity">Christianity</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Birthday</label>
+                    <Input
+                      type="date"
+                      value={
+                        formData?.birthday
+                          ? formData.birthday.split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, birthday: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Official Birthday</label>
+                    <Input
+                      type="date"
+                      value={
+                        formData?.official_birthday
+                          ? formData.official_birthday.split('T')[0]
+                          : ''
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, official_birthday: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Blood Group</label>
+                    <Select
+                      value={formData?.blood_group || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, blood_group: value })
+                      }
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Father’s Name</label>
+                    <Input defaultValue="Md. Mofiz Uddin Fakir(N/A)" readOnly />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Mother’s Name</label>
+                    <Input defaultValue="Umme Sara(N/A)" readOnly />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Relationship Status</label>
+                    <Select
+                      value={formData?.relationship_status || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, relationship_status: value })
+                      }
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-300 shadow-md">
+                        <SelectItem value="single">Single</SelectItem>
+                        <SelectItem value="married">Married</SelectItem>
+                        <SelectItem value="divorced">Divorced</SelectItem>
+                        <SelectItem value="widowed">Widowed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Present Address</label>
+                    <Textarea
+                      value={formData?.present_address || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, present_address: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Permanent Address</label>
+                    <Textarea
+                      value={formData?.permanent_address || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, permanent_address: e.target.value })
+                      }
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="official" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Skype [Official]</label>
+                    <Input value={formData?.skype || ''} onChange={(e) => setFormData({ ...formData, skype: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Gmail [Official]</label>
+                    <Input value={formData?.official_gmail || ''} onChange={(e) => setFormData({ ...formData, official_gmail: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">GitLab [Official]</label>
+                    <Input value={formData?.gitlab || ''} onChange={(e) => setFormData({ ...formData, gitlab: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">GitHub [Official]</label>
+                    <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">NID</label>
+                    <Input value={formData?.nid || ''} onChange={(e) => setFormData({ ...formData, nid: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">TIN</label>
+                    <Input value={formData?.tin || ''} onChange={(e) => setFormData({ ...formData, tin: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Bank Name</label>
+                    <Input value={formData?.bank_name || ''} onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">Bank Account No</label>
+                    <Input value={formData?.bank_account_no || ''} onChange={(e) => setFormData({ ...formData, bank_account_no: e.target.value })} readOnly={!isEditing} />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="social" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">Website</label>
+                  <Input value={formData?.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">Facebook</label>
+                  <Input value={formData?.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">Twitter</label>
+                  <Input value={formData?.twitter || ''} onChange={(e) => setFormData({ ...formData, twitter: e.target.value })} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">LinkedIn</label>
+                  <Input value={formData?.linkedin || ''} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">Instagram</label>
+                  <Input value={formData?.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} readOnly={!isEditing} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#1F2328]">Github</label>
+                  <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} readOnly={!isEditing} />
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="leave" className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-2 px-4 border border-gray-300">Leave Type</th>
+                      <th className="py-2 px-4 border border-gray-300">Available</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: 'Annual Leave Balance', value: '0.00 (0.00)' },
+                      { label: 'Sick Leave Balance', value: '0.00 (0.00)' },
+                      { label: 'Casual Leave Balance', value: '0.00 (0.00)' },
+                    ].map((leave) => (
+                      <tr key={leave.label}>
+                        <td className="py-2 px-4 border border-gray-300 font-semibold">{leave.label}</td>
+                        <td className="py-2 px-4 border border-gray-300">{leave.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+            <TabsContent value="meal" className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-2 px-4 border border-gray-300">Meal Type</th>
+                      <th className="py-2 px-4 border border-gray-300">Subscribed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: 'Breakfast', value: 'Yes' },
+                      { label: 'Lunch', value: 'Yes' },
+                      { label: 'Beef', value: 'Yes' },
+                      { label: 'Fish', value: 'Yes' },
+                    ].map((meal) => (
+                      <tr key={meal.label}>
+                        <td className="py-2 px-4 border border-gray-300 font-semibold">{meal.label}</td>
+                        <td className="py-2 px-4 border border-gray-300">{meal.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+          </Tabs>
+          <div className="mt-6 flex justify-end gap-4">
+            {!isEditing ? (
+              <Button onClick={() => setIsEditing(true)}>Edit</Button>
+            ) : (
+              <Button disabled={updating} onClick={handleSaveProfile}>{updating ? "Saving Profile.." : "Save Profile"}</Button>
+            )}
+          </div>
+        </div>
+        </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}
+      </Fragment>
+  );
+}
+
+export default EmployeeProfile;
