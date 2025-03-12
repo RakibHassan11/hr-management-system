@@ -12,8 +12,18 @@ import toast from 'react-hot-toast';
 
 function EmployeeProfile() {
   const [employee, setEmployee] = useState(null);
-  const [formData, setFormData] = useState(null);
-
+  const [formData, setFormData] = useState({
+    division_id: null,
+    department_id: null,
+    sub_department_id: null,
+    unit_id: null,
+  });
+  const [categoryOptions, setCategoryOptions] = useState({
+    divisions: [],
+    departments: [],
+    subDepartments: [],
+    units: [],
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
 
@@ -24,8 +34,12 @@ function EmployeeProfile() {
   const queryParams = new URLSearchParams(search);
   const id = queryParams.get('id');
 
+  let toastId;
   useEffect(() => {
-    if (!token) return;
+    if (!token || !id) {
+      toastId = toast("No changes made!")
+      return;
+    }
 
     const config = {
       headers: {
@@ -33,75 +47,39 @@ function EmployeeProfile() {
       },
     };
 
-    const fetchOptions = async () => {
+    const fetchData = async () => {
       try {
         const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes] = await Promise.all([
           axios.get(`${API_URL}/divisions/list`, config),
           axios.get(`${API_URL}/departments/list`, config),
           axios.get(`${API_URL}/sub-departments/list`, config),
-          axios.get(`${API_URL}/units/list`, config)
+          axios.get(`${API_URL}/units/list`, config),
         ]);
-
-        console.log(divisionsRes)
 
         const divisions = divisionsRes.data.data.map(division => ({
           id: division.id,
-          title: [division.title] 
+          title: division.title,
         }));
-        
-        // const departments = departmentsRes.data.data.map(department => ({
-        //   id: department.id,
-        //   title: [department.title]
-        // }));
-        
-        // const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
-        //   id: subDept.id,
-        //   title: [subDept.title]
-        // }));
-        
-        // const units = unitsRes.data.data.map(unit => ({
-        //   id: unit.id,
-        //   title: [unit.title]
-        // }));
-        
-        setFormData(prevData => ({
-          ...prevData,
-          division_id: {
-            selected: prevData?.division_id?.selected || null,
-            options: divisions
-          },
-          // department_id: {
-          //   selected: prevData?.department_id?.selected || null,
-          //   options: departments
-          // },
-          // sub_department_id: {
-          //   selected: prevData?.sub_department_id?.selected || null,
-          //   options: subDepartments
-          // },
-          // unit_id: {
-          //   selected: prevData?.unit_id?.selected || null,
-          //   options: units
-          // }
-        }))
-      } catch (error) {
-        console.error('Error fetching options:', error);
-      }
-    };
+        const departments = departmentsRes.data.data.map(department => ({
+          id: department.id,
+          title: department.title,
+        }));
+        const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+          id: subDept.id,
+          title: subDept.title,
+        }));
+        const units = unitsRes.data.data.map(unit => ({
+          id: unit.id,
+          title: unit.title,
+        }));
 
-    fetchOptions();
-  }, [API_URL, token]);
-  
-  console.log(formData)
+        setCategoryOptions({
+          divisions,
+          departments,
+          subDepartments,
+          units,
+        });
 
-  let toastId;
-  useEffect(() => {
-    if (!id) {
-      toastId = toast("No changes made!")
-      return;
-    }
-
-    const fetchEmployeeProfile = async () => {
-      try {
         const response = await fetch(`${API_URL}/employee/my-profile?id=${id}`, {
           method: 'GET',
           headers: {
@@ -115,14 +93,24 @@ function EmployeeProfile() {
         }
 
         const data = await response.json();
-        setEmployee(data.data);
-        setFormData(data.data);
+        const employeeData = data.data;
+
+        setFormData(prevData => ({
+          ...prevData,
+          ...employeeData,
+          division_id: employeeData.division_id || null,
+          department_id: employeeData.department_id || null,
+          sub_department_id: employeeData.sub_department_id || null,
+          unit_id: employeeData.unit_id || null,
+        }));
+
+        setEmployee(employeeData);
       } catch (err) {
-        toast.error("Fetching profile error:" + err.message, { id: toastId });
+        toast.error("Error fetching data: " + err.message), { id: toastId };
       }
     };
 
-    fetchEmployeeProfile();
+    fetchData();
   }, [API_URL, token, id]);
 
   const getDiff = (original, updated) => {
@@ -138,7 +126,7 @@ function EmployeeProfile() {
   const handleSaveProfile = async () => {
     const updatedFields = getDiff(employee, formData);
     if (Object.keys(updatedFields).length === 0) {
-      toastId = toast("No changes made!")
+      toastId = toast("No changes made!");
       setIsEditing(false);
       return;
     }
@@ -161,22 +149,22 @@ function EmployeeProfile() {
       const data = await response.json();
       toast.success(data.message, { id: toastId });
       const updatedEmployee = { ...employee, ...updatedFields };
-      
       setEmployee(updatedEmployee);
-      setFormData(updatedEmployee);
+      setFormData(prevData => ({
+        ...prevData,
+        ...updatedEmployee,
+      }));
       setIsEditing(false);
     } catch (err) {
-      toast.error("Error updating profile" + err.message, { id: toastId });
+      toast.error("Error updating profile: " + err.message, { id: toastId });
     } finally {
       setUpdating(false);
     }
   };
 
-  console.log(formData)
-  
   return (
     <Fragment>
-      {formData !== null ?
+      {employee !== null ?
       (<div className="animate-fadeIn">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#1F2328]">Employee Profile</h1>
@@ -292,130 +280,106 @@ function EmployeeProfile() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">Division</label>
-                    <Select
-                      value={formData?.division_id?.selected?.id || ''}
-                      onValueChange={(value) => {
-                        const selectedDivision = formData?.division_id?.options?.find(
-                          division => division.id === value
-                        );
-                        setFormData({
-                          ...formData,
-                          division_id: {
-                            ...formData.division_id,
-                            selected: selectedDivision
-                          }
-                        });
-                      }}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select division" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 shadow-md">
-                        {formData?.division_id?.options?.map(division => (
-                          <SelectItem key={division.id} value={division.id}>
-                            {division.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <label className="text-sm font-medium text-[#1F2328]">Division</label>
+                      <Select
+                        value={formData.division_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            division_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select division" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.divisions.map(division => (
+                            <SelectItem key={division.id} value={division.id}>
+                              {division.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">Department</label>
-                    <Select
-                      value={formData?.department_id?.selected?.id || ''}
-                      onValueChange={(value) => {
-                        const selectedDepartment = formData?.department_id?.options?.find(
-                          department => department.id === value
-                        );
-                        setFormData({
-                          ...formData,
-                          department_id: {
-                            ...formData.department_id,
-                            selected: selectedDepartment
-                          }
-                        });
-                      }}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 shadow-md">
-                        {formData?.department_id?.options?.map(department => (
-                          <SelectItem key={department.id} value={department.id}>
-                            {department.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-[#1F2328]">Department</label>
+                      <Select
+                        value={formData.department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            department_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.departments.map(department => (
+                            <SelectItem key={department.id} value={department.id}>
+                              {department.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                 </div>
               
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
-                    <Select
-                      value={formData?.sub_department_id?.selected?.id || ''}
-                      onValueChange={(value) => {
-                        const selectedSubDepartment = formData?.sub_department_id?.options?.find(
-                          subDepartment => subDepartment.id === value
-                        );
-                        setFormData({
-                          ...formData,
-                          sub_department_id: {
-                            ...formData.sub_department_id,
-                            selected: selectedSubDepartment
-                          }
-                        });
-                      }}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select sub department" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 shadow-md">
-                        {formData?.sub_department_id?.options?.map(subDepartment => (
-                          <SelectItem key={subDepartment.id} value={subDepartment.id}>
-                            {subDepartment.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                      <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
+                      <Select
+                        value={formData.sub_department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            sub_department_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sub department" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.subDepartments.map(subDepartment => (
+                            <SelectItem key={subDepartment.id} value={subDepartment.id}>
+                              {subDepartment.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">Unit</label>
-                    <Select
-                      value={formData?.unit_id?.selected?.id || ''}
-                      onValueChange={(value) => {
-                        const selectedUnit = formData?.unit_id?.options?.find(
-                          unit => unit.id === value
-                        );
-                        setFormData({
-                          ...formData,
-                          unit_id: {
-                            ...formData.unit_id,
-                            selected: selectedUnit
-                          }
-                        });
-                      }}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300 shadow-md">
-                        {formData?.unit_id?.options?.map(unit => (
-                          <SelectItem key={unit.id} value={unit.id}>
-                            {unit.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-[#1F2328]">Unit</label>
+                      <Select
+                        value={formData.unit_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            unit_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.units.map(unit => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
                     <Input value={formData?.line_manager_id || ''} readOnly />
@@ -513,9 +477,9 @@ function EmployeeProfile() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-gray-300 shadow-md">
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="MALE">Male</SelectItem>
+                        <SelectItem value="FEMALE">Female</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -750,10 +714,10 @@ function EmployeeProfile() {
                   </thead>
                   <tbody>
                     {[
-                      { label: 'Breakfast', value: 'Yes' },
-                      { label: 'Lunch', value: 'Yes' },
-                      { label: 'Beef', value: 'Yes' },
-                      { label: 'Fish', value: 'Yes' },
+                      { label: 'Breakfast', value: formData?.breakfast === 0 ? 'No' : 'Yes' },
+                      { label: 'Lunch', value: formData?.lunch === 0 ? 'No' : 'Yes' },
+                      { label: 'Beef', value: formData?.beef === 0 ? 'No' : 'Yes' },
+                      { label: 'Fish', value: formData?.fish === 0 ? 'No' : 'Yes' },
                     ].map((meal) => (
                       <tr key={meal.label}>
                         <td className="py-2 px-4 border border-gray-300 font-semibold">{meal.label}</td>
@@ -774,8 +738,8 @@ function EmployeeProfile() {
           </div>
         </div>
         </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}
-      </Fragment>
-  );
+    </Fragment>
+  )
 }
 
 export default EmployeeProfile;

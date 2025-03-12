@@ -1,10 +1,44 @@
-import {Layout} from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { RootState } from '@/store';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 export default function ViewLeave() {
+
+  const [leaveData, setLeaveData] = useState(null)
+  const API_URL = import.meta.env.VITE_API_URL;
+  const token = useSelector((state: RootState) => state.auth.userToken);
+
+  const fetchLeaveData = (query = '') => {
+    const url = `${API_URL}/team/leave-records?line_manager_id=2`;
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch employee data');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setLeaveData(data.data);
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
+  };
+
+  useEffect(() => {
+    fetchLeaveData();
+  }, [API_URL, token]);
+
   return (
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex justify-between items-center mb-6">
@@ -14,13 +48,14 @@ export default function ViewLeave() {
           </Button>
         </div>
         
-        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+      {leaveData !== null ?
+        (<div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
           <div className="grid grid-cols-3 gap-4 mb-4">
             <Select>
-              <SelectTrigger className="border border-gray-300 bg-white"> 
+              <SelectTrigger className="border border-gray-300 bg-white">
                 <SelectValue placeholder="Leave Type" />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-gray-300 shadow-md"> 
+              <SelectContent className="bg-white border border-gray-300 shadow-md">
                 <SelectItem value="annual">Annual Leave</SelectItem>
                 <SelectItem value="sick">Sick Leave</SelectItem>
                 <SelectItem value="unpaid">Unpaid Leave</SelectItem>
@@ -33,32 +68,35 @@ export default function ViewLeave() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-100">
-                <TableHead className="text-[#1F2328]">ID</TableHead>
+                <TableHead className="text-[#1F2328]">Id</TableHead>
                 <TableHead className="text-[#1F2328]">Name</TableHead>
-                <TableHead className="text-[#1F2328]">Designation</TableHead>
-                <TableHead className="text-[#1F2328]">Phone</TableHead>
-                <TableHead className="text-[#1F2328]">Joining Date</TableHead>
-                <TableHead className="text-[#1F2328]">Annual Leave Balance</TableHead>
-                <TableHead className="text-[#1F2328]">Sick Leave Balance</TableHead>
+                <TableHead className="text-[#1F2328]">Days</TableHead>
+                <TableHead className="text-[#1F2328]">Description</TableHead>
+                <TableHead className="text-[#1F2328]">Start Date</TableHead>
+                <TableHead className="text-[#1F2328]">End Date</TableHead>
+                <TableHead className="text-[#1F2328]">Type</TableHead>
+                <TableHead className="text-[#1F2328]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="text-[#1F2328]">144</TableCell>
-                <TableCell className="text-[#1F2328]">Rakib Uz Zaman</TableCell>
-                <TableCell className="text-[#1F2328]">HR-Assistant Manager</TableCell>
-                <TableCell className="text-[#1F2328]">01722185586</TableCell>
-                <TableCell className="text-[#1F2328]">2024-04-15</TableCell>
-                <TableCell className="text-[#1F2328]">0.00</TableCell>
-                <TableCell className="text-[#1F2328]">0.00</TableCell>
-              </TableRow>
+              {leaveData.map((leave) => (
+                <TableRow key={leave.id}>
+                  <TableCell className="text-[#1F2328]">{leave.id}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.days}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.description}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.start_date}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.end_date}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.type}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.status}</TableCell>
+                </TableRow>))}
             </TableBody>
           </Table>
           
-          <div className="mt-4 p-4 bg-gray-100 rounded-md text-[#1F2328]">
+          {/* <div className="mt-4 p-4 bg-gray-100 rounded-md text-[#1F2328]">
             <p className="font-medium">No Leave Record</p>
-          </div>
-        </div>
+          </div> */}
+        </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}
       </div>
   );
 }
