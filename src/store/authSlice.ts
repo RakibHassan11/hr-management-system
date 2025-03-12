@@ -273,11 +273,12 @@ export const loginSuperAdmin = createAsyncThunk(
   'auth/loginSuperAdmin',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        'https://api.allinall.social/api/otz-hrm/auth/super-admin/login',
-        credentials,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      // Construct the endpoint URL using the base URL from the .env file
+      const endpoint = `${import.meta.env.VITE_API_URL}/auth/super-admin/login`;
+      const response = await axios.post(endpoint, credentials, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
       if (response.data.success) {
         const { access, refresh, admin } = response.data.data;
         localStorage.setItem('adminInfo', JSON.stringify(admin));
@@ -314,7 +315,9 @@ export const loginUser = createAsyncThunk(
       }
     } catch (error: any) {
       console.error('Login error:', error.response ? error.response.data : error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to log in');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to log in'
+      );
     }
   }
 );
