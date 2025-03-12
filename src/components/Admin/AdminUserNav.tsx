@@ -13,19 +13,18 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { Button } from "../ui/button";
-import { logout } from "@/store/authSlice";
+import { logoutAdmin } from '@/store/authSlice';
 import adminDrop from '../../lovable-uploads/pet.jpg';
 import { RootState } from '@/store/store';
 
 export function AdminUserNav() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // Retrieve admin info from Redux store
   const admin = useSelector((state: RootState) => state.auth.admin);
 
   const handleLogout = () => {
     console.log('handleLogout function called');
-    dispatch(logout());
+    dispatch(logoutAdmin());
     console.log('Redux state cleared');
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
@@ -36,7 +35,6 @@ export function AdminUserNav() {
     console.log('Navigating to admin login page');
   };
 
-  console.log('AdminUserNav component rendered');
 
   return (
     <DropdownMenu>

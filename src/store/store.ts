@@ -1,6 +1,3 @@
-// src/store/store.ts
-console.log('START of store.ts at:', new Date().toISOString());
-
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 
@@ -15,7 +12,7 @@ export const store = configureStore({
   },
 });
 
-console.log('Store initialized successfully at:', new Date().toISOString());
+// console.log('Store initialized successfully at:', new Date().toISOString());
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

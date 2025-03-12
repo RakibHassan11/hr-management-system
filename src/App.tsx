@@ -14,7 +14,7 @@ import ApplyLeave from "./pages/ApplyLeave";
 import Holidays from "./pages/Holidays";
 import MacAddress from "./pages/MacAddress";
 import ImportantLinks from "./pages/ImportantLinks";
-import Employee from "./pages/Employee";
+import Employee from "./pages/employee/Employee";
 import Team from "./pages/Team";
 import Login from "./pages/Login";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
@@ -24,6 +24,8 @@ import {Layout} from "@/components/Layout";
 import { AdminLayout } from "@/components/Admin/AdminLayout";
 import AdminHome from "./components/Admin/Home";
 import AdminEmployee from "./components/Admin/Employee";
+import EmployeeProfile from "./pages/employee/EmployeeProfile";
+import UpdateEmployeeInfo from "./pages/employee/UpdateEmployeeInfo";
 
 const queryClient = new QueryClient();
 
@@ -35,19 +37,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/adminlogin" element={<SuperAdminLogin />} />
 
-            {/* User Routes */}
             <Route path="/user" element={<Navigate to="/user/home" />} />
             <Route path="/user/*" element={<PrivateRoute element={<Layout><UserRoutes /></Layout>} />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<Navigate to="/admin/home" />} />
+            <Route path="/admin" element={<Navigate to="/admin/AdminHome" />} />
             <Route path="/admin/*" element={<PrivateRoute element={<AdminLayout><AdminRoutes /></AdminLayout>} />} />
 
-            {/* Catch-all for invalid routes */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
@@ -56,7 +54,6 @@ const App = () => (
   </QueryClientProvider>
 );
 
-// User Routes (nested under /user/*)
 const UserRoutes = () => (
   <Routes>
     <Route path="home" element={<Home />} />
@@ -69,12 +66,13 @@ const UserRoutes = () => (
     <Route path="mac-address" element={<MacAddress />} />
     <Route path="important-links" element={<ImportantLinks />} />
     <Route path="employee" element={<Employee />} />
+    <Route path="employee/profile" element={<EmployeeProfile />} />
+    <Route path="employee/edit/:emp_id" element={<UpdateEmployeeInfo />} />
     <Route path="team" element={<Team />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
-// Admin Routes (nested under /admin/*)
 const AdminRoutes = () => (
   <Routes>
     <Route path="home" element={<AdminHome />} />

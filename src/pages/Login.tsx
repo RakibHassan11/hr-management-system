@@ -1,69 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Logo from "../lovable-uploads/orangetoolz-logo-orange.png";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "../store/authSlice";
-
-// Define the User type
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, setUserCredentials } from "../store/authSlice";
+import { RootState } from "../store";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { loadingUser, errorUser } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Mock authentication logic
-    if (email === "admin@orangetoolz.com" && password === "admin123") {
-      const mockResponse = {
-        user: {
-          id: "1",
-          name: "Admin User",
-          email: email,
-          role: "admin",
-        },
-        accessToken: "mock-token-admin",
-      };
-      const { user, accessToken } = mockResponse;
-      handleLogin(user, accessToken, "/admin");
-    } else if (email && password) {
-      const mockResponse = {
-        user: {
-          id: "2",
-          name: "Regular User",
-          email: email,
-          role: "user",
-        },
-        accessToken: "mock-token-user",
-      };
-      const { user, accessToken } = mockResponse;
-      handleLogin(user, accessToken, "/user");
-    } else {
-      setError("Invalid email or password. Please try again.");
-    }
-  };
-
-  const handleLogin = (user: User, accessToken: string, path: string) => {
     try {
-      dispatch(setCredentials({ user, accessToken }));
-      localStorage.setItem("token", accessToken);
-      localStorage.setItem("userInfo", JSON.stringify(user));
-      localStorage.setItem("mockRole", user.role);
-      setTimeout(() => navigate(path), 0);
+      await dispatch(loginUser({ email, password })).unwrap();
+      navigate("/user");
     } catch (err) {
-      setError("Failed to log in. Please try again.");
-      console.error("Dispatch error:", err);
+      console.error("User login failed:", err);
     }
   };
 
@@ -76,10 +36,13 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {errorUser && <p className="text-red-500 text-sm">{errorUser}</p>}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-[#1F2328]" htmlFor="email">
+              <label
+                className="text-sm font-medium text-[#1F2328]"
+                htmlFor="email"
+              >
                 Username/Email
               </label>
               <Input
@@ -94,7 +57,10 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-[#1F2328]" htmlFor="password">
+              <label
+                className="text-sm font-medium text-[#1F2328]"
+                htmlFor="password"
+              >
                 Password
               </label>
               <Input
@@ -111,8 +77,9 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold py-2 rounded-md"
+              disabled={loadingUser}
             >
-              LOGIN
+              {loadingUser ? "Logging in..." : "LOGIN"}
             </Button>
             <Button
               variant="link"
