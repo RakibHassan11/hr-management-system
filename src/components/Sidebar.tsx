@@ -17,6 +17,7 @@ const menuItems = [
   { icon: LinkIcon, label: 'Important Links', path: '/user/important-links' },
   { icon: Building2, label: 'Employee', path: '/user/employee' },
   { icon: Users, label: 'Team', path: '/user/team' },
+  { icon: Users, label: 'Team Leave Records', path: '/user/teamleaverecords' }, // New item
 ];
 
 export function Sidebar() {
@@ -80,7 +81,7 @@ export function Sidebar() {
         </ul>
       </nav>
       
-      <div className={`p-4  transition-opacity duration-500 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`p-4 transition-opacity duration-500 ${isCollapsed ? 'opacity-0' : 'opacity-100'}`}>
         <p className="text-xs text-[#1F2328]">Copyright © 2023 - 2025 - All Rights Reserved</p>
       </div>
     </div>
