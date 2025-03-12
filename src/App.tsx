@@ -23,7 +23,7 @@ import PrivateRoute from "@/components/PrivateRoute";
 import {Layout} from "@/components/Layout";
 import { AdminLayout } from "@/components/Admin/AdminLayout";
 import AdminHome from "./components/Admin/Home";
-import AdminEmployee from "./components/Admin/Employee";
+import AdminEmployee from "./components/Admin/AdminEmployee";
 
 const queryClient = new QueryClient();
 
