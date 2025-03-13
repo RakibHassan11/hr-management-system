@@ -3,6 +3,7 @@ import { useEffect, useState, Fragment } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import axios from 'axios';
 import { Textarea } from "@/components/ui/textarea";
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -11,12 +12,23 @@ import toast from 'react-hot-toast';
 
 function UpdateEmployeeInfo() {
   const [employee, setEmployee] = useState(null);
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    division_id: null,
+    department_id: null,
+    sub_department_id: null,
+    unit_id: null,
+  });
+  const [categoryOptions, setCategoryOptions] = useState({
+    divisions: [],
+    departments: [],
+    subDepartments: [],
+    units: [],
+  });
+
   const [updating, setUpdating] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
-  const user = useSelector((state: RootState) => state.auth.user);
 
   const params = useParams()
   const id = params.emp_id
@@ -29,8 +41,45 @@ function UpdateEmployeeInfo() {
       return;
     }
 
-    const fetchEmployeeProfile = async () => {
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const fetchData = async () => {
       try {
+        const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes] = await Promise.all([
+          axios.get(`${API_URL}/divisions/list`, config),
+          axios.get(`${API_URL}/departments/list`, config),
+          axios.get(`${API_URL}/sub-departments/list`, config),
+          axios.get(`${API_URL}/units/list`, config),
+        ]);
+
+        const divisions = divisionsRes.data.data.map(division => ({
+          id: division.id,
+          title: division.title,
+        }));
+        const departments = departmentsRes.data.data.map(department => ({
+          id: department.id,
+          title: department.title,
+        }));
+        const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+          id: subDept.id,
+          title: subDept.title,
+        }));
+        const units = unitsRes.data.data.map(unit => ({
+          id: unit.id,
+          title: unit.title,
+        }));
+
+        setCategoryOptions({
+          divisions,
+          departments,
+          subDepartments,
+          units,
+        });
+
         const response = await fetch(`${API_URL}/employee/my-profile?id=${s_id}`, {
           method: 'GET',
           headers: {
@@ -44,14 +93,25 @@ function UpdateEmployeeInfo() {
         }
 
         const data = await response.json();
-        setEmployee(data.data);
-        setFormData(data.data);
+        const employeeData = data.data;
+
+        setFormData(prevData => ({
+          ...prevData,
+          ...employeeData,
+          division_id: employeeData.division_id || null,
+          department_id: employeeData.department_id || null,
+          sub_department_id: employeeData.sub_department_id || null,
+          unit_id: employeeData.unit_id || null,
+        }));
+
+        setEmployee(employeeData);
       } catch (err) {
-        toast.error("Fetching employee error:" + err.message, { id: toastId });
-      } 
+        setEmployee([])
+        toast.error("Error fetching data: " + err.message), { id: toastId };
+      }
     };
 
-    fetchEmployeeProfile();
+    fetchData();
   }, [API_URL, token, s_id]);
 
   const getDiff = (original, updated) => {
@@ -70,7 +130,7 @@ function UpdateEmployeeInfo() {
       toastId = toast("No changes made!")
       return;
     }
-    const req_body = { ...updatedFields, id: s_id, employee_id: id }
+    const req_body = { ...updatedFields, id: s_id }
 
     try {
       setUpdating(true);
@@ -92,8 +152,12 @@ function UpdateEmployeeInfo() {
       const updatedEmployee = { ...employee, ...updatedFields };
 
       setEmployee(updatedEmployee);
-      setFormData(updatedEmployee);
+      setFormData(prevData => ({
+        ...prevData,
+        ...updatedEmployee,
+      }));
     } catch (err) {
+      setEmployee([])
       toast.error("Error updating info", { id: toastId });
     } finally {
       setUpdating(false);
@@ -102,7 +166,7 @@ function UpdateEmployeeInfo() {
 
   return (
     <Fragment>
-      {formData !== null ?
+      {employee !== null ?
         (<div className="animate-fadeIn">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#1F2328]">Update Employee Profile</h1>
@@ -201,33 +265,97 @@ function UpdateEmployeeInfo() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Division</label>
-                      <Input
-                        value={formData?.division || ''}
-                        onChange={(e) => setFormData({ ...formData, division: e.target.value })}
-                      />
+                      <Select
+                        value={formData.division_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            division_id: value,
+                          }));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select division" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.divisions.map(division => (
+                            <SelectItem key={division.id} value={division.id}>
+                              {division.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Department</label>
-                      <Input
-                        value={formData?.department || ''}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      />
+                      <Select
+                        value={formData.department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            department_id: value,
+                          }));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.departments.map(department => (
+                            <SelectItem key={department.id} value={department.id}>
+                              {department.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <div className="space-y-2">
+                  <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
-                      <Input
-                        value={formData?.sub_department || ''}
-                        onChange={(e) => setFormData({ ...formData, sub_department: e.target.value })}
-                      />
+                      <Select
+                        value={formData.sub_department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            sub_department_id: value,
+                          }));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sub department" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.subDepartments.map(subDepartment => (
+                            <SelectItem key={subDepartment.id} value={subDepartment.id}>
+                              {subDepartment.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Unit</label>
-                      <Input
-                        value={formData?.unit || ''}
-                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                      />
+                      <Select
+                        value={formData.unit_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            unit_id: value,
+                          }));
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.units.map(unit => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
@@ -300,9 +428,9 @@ function UpdateEmployeeInfo() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="MALE">Male</SelectItem>
+                          <SelectItem value="FEMALE">Female</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

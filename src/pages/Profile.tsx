@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from "@/components/ui/textarea";
+import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,21 @@ import toast from 'react-hot-toast';
 
 function Profile() {
   const [employee, setEmployee] = useState(null);
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    division_id: null,
+    department_id: null,
+    sub_department_id: null,
+    unit_id: null,
+    line_manager_id: null
+  });
+
+  const [categoryOptions, setCategoryOptions] = useState({
+    divisions: [],
+    departments: [],
+    subDepartments: [],
+    units: [],
+    lines: [],
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -25,49 +40,71 @@ function Profile() {
       toastId = toast("No authorized user provided!")
       return;
     }
-    const fetchEmployeeProfile = () => {
-        setEmployee(user);
-        setFormData(user);
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     };
 
-    fetchEmployeeProfile();
-  }, []);
-
-  useEffect(() => {
-    const fetchEmployeeNames = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/employee/employee-list-by-role?permission_value=2`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const jsonData = await response.json();
-        const managers = jsonData.data.map(manager => ({
-          id: manager.id,
-          name: manager.name
+        const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes, lineRes] = await Promise.all([
+          axios.get(`${API_URL}/divisions/list`, config),
+          axios.get(`${API_URL}/departments/list`, config),
+          axios.get(`${API_URL}/sub-departments/list`, config),
+          axios.get(`${API_URL}/units/list`, config),
+          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=2`, config),
+        ]);
+
+        const divisions = divisionsRes.data.data.map(division => ({
+          id: division.id,
+          title: division.title,
         }));
+        const departments = departmentsRes.data.data.map(department => ({
+          id: department.id,
+          title: department.title,
+        }));
+        const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+          id: subDept.id,
+          title: subDept.title,
+        }));
+        const units = unitsRes.data.data.map(unit => ({
+          id: unit.id,
+          title: unit.title,
+        }));
+        const lines = lineRes.data.data.map(line => ({
+          id: line.id,
+          name: line.name,
+        }));
+
+        setCategoryOptions({
+          divisions,
+          departments,
+          subDepartments,
+          units,
+          lines
+        });
+
         setFormData(prevData => ({
           ...prevData,
-          line_manager_id: {
-            selected: prevData?.line_manager_id?.selected || null,
-            options: managers
-          }
+          ...user,
+          division_id: user.division_id || null,
+          department_id: user.department_id || null,
+          sub_department_id: user.sub_department_id || null,
+          unit_id: user.unit_id || null,
+          line_manager_id: user.line_manager_id || null,
         }));
-      } catch (error) {
-        console.error("Error fetching employee names:", error);
+
+        setEmployee(user);
+      } catch (err) {
+        setEmployee([])
+        toast.error("Error fetching profile: " + err.message), { id: toastId };
       }
     };
-  
-    fetchEmployeeNames();
-  }, [API_URL, token]);  
+
+    fetchData();
+  }, [API_URL, token]);
 
   const getDiff = (original, updated) => {
     const diff = {};
@@ -104,18 +141,24 @@ function Profile() {
       toast.success(data.message, { id: toastId });
       const updatedEmployee = { ...employee, ...updatedFields };
       setEmployee(updatedEmployee);
-      setFormData(updatedEmployee);
+      setFormData(prevData => ({
+        ...prevData,
+        ...updatedEmployee,
+      }));
       setIsEditing(false);
     } catch (err) {
+      setEmployee([])
       toast.error("Error updating profile" + err.message, { id: toastId });
     } finally {
       setUpdating(false);
     }
   };
 
+  console.log(formData)
+
   return (
     <Fragment>
-      {formData !== null ?
+      {employee !== null ?
         (<div className="animate-fadeIn">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#1F2328]">User Profile</h1>
@@ -193,53 +236,57 @@ function Profile() {
                         onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                         readOnly={!isEditing}
                       />
-                    </div>
-                    {/* <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
-                      <Input value={formData?.line_manager_id || ''} readOnly={!isEditing} />
-                    </div> */}
-                        
-                        <div className="space-y-2">
+                    </div>       
+                   <div className="space-y-2">
                           <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
                           <Select
-                            value={formData?.line_manager_id?.selected?.id || ''}
+                            value={formData.line_manager_id || ''}
                             onValueChange={(value) => {
-                              const selectedManager = formData?.line_manager_id?.options?.find(
-                                manager => manager.id === value
-                              );
-                              if (selectedManager) {
                                 setFormData(prevData => ({
                                   ...prevData,
-                                  line_manager_id: {
-                                    ...prevData.line_manager_id,
-                                    selected: selectedManager
-                                  }
+                                  line_manager_id: value
                                 }));
-                              }
                             }}
                             disabled={!isEditing}
                           >
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="-- Select manager id --" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-gray-300 shadow-md">
-                              {formData?.line_manager_id?.options?.map(manager => (
-                                <SelectItem key={manager.id} value={manager.id}>
-                                  {manager.name}
-                                </SelectItem>
-                              ))}
+                            {categoryOptions.lines?.map(manager => (
+                            <SelectItem key={manager.id} value={manager.id}>
+                              {manager.name}
+                            </SelectItem>
+                          ))}
                             </SelectContent>
                           </Select>
                         </div>
 
-                    <div className="space-y-2">
+                  <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Department</label>
-                      <Input
-                        value={formData?.department || ''}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        readOnly={!isEditing}
-                      />
+                      <Select
+                        value={formData.department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            department_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="-- Select department --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.departments.map(department => (
+                            <SelectItem key={department.id} value={department.id}>
+                              {department.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Confirmed</label>
                       <Input
@@ -250,11 +297,27 @@ function Profile() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Unit</label>
-                      <Input
-                        value={formData?.unit || ''}
-                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                        readOnly={!isEditing}
-                      />
+                      <Select
+                        value={formData.unit_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            unit_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="-- Select unit --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.units.map(unit => (
+                            <SelectItem key={unit.id} value={unit.id}>
+                              {unit.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Employee ID</label>
@@ -283,11 +346,27 @@ function Profile() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Division</label>
-                      <Input
-                        value={formData?.division || ''}
-                        onChange={(e) => setFormData({ ...formData, division: e.target.value })}
-                        readOnly={!isEditing}
-                      />
+                      <Select
+                        value={formData.division_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            division_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="-- Select division --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.divisions.map(division => (
+                            <SelectItem key={division.id} value={division.id}>
+                              {division.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Joining Date</label>
@@ -300,11 +379,27 @@ function Profile() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
-                      <Input
-                        value={formData?.sub_department || ''}
-                        onChange={(e) => setFormData({ ...formData, sub_department: e.target.value })}
-                        readOnly={!isEditing}
-                      />
+                      <Select
+                        value={formData.sub_department_id || ''}
+                        onValueChange={(value) => {
+                          setFormData(prevData => ({
+                            ...prevData,
+                            sub_department_id: value,
+                          }));
+                        }}
+                        disabled={!isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="-- Select sub department --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {categoryOptions.subDepartments.map(subDepartment => (
+                            <SelectItem key={subDepartment.id} value={subDepartment.id}>
+                              {subDepartment.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Confirmation Date</label>
@@ -361,12 +456,12 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Gender --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="MALE">Male</SelectItem>
+                          <SelectItem value="FEMALE">Female</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -395,7 +490,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Status --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="single">Single</SelectItem>
@@ -419,7 +514,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Religion --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="islam">Islam</SelectItem>
@@ -454,7 +549,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Blood Group --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="O+">O+</SelectItem>

@@ -1,19 +1,24 @@
 import ima from '../lovable-uploads/pet.jpg';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
+
 export default function Home() {
+  const user = useSelector((state: RootState) => state.auth.user);
+  console.log(user)
   return (
       <div className="animate-fadeIn p-6 flex flex-col gap-6">
         <div className="flex gap-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328] flex-1">
             <div className="flex items-center gap-6 mb-6">
               <img
-                src={ima}
+                src={ima} 
                 alt="Profile"
                 className="w-24 h-24 rounded-full border-4 border-orange-500"
               />
               <div>
-                <h1 className="text-2xl font-semibold">Rakibul Hassan Rakib</h1>
-                <p className="text-lg text-gray-700">Jr. Software Engineer</p>
-                <p className="text-gray-600">Software Development</p>
+                <h1 className="text-2xl font-semibold">{user?.name}</h1>
+                <p className="text-lg text-gray-700">{user?.designation}</p>
+                <p className="text-gray-600">{user?.department}</p>
               </div>
             </div>
           </div>

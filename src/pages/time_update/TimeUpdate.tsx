@@ -6,6 +6,7 @@ import { RootState } from '@/store';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast'; 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function TimeUpdate() {
   const [type, setType] = useState('');
@@ -16,6 +17,7 @@ export default function TimeUpdate() {
   const [description, setDescription] = useState('');
   const [updating, setUpdating] = useState(false);
   const [errorUpdating, setErrorUpdating] = useState(null);
+  const navigate = useNavigate()
 
   const token = useSelector((state: RootState) => state.auth.userToken);
   const API_URL = import.meta.env.VITE_API_URL;
@@ -43,7 +45,7 @@ export default function TimeUpdate() {
       toastId = toast.loading("Updating time...");
       
       const response = await fetch(`${API_URL}/employee/update-time`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -78,7 +80,12 @@ export default function TimeUpdate() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">New Time Update Request</h1>
-        <Button>
+        <Button
+          onClick={(e) => {
+                navigate(`/user/time-update/time-update-list`);
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           View Time Update Records
         </Button>
       </div>

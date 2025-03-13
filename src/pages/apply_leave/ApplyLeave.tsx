@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RootState } from '@/store';
 import { useSelector } from 'react-redux';
 import toast from 'react-hot-toast'; 
+import { useNavigate } from 'react-router-dom';
 
 export default function ApplyLeave() {
   const [leaveType, setLeaveType] = useState('');
@@ -17,6 +18,7 @@ export default function ApplyLeave() {
   const [errorUpdating, setErrorUpdating] = useState(null);
   const token = useSelector((state: RootState) => state.auth.userToken);
   const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate()
 
   const handleApplyLeave = async () => {
     const start = new Date(startDate);
@@ -29,8 +31,8 @@ export default function ApplyLeave() {
       start_date: new Date(startDate).toISOString(),
       end_date: new Date(endDate).toISOString(),       
       days: diffDays,
-      status: leaveStatus,
       description: description,
+      without_pay: true,
     };
 
     let toastId;
@@ -39,7 +41,7 @@ export default function ApplyLeave() {
       toastId = toast.loading("Applying for leave...");
       
       const response = await fetch(`${API_URL}/employee/update-leave`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -70,7 +72,11 @@ export default function ApplyLeave() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Apply for Leave</h1>
-        <Button>
+        <Button
+          onClick={(e) => {
+                navigate(`/user/apply-leave/leave-record-list`);
+          }}
+          style={{ cursor: 'pointer' }}>
           View Leave Records
         </Button>
       </div>
@@ -82,7 +88,7 @@ export default function ApplyLeave() {
               <label className="block text-sm font-medium">Leave Type:</label>
               <Select onValueChange={(value) => setLeaveType(value)}>
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
-                  <SelectValue placeholder="-- Select --" />
+                  <SelectValue placeholder="-- Select Type --" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
                   <SelectItem value="ANNUAL">ANNUAL</SelectItem>
@@ -96,7 +102,7 @@ export default function ApplyLeave() {
               <label className="block text-sm font-medium">Leave Status:</label>
               <Select onValueChange={(value) => setLeaveStatus(value)}>
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
-                  <SelectValue placeholder="-- Select --" />
+                  <SelectValue placeholder="-- Select Status --" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
                   <SelectItem value="ACTIVE">ACTIVE</SelectItem>

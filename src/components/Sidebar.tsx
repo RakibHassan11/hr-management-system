@@ -4,6 +4,8 @@ import { Home, User, Clock, FileEdit, Plane, Calendar, HardDrive, Link as LinkIc
 import { useState } from 'react';
 import { Button } from './ui/button';
 import logo from '../lovable-uploads/orangetoolz-logo-orange.png';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store'; 
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/user/home' },
@@ -24,6 +26,18 @@ const menuItems = [
 export function Sidebar() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.label === 'Employee' && user?.permission_value === 'TEAM LEAD') {
+      return false;
+    }
+    if (item.label === 'Team' && user?.permission_value === 'HR') {
+      return false; 
+    }
+    return true; 
+  });
 
   return (
     <div 
@@ -52,7 +66,7 @@ export function Sidebar() {
       
       <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-1">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
             return (
