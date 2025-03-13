@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Clock, FileEdit, Plane, Calendar, HardDrive, Link as LinkIcon, Users, Building2, Menu } from 'lucide-react';
+import { Home, User, Clock, FileEdit, Plane, Calendar, HardDrive, Link as LinkIcon, Users, Building2, Timer } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
 import logo from '../lovable-uploads/orangetoolz-logo-orange.png';
@@ -17,7 +17,8 @@ const menuItems = [
   { icon: LinkIcon, label: 'Important Links', path: '/user/important-links' },
   { icon: Building2, label: 'Employee', path: '/user/employee' },
   { icon: Users, label: 'Team', path: '/user/team' },
-  { icon: Users, label: 'Team Leave Records', path: '/user/teamleaverecords' }, // New item
+  { icon: Users, label: 'Leave Records', path: '/user/teamleaverecords' },
+  { icon: Users, label: 'Attendance Records', path: '/user/teamattendancerecords' },
 ];
 
 export function Sidebar() {
@@ -39,7 +40,7 @@ export function Sidebar() {
         <ChevronLeft className={`h-5 w-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
       </Button>
 
-      <div className="p-4 ">
+      <div className="p-4">
         <Link to="/user" className="flex items-center space-x-2">
           <img 
             src={logo} 
