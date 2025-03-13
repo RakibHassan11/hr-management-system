@@ -1,4 +1,3 @@
-// src/components/UserNav.tsx
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,16 +8,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux'; 
+import { logoutUser, logoutAdmin } from "@/store/authSlice";
 import drop from '../lovable-uploads/pet.jpg';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 export function UserNav() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const dispatch = useDispatch(); 
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const handleLogout = () => {
-    // Clear the token from localStorage
-    localStorage.removeItem("token");
-    // Navigate to the login page
-    navigate("/login");
+    const currentPath = window.location.pathname;
+
+    try {
+      if (currentPath.startsWith('/user')) {
+        dispatch(logoutUser());
+        navigate("/login");
+      }
+      else if (currentPath.startsWith('/admin')) {
+        dispatch(logoutAdmin());
+        navigate("/adminlogin");
+      }
+      else {
+        dispatch(logoutUser());
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate("/login");
+    }
   };
 
   return (
@@ -36,8 +56,8 @@ export function UserNav() {
       <DropdownMenuContent className="w-56 bg-white border border-[rgb(74,182,201,0.2)] shadow-lg" align="end">
         <DropdownMenuLabel className="bg-white">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium text-[#1F2328]">Rakib Uz Zaman</p>
-            <p className="text-xs text-[#1F2328]">HR Assistant Manager</p>
+            <p className="text-sm font-medium text-[#1F2328]">{user?.name}</p>
+            <p className="text-xs text-[#1F2328]">{user?.designation}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />

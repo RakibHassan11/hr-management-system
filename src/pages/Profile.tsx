@@ -24,6 +24,7 @@ function Profile() {
     departments: [],
     subDepartments: [],
     units: [],
+    lines: [],
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -74,7 +75,7 @@ function Profile() {
         }));
         const lines = lineRes.data.data.map(line => ({
           id: line.id,
-          title: line.title,
+          name: line.name,
         }));
 
         setCategoryOptions({
@@ -97,6 +98,7 @@ function Profile() {
 
         setEmployee(user);
       } catch (err) {
+        setEmployee([])
         toast.error("Error fetching profile: " + err.message), { id: toastId };
       }
     };
@@ -145,11 +147,14 @@ function Profile() {
       }));
       setIsEditing(false);
     } catch (err) {
+      setEmployee([])
       toast.error("Error updating profile" + err.message, { id: toastId });
     } finally {
       setUpdating(false);
     }
   };
+
+  console.log(formData)
 
   return (
     <Fragment>
@@ -232,7 +237,7 @@ function Profile() {
                         readOnly={!isEditing}
                       />
                     </div>       
-                   {/* <div className="space-y-2">
+                   <div className="space-y-2">
                           <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
                           <Select
                             value={formData.line_manager_id || ''}
@@ -245,17 +250,17 @@ function Profile() {
                             disabled={!isEditing}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select manager id" />
+                              <SelectValue placeholder="-- Select manager id --" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-gray-300 shadow-md">
-                            {categoryOptions.line_managers.map(manager => (
+                            {categoryOptions.lines?.map(manager => (
                             <SelectItem key={manager.id} value={manager.id}>
-                              {manager.title}
+                              {manager.name}
                             </SelectItem>
                           ))}
                             </SelectContent>
                           </Select>
-                        </div> */}
+                        </div>
 
                   <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Department</label>
@@ -270,7 +275,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
+                          <SelectValue placeholder="-- Select department --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.departments.map(department => (
@@ -303,7 +308,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select unit" />
+                          <SelectValue placeholder="-- Select unit --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.units.map(unit => (
@@ -352,7 +357,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select division" />
+                          <SelectValue placeholder="-- Select division --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.divisions.map(division => (
@@ -385,7 +390,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select sub department" />
+                          <SelectValue placeholder="-- Select sub department --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.subDepartments.map(subDepartment => (
@@ -451,7 +456,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Gender --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="MALE">Male</SelectItem>
@@ -485,7 +490,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Status --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="single">Single</SelectItem>
@@ -509,7 +514,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Religion --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="islam">Islam</SelectItem>
@@ -544,7 +549,7 @@ function Profile() {
                         disabled={!isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="-- Select Blood Group --" />
                         </SelectTrigger>
                         <SelectContent className='bg-white border-gray-300 shadow-md'>
                           <SelectItem value="O+">O+</SelectItem>

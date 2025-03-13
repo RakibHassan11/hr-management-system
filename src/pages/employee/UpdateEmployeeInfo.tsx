@@ -106,6 +106,7 @@ function UpdateEmployeeInfo() {
 
         setEmployee(employeeData);
       } catch (err) {
+        setEmployee([])
         toast.error("Error fetching data: " + err.message), { id: toastId };
       }
     };
@@ -156,6 +157,7 @@ function UpdateEmployeeInfo() {
         ...updatedEmployee,
       }));
     } catch (err) {
+      setEmployee([])
       toast.error("Error updating info", { id: toastId });
     } finally {
       setUpdating(false);

@@ -31,6 +31,7 @@ export default function ViewLeave() {
         setLeaveData(data.data);
       })
       .catch((error) => {
+        setLeaveData([]);
         console.error(error.message);
       });
   };

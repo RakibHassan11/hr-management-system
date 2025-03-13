@@ -8,9 +8,9 @@ import { store } from "./store";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ViewAttendance from "./pages/ViewAttendance";
-import TimeUpdate from "./pages/TimeUpdate";
+import TimeUpdate from "./pages/time_update/TimeUpdate";
 import ViewLeave from "./pages/ViewLeave";
-import ApplyLeave from "./pages/ApplyLeave";
+import ApplyLeave from "./pages/apply_leave/ApplyLeave";
 import Holidays from "./pages/Holidays";
 import MacAddress from "./pages/MacAddress";
 import ImportantLinks from "./pages/ImportantLinks";
@@ -26,6 +26,8 @@ import AdminHome from "./components/Admin/Home";
 import AdminEmployee from "./components/Admin/AdminEmployee";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import UpdateEmployeeInfo from "./pages/employee/UpdateEmployeeInfo";
+import LeaveRecords from "./pages/apply_leave/LeaveRecords";
+import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
 
 const queryClient = new QueryClient();
 
@@ -60,8 +62,10 @@ const UserRoutes = () => (
     <Route path="profile" element={<Profile />} />
     <Route path="view-attendance" element={<ViewAttendance />} />
     <Route path="time-update" element={<TimeUpdate />} />
+    <Route path="time-update/time-update-list" element={<TimeUpdatesList />} />
     <Route path="view-leave" element={<ViewLeave />} />
     <Route path="apply-leave" element={<ApplyLeave />} />
+    <Route path="apply-leave/leave-record-list" element={<LeaveRecords />} />
     <Route path="holidays" element={<Holidays />} />
     <Route path="mac-address" element={<MacAddress />} />
     <Route path="important-links" element={<ImportantLinks />} />

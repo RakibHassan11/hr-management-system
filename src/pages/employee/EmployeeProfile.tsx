@@ -106,6 +106,7 @@ function EmployeeProfile() {
 
         setEmployee(employeeData);
       } catch (err) {
+        setEmployee([])
         toast.error("Error fetching data: " + err.message), { id: toastId };
       }
     };
@@ -156,6 +157,7 @@ function EmployeeProfile() {
       }));
       setIsEditing(false);
     } catch (err) {
+      setEmployee([])
       toast.error("Error updating profile: " + err.message, { id: toastId });
     } finally {
       setUpdating(false);
