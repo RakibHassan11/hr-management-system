@@ -28,6 +28,8 @@ import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import UpdateEmployeeInfo from "./pages/employee/UpdateEmployeeInfo";
 import LeaveRecords from "./pages/apply_leave/LeaveRecords";
 import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
+import TeamLeaveRecords from "./pages/TeamLeaveRecords";
+import TeamAttendanceRecords from "./pages/TeamAttendanceRecord.tsx";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +75,8 @@ const UserRoutes = () => (
     <Route path="employee/profile" element={<EmployeeProfile />} />
     <Route path="employee/edit/:emp_id" element={<UpdateEmployeeInfo />} />
     <Route path="team" element={<Team />} />
+    <Route path="teamleaverecords" element={<TeamLeaveRecords/>} />
+    <Route path="teamattendancerecords" element={<TeamAttendanceRecords/>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
