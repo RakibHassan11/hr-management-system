@@ -27,7 +27,7 @@ import AdminEmployee from "./components/Admin/AdminEmployee";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import UpdateEmployeeInfo from "./pages/employee/UpdateEmployeeInfo";
 import TeamLeaveRecords from "./pages/TeamLeaveRecords";
-import TeamAttendanceRecords from "./pages/TeamAttendanceRecord,tsx";
+import TeamAttendanceRecords from "./pages/TeamAttendanceRecord.tsx";
 
 const queryClient = new QueryClient();
 
