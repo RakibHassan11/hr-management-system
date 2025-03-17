@@ -21,6 +21,11 @@ export default function ApplyLeave() {
   const navigate = useNavigate()
 
   const handleApplyLeave = async () => {
+
+    if(!leaveType || !startDate || !endDate || !description) {
+      toast.error("All fields are required");
+      return;
+    }
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
@@ -83,7 +88,7 @@ export default function ApplyLeave() {
       
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex gap-4">
             <div>
               <label className="block text-sm font-medium">Leave Type:</label>
               <Select onValueChange={(value) => setLeaveType(value)}>
@@ -98,21 +103,7 @@ export default function ApplyLeave() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="block text-sm font-medium">Leave Status:</label>
-              <Select onValueChange={(value) => setLeaveStatus(value)}>
-                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                  <SelectValue placeholder="-- Select Status --" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-300 shadow-md">
-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                  <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                  <SelectItem value="PENDING">PENDING</SelectItem>
-                  <SelectItem value="APPROVED">APPROVED</SelectItem>
-                  <SelectItem value="REJECTED">REJECTED</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
             <div>
               <label className="block text-sm font-medium">Start Date:</label>
               <Input

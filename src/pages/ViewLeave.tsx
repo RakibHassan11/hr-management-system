@@ -44,9 +44,6 @@ export default function ViewLeave() {
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Leave Record</h1>
-          <Button>
-            Submit
-          </Button>
         </div>
         
       {leaveData !== null ?

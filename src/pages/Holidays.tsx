@@ -21,6 +21,7 @@ export default function Holidays() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // New loading state for GET
   const { userToken } = useSelector((state: RootState) => state.auth);
 
   // Fetch holidays on mount
@@ -31,6 +32,7 @@ export default function Holidays() {
 
       if (!storedToken) {
         toast.error('No authentication token found. Please log in.');
+        setIsLoading(false);
         return;
       }
 
@@ -49,7 +51,7 @@ export default function Holidays() {
           const formattedHolidays: Holiday[] = result.data.map((holiday: any) => ({
             id: holiday.id,
             title: holiday.title,
-            startday: holiday.start_date.split('T')[0], // "2025-02-01"
+            startday: holiday.start_date.split('T')[0],
             endday: holiday.end_date.split('T')[0],
             day: new Date(holiday.start_date).toLocaleDateString('en-US', { weekday: 'long' }),
             active: holiday.status === 'ACTIVE',
@@ -62,6 +64,8 @@ export default function Holidays() {
       } catch (error) {
         console.error('GET error:', error);
         toast.error('Network error: Could not fetch holidays');
+      } finally {
+        setIsLoading(false); // Done loading, success or failure
       }
     };
 
@@ -115,6 +119,7 @@ export default function Holidays() {
         setIsSaving(false);
         toggleModal();
         // Refetch holidays to sync with server
+        setIsLoading(true);
         const fetchResponse = await fetch('https://api.allinall.social/api/otz-hrm/Holiday/holiday-list', {
           method: 'GET',
           headers: {
@@ -135,6 +140,7 @@ export default function Holidays() {
           }));
           setHolidays(formattedHolidays);
         }
+        setIsLoading(false);
       } else {
         toast.error(result.message || `Failed to create holiday (Status: ${response.status})`);
         setIsSaving(false); // Keep modal open on failure
@@ -181,6 +187,12 @@ export default function Holidays() {
                     <TableCell className="text-[#1F2328]">{holiday.active ? '✔' : '✘'}</TableCell>
                   </TableRow>
                 ))
+              ) : isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-[#1F2328]">
+                    Loading...
+                  </TableCell>
+                </TableRow>
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-[#1F2328]">
