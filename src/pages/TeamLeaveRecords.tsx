@@ -24,13 +24,14 @@ const TeamLeaveRecords = () => {
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { userToken, id } = useSelector((state: RootState) => state.auth); // Extract id directly
+  const { userToken } = useSelector((state: RootState) => state.auth);
+  const { id } = useSelector((state: RootState) => state.auth.user);
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
-      const lineManagerId = id; // Use id from state.auth
+      const lineManagerId = id;
 
       if (!storedToken) {
         setError('No authentication token found. Please log in.');

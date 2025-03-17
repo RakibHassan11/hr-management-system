@@ -25,12 +25,6 @@ export default function Employee() {
     name: '',
   });
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalStatus, setModalStatus] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-
   const fetchEmployees = (query = '', page = currentPage, itemsPerPage = perPage, sortDir = sortDirection, sortField = sortOn) => {
     setLoading(true);
     let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
@@ -93,42 +87,7 @@ export default function Employee() {
   };
 
   const handleEditClick = (employee) => {
-    setSelectedEmployee(employee);
-    setModalOpen(true);
-    setModalLoading(true);
-    const url = `${API_URL}/employee/update-permission`;
-
-    fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id: Number(employee.id), permission: "USER" }),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Permission denied');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setModalMessage('Permission granted! Redirecting...');
-        setModalStatus('success');
-        setModalLoading(false);
-        setTimeout(() => {
-          setModalOpen(false);
-          navigate(`/user/employee/edit/${employee.employee_id}`);
-        }, 2000);
-      })
-      .catch(err => {
-        setModalMessage(err.message || 'Permission denied');
-        setModalStatus('error');
-        setModalLoading(false);
-        setTimeout(() => {
-          setModalOpen(false);
-        }, 2000);
-      });
+    navigate(`/user/employee/profile?id=${employee.id}`);
   };
 
   return (
@@ -180,12 +139,6 @@ export default function Employee() {
                 {employees.map((employee) => (
                   <TableRow
                     key={employee.employee_id}
-                    onClick={(e) => {
-                      if (!e.target.closest('button')) {
-                        navigate(`/user/employee/profile?id=${employee.id}`);
-                      }
-                    }}
-                    style={{ cursor: 'pointer' }}
                   >
                     <TableCell className="text-[#1F2328]">{employee.employee_id}</TableCell>
                     <TableCell className="text-[#1F2328]">{employee.name}</TableCell>
@@ -195,8 +148,7 @@ export default function Employee() {
                     <TableCell className="text-[#1F2328]">{employee.department || 'Development'}</TableCell>
                     <TableCell>
                       <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={() => {
                           handleEditClick(employee);
                         }}
                         className="text-[#fff] bg-[#8e44ad] border-none px-4 py-1.5 text-xs rounded-md cursor-pointer transition-all duration-300 hover:bg-[#860dba]"
@@ -249,38 +201,6 @@ export default function Employee() {
           </>
         )}
       </div>
-
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-          <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 animate-fadeIn">
-            {modalLoading ? (
-              <div className="flex flex-col items-center">
-                <div className="loader mb-4"></div>
-                <p className="text-[#1F2328]">Checking permission...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                {modalStatus === 'success' ? (
-                  <>
-                    <svg className="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <p className="text-[#1F2328] font-semibold">{modalMessage}</p>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <p className="text-[#1F2328] font-semibold">{modalMessage}</p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
