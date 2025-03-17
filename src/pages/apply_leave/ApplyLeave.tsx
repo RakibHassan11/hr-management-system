@@ -20,6 +20,11 @@ export default function ApplyLeave() {
   const navigate = useNavigate()
 
   const handleApplyLeave = async () => {
+
+    if(!leaveType || !startDate || !endDate || !description) {
+      toast.error("All fields are required");
+      return;
+    }
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
@@ -81,7 +86,7 @@ export default function ApplyLeave() {
       
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex gap-4">
             <div>
               <label className="block text-sm font-medium">Leave Type:</label>
               <Select onValueChange={(value) => setLeaveType(value)}>

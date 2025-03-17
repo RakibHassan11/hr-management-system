@@ -23,6 +23,11 @@ export default function TimeUpdate() {
   const API_URL = import.meta.env.VITE_API_URL;
 
   const handleTimeUpdate = async () => {
+    // Check if all fields are filled
+    if (!type || !date || !timeHour || !timeMinute || !timePeriod || !description) {
+      toast.error("All fields are required");
+      return;
+    }
     const hourNum = parseInt(timeHour, 10);
     let convertedHour = hourNum;
     if (timePeriod === 'PM' && hourNum < 12) {
