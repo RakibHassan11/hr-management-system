@@ -1,0 +1,297 @@
+[1mdiff --git a/src/pages/Holidays.tsx b/src/pages/Holidays.tsx[m
+[1mindex 385ef90..c345a4e 100644[m
+[1m--- a/src/pages/Holidays.tsx[m
+[1m+++ b/src/pages/Holidays.tsx[m
+[36m@@ -21,6 +21,7 @@[m [mexport default function Holidays() {[m
+   const [startDate, setStartDate] = useState('');[m
+   const [endDate, setEndDate] = useState('');[m
+   const [isSaving, setIsSaving] = useState(false);[m
+[32m+[m[32m  const [isLoading, setIsLoading] = useState(true); // New loading state for GET[m
+   const { userToken } = useSelector((state: RootState) => state.auth);[m
+ [m
+   // Fetch holidays on mount[m
+[36m@@ -31,6 +32,7 @@[m [mexport default function Holidays() {[m
+ [m
+       if (!storedToken) {[m
+         toast.error('No authentication token found. Please log in.');[m
+[32m+[m[32m        setIsLoading(false);[m
+         return;[m
+       }[m
+ [m
+[36m@@ -49,7 +51,7 @@[m [mexport default function Holidays() {[m
+           const formattedHolidays: Holiday[] = result.data.map((holiday: any) => ({[m
+             id: holiday.id,[m
+             title: holiday.title,[m
+[31m-            startday: holiday.start_date.split('T')[0], // "2025-02-01"[m
+[32m+[m[32m            startday: holiday.start_date.split('T')[0],[m
+             endday: holiday.end_date.split('T')[0],[m
+             day: new Date(holiday.start_date).toLocaleDateString('en-US', { weekday: 'long' }),[m
+             active: holiday.status === 'ACTIVE',[m
+[36m@@ -62,6 +64,8 @@[m [mexport default function Holidays() {[m
+       } catch (error) {[m
+         console.error('GET error:', error);[m
+         toast.error('Network error: Could not fetch holidays');[m
+[32m+[m[32m      } finally {[m
+[32m+[m[32m        setIsLoading(false); // Done loading, success or failure[m
+       }[m
+     };[m
+ [m
+[36m@@ -115,6 +119,7 @@[m [mexport default function Holidays() {[m
+         setIsSaving(false);[m
+         toggleModal();[m
+         // Refetch holidays to sync with server[m
+[32m+[m[32m        setIsLoading(true);[m
+         const fetchResponse = await fetch('https://api.allinall.social/api/otz-hrm/Holiday/holiday-list', {[m
+           method: 'GET',[m
+           headers: {[m
+[36m@@ -135,6 +140,7 @@[m [mexport default function Holidays() {[m
+           }));[m
+           setHolidays(formattedHolidays);[m
+         }[m
+[32m+[m[32m        setIsLoading(false);[m
+       } else {[m
+         toast.error(result.message || `Failed to create holiday (Status: ${response.status})`);[m
+         setIsSaving(false); // Keep modal open on failure[m
+[36m@@ -181,6 +187,12 @@[m [mexport default function Holidays() {[m
+                     <TableCell className="text-[#1F2328]">{holiday.active ? '✔' : '✘'}</TableCell>[m
+                   </TableRow>[m
+                 ))[m
+[32m+[m[32m              ) : isLoading ? ([m
+[32m+[m[32m                <TableRow>[m
+[32m+[m[32m                  <TableCell colSpan={5} className="text-center text-[#1F2328]">[m
+[32m+[m[32m                    Loading...[m
+[32m+[m[32m                  </TableCell>[m
+[32m+[m[32m                </TableRow>[m
+               ) : ([m
+                 <TableRow>[m
+                   <TableCell colSpan={5} className="text-center text-[#1F2328]">[m
+[1mdiff --git a/src/pages/TeamLeaveRecords.tsx b/src/pages/TeamLeaveRecords.tsx[m
+[1mindex a7b925a..fce23f1 100644[m
+[1m--- a/src/pages/TeamLeaveRecords.tsx[m
+[1m+++ b/src/pages/TeamLeaveRecords.tsx[m
+[36m@@ -23,19 +23,30 @@[m [minterface LeaveRecord {[m
+ const TeamLeaveRecords = () => {[m
+   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);[m
+   const [error, setError] = useState<string | null>(null);[m
+[31m-  const { userToken } = useSelector((state: RootState) => state.auth);[m
+[31m-  [m
+[32m+[m[32m  const [isLoading, setIsLoading] = useState(true);[m
+[32m+[m[32m  const { userToken, id } = useSelector((state: RootState) => state.auth); // Extract id directly[m
+   const API_BASE_URL = import.meta.env.VITE_API_URL;[m
+ [m
+   useEffect(() => {[m
+     const fetchLeaveRecords = async () => {[m
+       const storedToken = localStorage.getItem('token_user') || userToken;[m
+[32m+[m[32m      const lineManagerId = id; // Use id from state.auth[m
+[32m+[m
+       if (!storedToken) {[m
+         setError('No authentication token found. Please log in.');[m
+[32m+[m[32m        setIsLoading(false);[m
+[32m+[m[32m        return;[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      if (!lineManagerId) {[m
+[32m+[m[32m        setError('User ID not found. Please ensure you are logged in correctly.');[m
+[32m+[m[32m        setIsLoading(false);[m
+         return;[m
+       }[m
+ [m
+[31m-      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=2`;[m
+[32m+[m[32m      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;[m
+[32m+[m[32m      console.log('Fetching leave records from:', url); // Debug URL[m
+[32m+[m
+       try {[m
+         const response = await fetch(url, {[m
+           method: 'GET',[m
+[36m@@ -46,6 +57,8 @@[m [mconst TeamLeaveRecords = () => {[m
+         });[m
+ [m
+         const result = await response.json();[m
+[32m+[m[32m        console.log('GET response:', result); // Debug response[m
+[32m+[m
+         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {[m
+           setLeaveRecords(result.data);[m
+         } else if (response.status === 401) {[m
+[36m@@ -57,11 +70,13 @@[m [mconst TeamLeaveRecords = () => {[m
+         }[m
+       } catch (error) {[m
+         setError('Network error: Failed to fetch leave records. Please try again later.');[m
+[32m+[m[32m      } finally {[m
+[32m+[m[32m        setIsLoading(false);[m
+       }[m
+     };[m
+ [m
+     fetchLeaveRecords();[m
+[31m-  }, [userToken, API_BASE_URL]);[m
+[32m+[m[32m  }, [userToken, id, API_BASE_URL]); // Add id to dependencies[m
+ [m
+   const formatDate = (dateString: string) => {[m
+     return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');[m
+[36m@@ -123,42 +138,56 @@[m [mconst TeamLeaveRecords = () => {[m
+             </TableRow>[m
+           </TableHeader>[m
+           <TableBody>[m
+[31m-            {leaveRecords.map((record) => ([m
+[31m-              <TableRow key={record.id}>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">{formatDate(record.start_date)}</TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">{formatDate(record.end_date)}</TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">{record.days}</TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium">[m
+[31m-                  <span[m
+[31m-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${[m
+[31m-                      record.status === 'APPROVED'[m
+[31m-                        ? 'bg-green-100 text-green-800'[m
+[31m-                        : record.status === 'REJECTED'[m
+[31m-                        ? 'bg-red-100 text-red-800'[m
+[31m-                        : 'bg-gray-100 text-gray-800'[m
+[31m-                    }`}[m
+[31m-                  >[m
+[31m-                    {record.status}[m
+[31m-                  </span>[m
+[32m+[m[32m            {isLoading ? ([m
+[32m+[m[32m              <TableRow>[m
+[32m+[m[32m                <TableCell colSpan={7} className="text-center text-[#1F2328]">[m
+[32m+[m[32m                  Loading...[m
+                 </TableCell>[m
+[31m-                <TableCell className="text-[#1F2328] font-medium space-x-2">[m
+[31m-                  <button[m
+[31m-                    className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"[m
+[31m-                    onClick={() => handleAction(record.id, 'APPROVED')}[m
+[31m-                  >[m
+[31m-                    <FaCheck />[m
+[31m-                  </button>[m
+[31m-                  <button[m
+[31m-                    className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"[m
+[31m-                    onClick={() => handleAction(record.id, 'REJECTED')}[m
+[31m-                  >[m
+[31m-                    <FaTimes />[m
+[31m-                  </button>[m
+[32m+[m[32m              </TableRow>[m
+[32m+[m[32m            ) : leaveRecords.length > 0 ? ([m
+[32m+[m[32m              leaveRecords.map((record) => ([m
+[32m+[m[32m                <TableRow key={record.id}>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">{formatDate(record.start_date)}</TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">{formatDate(record.end_date)}</TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">{record.days}</TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium">[m
+[32m+[m[32m                    <span[m
+[32m+[m[32m                      className={`px-2 py-1 rounded-full text-xs font-semibold ${[m
+[32m+[m[32m                        record.status === 'APPROVED'[m
+[32m+[m[32m                          ? 'bg-green-100 text-green-800'[m
+[32m+[m[32m                          : record.status === 'REJECTED'[m
+[32m+[m[32m                          ? 'bg-red-100 text-red-800'[m
+[32m+[m[32m                          : 'bg-gray-100 text-gray-800'[m
+[32m+[m[32m                      }`}[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                      {record.status}[m
+[32m+[m[32m                    </span>[m
+[32m+[m[32m                  </TableCell>[m
+[32m+[m[32m                  <TableCell className="text-[#1F2328] font-medium space-x-2">[m
+[32m+[m[32m                    <button[m
+[32m+[m[32m                      className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"[m
+[32m+[m[32m                      onClick={() => handleAction(record.id, 'APPROVED')}[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                      <FaCheck />[m
+[32m+[m[32m                    </button>[m
+[32m+[m[32m                    <button[m
+[32m+[m[32m                      className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"[m
+[32m+[m[32m                      onClick={() => handleAction(record.id, 'REJECTED')}[m
+[32m+[m[32m                    >[m
+[32m+[m[32m                      <FaTimes />[m
+[32m+[m[32m                    </button>[m
+[32m+[m[32m                  </TableCell>[m
+[32m+[m[32m                </TableRow>[m
+[32m+[m[32m              ))[m
+[32m+[m[32m            ) : ([m
+[32m+[m[32m              <TableRow>[m
+[32m+[m[32m                <TableCell colSpan={7} className="text-center text-[#1F2328]">[m
+[32m+[m[32m                  No leave records available[m
+                 </TableCell>[m
+               </TableRow>[m
+[31m-            ))}[m
+[32m+[m[32m            )}[m
+           </TableBody>[m
+         </Table>[m
+       </div>[m
+[1mdiff --git a/src/pages/ViewLeave.tsx b/src/pages/ViewLeave.tsx[m
+[1mindex 58609e8..b8254d3 100644[m
+[1m--- a/src/pages/ViewLeave.tsx[m
+[1m+++ b/src/pages/ViewLeave.tsx[m
+[36m@@ -44,9 +44,6 @@[m [mexport default function ViewLeave() {[m
+       <div className="p-6 bg-white text-[#1F2328] min-h-screen">[m
+         <div className="flex justify-between items-center mb-6">[m
+           <h1 className="text-2xl font-bold">Leave Record</h1>[m
+[31m-          <Button>[m
+[31m-            Submit[m
+[31m-          </Button>[m
+         </div>[m
+         [m
+       {leaveData !== null ?[m
+[1mdiff --git a/src/pages/apply_leave/ApplyLeave.tsx b/src/pages/apply_leave/ApplyLeave.tsx[m
+[1mindex 5ce6c06..c58adf1 100644[m
+[1m--- a/src/pages/apply_leave/ApplyLeave.tsx[m
+[1m+++ b/src/pages/apply_leave/ApplyLeave.tsx[m
+[36m@@ -21,6 +21,11 @@[m [mexport default function ApplyLeave() {[m
+   const navigate = useNavigate()[m
+ [m
+   const handleApplyLeave = async () => {[m
+[32m+[m
+[32m+[m[32m    if(!leaveType || !startDate || !endDate || !description) {[m
+[32m+[m[32m      toast.error("All fields are required");[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+     const start = new Date(startDate);[m
+     const end = new Date(endDate);[m
+     const diffTime = Math.abs(end - start);[m
+[36m@@ -83,7 +88,7 @@[m [mexport default function ApplyLeave() {[m
+       [m
+       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">[m
+         <div className="space-y-4">[m
+[31m-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">[m
+[32m+[m[32m          <div className="flex gap-4">[m
+             <div>[m
+               <label className="block text-sm font-medium">Leave Type:</label>[m
+               <Select onValueChange={(value) => setLeaveType(value)}>[m
+[36m@@ -98,21 +103,7 @@[m [mexport default function ApplyLeave() {[m
+                 </SelectContent>[m
+               </Select>[m
+             </div>[m
+[31m-            <div>[m
+[31m-              <label className="block text-sm font-medium">Leave Status:</label>[m
+[31m-              <Select onValueChange={(value) => setLeaveStatus(value)}>[m
+[31m-                <SelectTrigger className="w-full border border-gray-300 bg-white">[m
+[31m-                  <SelectValue placeholder="-- Select Status --" />[m
+[31m-                </SelectTrigger>[m
+[31m-                <SelectContent className="bg-white border border-gray-300 shadow-md">[m
+[31m-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>[m
+[31m-                  <SelectItem value="INACTIVE">INACTIVE</SelectItem>[m
+[31m-                  <SelectItem value="PENDING">PENDING</SelectItem>[m
+[31m-                  <SelectItem value="APPROVED">APPROVED</SelectItem>[m
+[31m-                  <SelectItem value="REJECTED">REJECTED</SelectItem>[m
+[31m-                </SelectContent>[m
+[31m-              </Select>[m
+[31m-            </div>[m
+[32m+[m
+             <div>[m
+               <label className="block text-sm font-medium">Start Date:</label>[m
+               <Input[m
+[1mdiff --git a/src/pages/time_update/TimeUpdate.tsx b/src/pages/time_update/TimeUpdate.tsx[m
+[1mindex efa6ee9..754e472 100644[m
+[1m--- a/src/pages/time_update/TimeUpdate.tsx[m
+[1m+++ b/src/pages/time_update/TimeUpdate.tsx[m
+[36m@@ -23,6 +23,11 @@[m [mexport default function TimeUpdate() {[m
+   const API_URL = import.meta.env.VITE_API_URL;[m
+ [m
+   const handleTimeUpdate = async () => {[m
+[32m+[m[32m    // Check if all fields are filled[m
+[32m+[m[32m    if (!type || !date || !timeHour || !timeMinute || !timePeriod || !description) {[m
+[32m+[m[32m      toast.error("All fields are required");[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+     const hourNum = parseInt(timeHour, 10);[m
+     let convertedHour = hourNum;[m
+     if (timePeriod === 'PM' && hourNum < 12) {[m

@@ -5,6 +5,7 @@ import { RootState } from '../store';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import moment from 'moment-timezone';
+import Swal from 'sweetalert2';
 
 interface LeaveRecord {
   id: number;
@@ -24,13 +25,16 @@ const TeamLeaveRecords = () => {
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { userToken, id } = useSelector((state: RootState) => state.auth); // Extract id directly
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
+  const { userToken } = useSelector((state: RootState) => state.auth);
+  const { id } = useSelector((state: RootState) => state.auth.user);
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
-      const lineManagerId = id; // Use id from state.auth
+      const lineManagerId = id;
 
       if (!storedToken) {
         setError('No authentication token found. Please log in.');
@@ -45,7 +49,7 @@ const TeamLeaveRecords = () => {
       }
 
       const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
-      console.log('Fetching leave records from:', url); // Debug URL
+      console.log('Fetching leave records from:', url);
 
       try {
         const response = await fetch(url, {
@@ -57,7 +61,7 @@ const TeamLeaveRecords = () => {
         });
 
         const result = await response.json();
-        console.log('GET response:', result); // Debug response
+        console.log('GET response:', result);
 
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
           setLeaveRecords(result.data);
@@ -76,7 +80,7 @@ const TeamLeaveRecords = () => {
     };
 
     fetchLeaveRecords();
-  }, [userToken, id, API_BASE_URL]); // Add id to dependencies
+  }, [userToken, id, API_BASE_URL]);
 
   const formatDate = (dateString: string) => {
     return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
@@ -86,6 +90,22 @@ const TeamLeaveRecords = () => {
     const storedToken = localStorage.getItem('token_user') || userToken;
     if (!storedToken) {
       toast.error('No authentication token found. Please log in.');
+      return;
+    }
+
+    const actionText = newStatus === 'APPROVED' ? 'approve' : 'reject';
+    const result = await Swal.fire({
+      title: `Are you sure you want to ${actionText} this leave request?`,
+      text: "This action will update the leave status.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes',
+      cancelButtonText: 'No',
+    });
+
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -101,8 +121,8 @@ const TeamLeaveRecords = () => {
 
       const result = await response.json();
       if (response.ok && result.success) {
-        setLeaveRecords(prevRecords =>
-          prevRecords.map(record =>
+        setLeaveRecords((prevRecords) =>
+          prevRecords.map((record) =>
             record.id === recordId ? { ...record, ...result.data } : record
           )
         );
@@ -112,6 +132,18 @@ const TeamLeaveRecords = () => {
       }
     } catch (error) {
       toast.error('Network error: Failed to update leave record. Please try again later.');
+    }
+  };
+
+  // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = leaveRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(leaveRecords.length / recordsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -144,8 +176,8 @@ const TeamLeaveRecords = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : leaveRecords.length > 0 ? (
-              leaveRecords.map((record) => (
+            ) : currentRecords.length > 0 ? (
+              currentRecords.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
@@ -166,18 +198,22 @@ const TeamLeaveRecords = () => {
                     </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium space-x-2">
-                    <button
-                      className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                      onClick={() => handleAction(record.id, 'APPROVED')}
-                    >
-                      <FaCheck />
-                    </button>
-                    <button
-                      className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                      onClick={() => handleAction(record.id, 'REJECTED')}
-                    >
-                      <FaTimes />
-                    </button>
+                    {record.status !== 'APPROVED' && (
+                      <button
+                        className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
+                        onClick={() => handleAction(record.id, 'APPROVED')}
+                      >
+                        <FaCheck />
+                      </button>
+                    )}
+                    {record.status !== 'REJECTED' && (
+                      <button
+                        className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
+                        onClick={() => handleAction(record.id, 'REJECTED')}
+                      >
+                        <FaTimes />
+                      </button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -190,9 +226,29 @@ const TeamLeaveRecords = () => {
             )}
           </TableBody>
         </Table>
+        <div className="flex justify-between items-center p-4">
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="text-[#1F2328]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default TeamLeaveRecords;
+

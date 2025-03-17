@@ -81,13 +81,6 @@ const Login = () => {
             >
               {loadingUser ? "Logging in..." : "LOGIN"}
             </Button>
-            <Button
-              variant="link"
-              onClick={() => navigate("/adminlogin")}
-              className="w-full text-[#EA580C]"
-            >
-              Login as Super Admin
-            </Button>
           </form>
         </div>
       </div>
