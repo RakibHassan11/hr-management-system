@@ -1,69 +1,91 @@
-import {Layout} from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import moment from 'moment-timezone';
 
-export default function ViewAttendance() {
-  return (
-      <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Attendance Record</h1>
-          <Button >
-            Submit
-          </Button>
-        </div>
-       
-        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-          <div className="grid grid-cols-3 gap-4 mb-4">
-          <Select>
-          <SelectTrigger className="border border-gray-300 bg-white"> {/* Ensure white background */}
-            <SelectValue placeholder="Attendance" />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-300 shadow-md"> {/* Set dropdown background to white */}
-            <SelectItem value="present">Present</SelectItem>
-            <SelectItem value="absent">Absent</SelectItem>
-            <SelectItem value="leave">Leave</SelectItem>
-          </SelectContent>
-        </Select>
-
-            <Input type="date" className="border border-gray-300" defaultValue="2025-02-01" />
-            <Input type="date" className="border border-gray-300" defaultValue="2025-02-18" />
-          </div>
-          
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                <TableHead className="text-[#1F2328]">Date</TableHead>
-                <TableHead className="text-[#1F2328]">Day</TableHead>
-                <TableHead className="text-[#1F2328]">Shift</TableHead>
-                <TableHead className="text-[#1F2328]">In Time</TableHead>
-                <TableHead className="text-[#1F2328]">Out Time</TableHead>
-                <TableHead className="text-[#1F2328]">Duration</TableHead>
-                <TableHead className="text-[#1F2328]">Status</TableHead>
-                <TableHead className="text-[#1F2328]">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(10)].map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell className="text-[#1F2328]">2025-02-{String(index + 1).padStart(2, '0')}</TableCell>
-                  <TableCell className="text-[#1F2328]">Monday</TableCell>
-                  <TableCell className="text-[#1F2328]">General Shift (10:00-19:00)</TableCell>
-                  <TableCell className="text-[#1F2328]">09:30 AM</TableCell>
-                  <TableCell className="text-[#1F2328]">07:30 PM</TableCell>
-                  <TableCell className="text-[#1F2328]">09:00</TableCell>
-                  <TableCell className="text-[#1F2328]">Present</TableCell>
-                  <TableCell>
-                    <Button>
-                      Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-  );
+interface AttendanceRecord {
+  id: number;
+  employee_id: number;
+  employee_name: string;
+  permission_value: string;
+  date: string;
+  time: string;
+  type: string;
+  status: string;
+  description: string;
+  created_at: string;
 }
+
+const TeamAttendanceRecord = () => {
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const { userToken } = useSelector((state: RootState) => state.auth);
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    const fetchAttendanceRecords = async () => {
+      const storedToken = localStorage.getItem('token_user') || userToken;
+      if (!storedToken) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/team/attendance-record?line_manager_id=2`, {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+        if (response.status === 200 && result.message === 'ATTENDANCE_REQUESTS_FETCHED') {
+          setAttendanceRecords(result.data);
+        }
+      } catch (error) {
+        console.log('Fetch error:', error);
+      }
+    };
+
+    fetchAttendanceRecords();
+  }, [userToken, API_BASE_URL]);
+
+  const formatDate = (dateString: string) => {
+    return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
+  };
+
+  const formatTime = (timeString: string) => {
+    const date = timeString.includes('T') ? timeString : `1970-01-01T${timeString}Z`;
+    return moment.utc(date).tz('Asia/Dhaka').format('hh:mm A');
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-[#1F2328] mb-6">Team Attendance Records</h1>
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1F2328]/30">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-[#E0E0E0]">
+              <TableHead className="text-[#1F2328] font-semibold">Employee Name</TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">Date</TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">Time</TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">Type</TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {attendanceRecords.map((record) => (
+              <TableRow key={record.id}>
+                <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
+                <TableCell className="text-[#1F2328] font-medium">{formatDate(record.date)}</TableCell>
+                <TableCell className="text-[#1F2328] font-medium">{formatTime(record.time)}</TableCell>
+                <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
+                <TableCell className="text-[#1F2328] font-medium">{record.status}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default TeamAttendanceRecord;

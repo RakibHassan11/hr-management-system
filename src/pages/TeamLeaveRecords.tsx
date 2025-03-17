@@ -3,6 +3,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { FaCheck, FaTimes } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+import moment from 'moment-timezone';
 
 interface LeaveRecord {
   id: number;
@@ -23,7 +25,6 @@ const TeamLeaveRecords = () => {
   const [error, setError] = useState<string | null>(null);
   const { userToken } = useSelector((state: RootState) => state.auth);
   
-  // Use the environment variable for the base API URL
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -63,42 +64,39 @@ const TeamLeaveRecords = () => {
   }, [userToken, API_BASE_URL]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
   };
 
   const handleAction = async (recordId: number, newStatus: string) => {
     const storedToken = localStorage.getItem('token_user') || userToken;
     if (!storedToken) {
-      alert('No authentication token found. Please log in.');
+      toast.error('No authentication token found. Please log in.');
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/team/leave-records/${recordId}`, {
+      const response = await fetch('https://api.allinall.social/api/otz-hrm/employee/update-leave-status', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ id: recordId, status: newStatus }),
       });
 
       const result = await response.json();
       if (response.ok && result.success) {
         setLeaveRecords(prevRecords =>
           prevRecords.map(record =>
-            record.id === recordId ? { ...record, status: newStatus } : record
+            record.id === recordId ? { ...record, ...result.data } : record
           )
         );
+        toast.success('Leave status updated successfully');
       } else {
-        alert(result.message || 'Failed to update leave record.');
+        toast.error(result.message || 'Failed to update leave record.');
       }
     } catch (error) {
-      alert('Network error: Failed to update leave record. Please try again later.');
+      toast.error('Network error: Failed to update leave record. Please try again later.');
     }
   };
 
@@ -147,13 +145,13 @@ const TeamLeaveRecords = () => {
                 </TableCell>
                 <TableCell className="text-[#1F2328] font-medium space-x-2">
                   <button
-                    className="p-2 rounded bg-gray-500 text-white"
+                    className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
                     onClick={() => handleAction(record.id, 'APPROVED')}
                   >
                     <FaCheck />
                   </button>
                   <button
-                    className="p-2 rounded bg-gray-500 text-white"
+                    className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
                     onClick={() => handleAction(record.id, 'REJECTED')}
                   >
                     <FaTimes />
