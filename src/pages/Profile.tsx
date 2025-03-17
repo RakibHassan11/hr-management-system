@@ -32,6 +32,7 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
   const user = useSelector((state: RootState) => state.auth.user);
+  console.log(user)
 
   let toastId;
   useEffect(() => {
@@ -118,34 +119,41 @@ function Profile() {
   const handleSaveProfile = async () => {
     const updatedFields = getDiff(employee, formData);
     if (Object.keys(updatedFields).length === 0) {
-      toastId = toast("No changes made!")
+      toastId = toast("No changes made!");
       return;
     }
     try {
       setUpdating(true);
       toastId = toast.loading("Updating user profile...");
       const response = await fetch(`${API_URL}/employee/update-profile`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedFields),
       });
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
       const data = await response.json();
       toast.success(data.message, { id: toastId });
+  
       const updatedEmployee = { ...employee, ...updatedFields };
       setEmployee(updatedEmployee);
-      setFormData(prevData => ({
+      setFormData((prevData) => ({
         ...prevData,
         ...updatedEmployee,
       }));
+  
+      const currentUserInfo = localStorage.getItem("userInfo")
+        ? JSON.parse(localStorage.getItem("userInfo")!)
+        : {};
+      const updatedUserInfo = { ...currentUserInfo, ...updatedFields };
+      localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo));
     } catch (err) {
-      setEmployee([])
-      toast.error("Error updating profile" + err.message, { id: toastId });
+      setEmployee([]);
+      toast.error("Error updating profile: " + err.message, { id: toastId });
     } finally {
       setUpdating(false);
     }
@@ -227,6 +235,7 @@ function Profile() {
                       <Input
                         value={formData?.designation || ''}
                         onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                        readOnly
                       />
                     </div>       
                    <div className="space-y-2">
@@ -239,6 +248,7 @@ function Profile() {
                                   line_manager_id: value
                                 }));
                             }}
+                            disabled
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="-- Select manager id --" />
@@ -263,6 +273,7 @@ function Profile() {
                             department_id: value,
                           }));
                         }}
+                        disabled
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select department --" />
@@ -282,6 +293,7 @@ function Profile() {
                       <Input
                         value={formData?.confirmed || ''}
                         onChange={(e) => setFormData({ ...formData, confirmed: e.target.value })}
+                        readOnly
                       />
                     </div>
                     <div className="space-y-2">
@@ -294,6 +306,7 @@ function Profile() {
                             unit_id: value,
                           }));
                         }}
+                        disabled
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select unit --" />
@@ -311,7 +324,9 @@ function Profile() {
                       <label className="text-sm font-medium text-[#1F2328]">Employee ID</label>
                       <Input
                         value={Number(formData?.id) + 1000 || ''}
-                        onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} className="bg-gray-50" />
+                        onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} className="bg-gray-50"
+                        readOnly
+                      />
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -320,6 +335,7 @@ function Profile() {
                       <Input
                         value={formData?.email || ''}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        readOnly
                       />
                     </div>
                     <div className="space-y-2">
@@ -339,6 +355,7 @@ function Profile() {
                             division_id: value,
                           }));
                         }}
+                        disabled
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select division --" />
@@ -358,6 +375,7 @@ function Profile() {
                         type="date"
                         value={formData?.joining_date ? formData.joining_date.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
+                        readOnly
                       />
                     </div>
                     <div className="space-y-2">
@@ -370,6 +388,7 @@ function Profile() {
                             sub_department_id: value,
                           }));
                         }}
+                        disabled
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select sub department --" />
@@ -389,19 +408,20 @@ function Profile() {
                         type="date"
                         value={formData?.confirmation_date ? formData.confirmation_date.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })}
+                        readOnly
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Default Shift</label>
                       <Input
                         value={formData?.default_shift || ''}
-                        onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })} />
+                        onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })} readOnly />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Employment Type</label>
                       <Input
                         value={formData?.emp_type || ''}
-                        onChange={(e) => setFormData({ ...formData, emp_type: e.target.value })} />
+                        onChange={(e) => setFormData({ ...formData, emp_type: e.target.value })} readOnly />
                     </div>
                   </div>
                 </div>

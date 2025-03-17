@@ -27,25 +27,25 @@ const menuItems = [
     icon: Building2, 
     label: 'Employee', 
     path: '/user/employee', 
-    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' 
+    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' || user?.permission_value === 'EMPLOYEE' 
   },
   { 
     icon: Users, 
     label: 'Team', 
     path: '/user/team', 
-    hideCondition: (user) => user?.permission_value === 'HR' 
+    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE' 
   },
   { 
     icon: Users, 
     label: 'Leave Records', 
     path: '/user/teamleaverecords', 
-    hideCondition: (user) => user?.permission_value === 'HR'
+    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE'
   },
   { 
     icon: Users, 
     label: 'Attendance Records', 
     path: '/user/teamattendancerecords', 
-    hideCondition: (user) => user?.permission_value === 'HR'
+    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE'
   },
 ];
 

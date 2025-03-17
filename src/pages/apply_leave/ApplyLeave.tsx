@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function ApplyLeave() {
   const [leaveType, setLeaveType] = useState('');
-  const [leaveStatus, setLeaveStatus] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [description, setDescription] = useState('');
@@ -53,7 +52,6 @@ export default function ApplyLeave() {
       toast.success(data.message, { id: toastId });
       
       setLeaveType('');
-      setLeaveStatus('');
       setStartDate('');
       setEndDate('');
       setDescription('');
@@ -95,21 +93,6 @@ export default function ApplyLeave() {
                   <SelectItem value="SICK">SICK</SelectItem>
                   <SelectItem value="CASUAL">CASUAL</SelectItem>
                   <SelectItem value="OTHER">OTHER</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Leave Status:</label>
-              <Select onValueChange={(value) => setLeaveStatus(value)}>
-                <SelectTrigger className="w-full border border-gray-300 bg-white">
-                  <SelectValue placeholder="-- Select Status --" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-300 shadow-md">
-                  <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                  <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                  <SelectItem value="PENDING">PENDING</SelectItem>
-                  <SelectItem value="APPROVED">APPROVED</SelectItem>
-                  <SelectItem value="REJECTED">REJECTED</SelectItem>
                 </SelectContent>
               </Select>
             </div>
