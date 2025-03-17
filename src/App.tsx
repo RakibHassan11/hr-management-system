@@ -7,7 +7,8 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
-import ViewAttendance from "./pages/ViewAttendance";
+import ViewAttendance from "./pages/ViewAttendance.tsx";
+import AllAttendance from "./pages/AllAttendance.tsx";
 import TimeUpdate from "./pages/time_update/TimeUpdate";
 import ViewLeave from "./pages/ViewLeave";
 import ApplyLeave from "./pages/apply_leave/ApplyLeave";
@@ -63,6 +64,7 @@ const UserRoutes = () => (
     <Route path="home" element={<Home />} />
     <Route path="profile" element={<Profile />} />
     <Route path="view-attendance" element={<ViewAttendance />} />
+    <Route path="all-attendance" element={<AllAttendance />} />
     <Route path="time-update" element={<TimeUpdate />} />
     <Route path="time-update/time-update-list" element={<TimeUpdatesList />} />
     <Route path="view-leave" element={<ViewLeave />} />

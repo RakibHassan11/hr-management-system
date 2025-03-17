@@ -44,9 +44,6 @@ export default function ViewLeave() {
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Leave Record</h1>
-          <Button>
-            Submit
-          </Button>
         </div>
         
       {leaveData !== null ?
@@ -86,18 +83,26 @@ export default function ViewLeave() {
                   <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.days}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.description}</TableCell>
-                  <TableCell className="text-[#1F2328]">{leave.start_date}</TableCell>
-                  <TableCell className="text-[#1F2328]">{leave.end_date}</TableCell>
+                  <TableCell className="text-[#1F2328]">
+                    {leave.start_date ? new Date(leave.start_date).toLocaleDateString('en-BD', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                    }) : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-[#1F2328]">
+                    {leave.end_date ? new Date(leave.end_date).toLocaleDateString('en-BD', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                    }) : 'N/A'}
+                  </TableCell>
                   <TableCell className="text-[#1F2328]">{leave.type}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.status}</TableCell>
                 </TableRow>))}
             </TableBody>
           </Table>
-          
-          {/* <div className="mt-4 p-4 bg-gray-100 rounded-md text-[#1F2328]">
-            <p className="font-medium">No Leave Record</p>
-          </div> */}
-        </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}
+        </div>) : (<p className="text-center text-gray-600">Loading leave records...</p>)}
       </div>
   );
 }

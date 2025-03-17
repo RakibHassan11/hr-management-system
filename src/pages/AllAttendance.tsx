@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useNavigate } from 'react-router-dom';
+import { formatDate, formatTime } from '@/components/utils/dateHelper';
 
-export default function Employee() {
+export default function AllAttendance() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,15 +26,12 @@ export default function Employee() {
     name: '',
   });
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalStatus, setModalStatus] = useState('');
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-
   const fetchEmployees = (query = '', page = currentPage, itemsPerPage = perPage, sortDir = sortDirection, sortField = sortOn) => {
     setLoading(true);
-    let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
+    // let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
+
+    let url = `${API_URL}/employee-attendance/attendance-list`;
+
     if (query) {
       url += `&query=${query}`;
     }
@@ -46,6 +44,7 @@ export default function Employee() {
       },
     })
       .then((response) => {
+        console.log(response)
         if (!response.ok) {
           throw new Error('Failed to fetch employee data');
         }
@@ -53,10 +52,10 @@ export default function Employee() {
       })
       .then((data) => {
         setEmployees(data.data);
-        setTotalPages(data.extraData.totalPages);
-        setCurrentPage(data.extraData.currentPage);
-        setPerPage(data.extraData.perPage);
-        setTotalItems(data.extraData.total);
+        setTotalPages(data?.extraData?.totalPages);
+        setCurrentPage(data?.extraData?.currentPage);
+        setPerPage(data?.extraData?.perPage);
+        setTotalItems(data?.extraData?.total);
         setLoading(false);
       })
       .catch((error) => {
@@ -92,48 +91,20 @@ export default function Employee() {
     fetchEmployees(employeeData.name, currentPage, perPage, newSortDirection, field);
   };
 
-  const handleEditClick = (employee) => {
-    setSelectedEmployee(employee);
-    setModalOpen(true);
-    setModalLoading(true);
-    const url = `${API_URL}/employee/update-permission`;
-
-    fetch(url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ id: Number(employee.id), permission: "USER" }),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Permission denied');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setModalMessage('Permission granted! Redirecting...');
-        setModalStatus('success');
-        setModalLoading(false);
-        setTimeout(() => {
-          setModalOpen(false);
-          navigate(`/user/employee/edit/${employee.employee_id}`);
-        }, 2000);
-      })
-      .catch(err => {
-        setModalMessage(err.message || 'Permission denied');
-        setModalStatus('error');
-        setModalLoading(false);
-        setTimeout(() => {
-          setModalOpen(false);
-        }, 2000);
-      });
-  };
+  if (loading) {
+    return (
+        <p className="text-center text-gray-600">Loading all attendances...</p>
+    )
+  } 
+  if (error) {
+    return (
+      <p className="text-center text-red-500">{error}</p>
+    )
+  } 
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Employee List</h1>
+      <h1 className="text-2xl font-bold mb-4">Employee Attendance</h1>
       
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
         <div className="w-full flex items-center space-x-4">
@@ -153,27 +124,24 @@ export default function Employee() {
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-        {loading && <p className="text-center text-gray-600">Loading employees...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
-        
         {!loading && !error && (
           <>
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-100">
-                  <TableHead className="text-[#1F2328]" onClick={() => handleSortChange('employee_id')}>
+                  <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('employee_id')}>
                     ID {sortOn === 'employee_id' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('name')}>
-                    Name {sortOn === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  <TableHead className="text-[#1F2328] cursor-pointer">
+                    Employee ID
                   </TableHead>
-                  <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('email')}>
-                    Email {sortOn === 'email' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  <TableHead className="text-[#1F2328] cursor-pointer">
+                    Date
                   </TableHead>
-                  <TableHead className="text-[#1F2328]">Phone</TableHead>
-                  <TableHead className="text-[#1F2328]">Designation</TableHead>
-                  <TableHead className="text-[#1F2328]">Department</TableHead>
-                  <TableHead className="text-[#1F2328]">Action</TableHead>
+                  <TableHead className="text-[#1F2328]">Time</TableHead>
+                  <TableHead className="text-[#1F2328]">Device</TableHead>
+                  <TableHead className="text-[#1F2328]">Comment</TableHead>
+                  <TableHead className="text-[#1F2328]">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -187,23 +155,13 @@ export default function Employee() {
                     }}
                     style={{ cursor: 'pointer' }}
                   >
+                    <TableCell className="text-[#1F2328]">{employee.id}</TableCell>
                     <TableCell className="text-[#1F2328]">{employee.employee_id}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.name}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.email}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.phone || 'N/A'}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.designation || 'N/A'}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.department || 'Development'}</TableCell>
-                    <TableCell>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(employee);
-                        }}
-                        className="text-[#fff] bg-[#8e44ad] border-none px-4 py-1.5 text-xs rounded-md cursor-pointer transition-all duration-300 hover:bg-[#860dba]"
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
+                    <TableCell className="text-[#1F2328]">{formatDate(employee.date)}</TableCell>
+                    <TableCell className="text-[#1F2328]">{formatTime(employee.time)}</TableCell>
+                    <TableCell className="text-[#1F2328]">{employee.device}</TableCell>
+                    <TableCell className="text-[#1F2328]">{employee.comment}</TableCell>
+                    <TableCell className="text-[#1F2328]">{employee.status}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -249,39 +207,8 @@ export default function Employee() {
           </>
         )}
       </div>
-
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black opacity-50"></div>
-          <div className="relative bg-white rounded-lg shadow-lg p-6 z-10 animate-fadeIn">
-            {modalLoading ? (
-              <div className="flex flex-col items-center">
-                <div className="loader mb-4"></div>
-                <p className="text-[#1F2328]">Checking permission...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                {modalStatus === 'success' ? (
-                  <>
-                    <svg className="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <p className="text-[#1F2328] font-semibold">{modalMessage}</p>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-12 h-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <p className="text-[#1F2328] font-semibold">{modalMessage}</p>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
 

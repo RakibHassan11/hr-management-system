@@ -23,19 +23,30 @@ interface LeaveRecord {
 const TeamLeaveRecords = () => {
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { userToken } = useSelector((state: RootState) => state.auth);
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const { userToken, id } = useSelector((state: RootState) => state.auth); // Extract id directly
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
+      const lineManagerId = id; // Use id from state.auth
+
       if (!storedToken) {
         setError('No authentication token found. Please log in.');
+        setIsLoading(false);
         return;
       }
 
-      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=2`;
+      if (!lineManagerId) {
+        setError('User ID not found. Please ensure you are logged in correctly.');
+        setIsLoading(false);
+        return;
+      }
+
+      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
+      console.log('Fetching leave records from:', url); // Debug URL
+
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -46,6 +57,8 @@ const TeamLeaveRecords = () => {
         });
 
         const result = await response.json();
+        console.log('GET response:', result); // Debug response
+
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
           setLeaveRecords(result.data);
         } else if (response.status === 401) {
@@ -57,11 +70,13 @@ const TeamLeaveRecords = () => {
         }
       } catch (error) {
         setError('Network error: Failed to fetch leave records. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchLeaveRecords();
-  }, [userToken, API_BASE_URL]);
+  }, [userToken, id, API_BASE_URL]); // Add id to dependencies
 
   const formatDate = (dateString: string) => {
     return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
@@ -123,42 +138,56 @@ const TeamLeaveRecords = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {leaveRecords.map((record) => (
-              <TableRow key={record.id}>
-                <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">{formatDate(record.start_date)}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">{formatDate(record.end_date)}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">{record.days}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      record.status === 'APPROVED'
-                        ? 'bg-green-100 text-green-800'
-                        : record.status === 'REJECTED'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {record.status}
-                  </span>
-                </TableCell>
-                <TableCell className="text-[#1F2328] font-medium space-x-2">
-                  <button
-                    className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                    onClick={() => handleAction(record.id, 'APPROVED')}
-                  >
-                    <FaCheck />
-                  </button>
-                  <button
-                    className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                    onClick={() => handleAction(record.id, 'REJECTED')}
-                  >
-                    <FaTimes />
-                  </button>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">
+                  Loading...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : leaveRecords.length > 0 ? (
+              leaveRecords.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{formatDate(record.start_date)}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{formatDate(record.end_date)}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{record.days}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        record.status === 'APPROVED'
+                          ? 'bg-green-100 text-green-800'
+                          : record.status === 'REJECTED'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {record.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-[#1F2328] font-medium space-x-2">
+                    <button
+                      className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
+                      onClick={() => handleAction(record.id, 'APPROVED')}
+                    >
+                      <FaCheck />
+                    </button>
+                    <button
+                      className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
+                      onClick={() => handleAction(record.id, 'REJECTED')}
+                    >
+                      <FaTimes />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">
+                  No leave records available
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
