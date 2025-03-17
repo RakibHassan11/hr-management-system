@@ -26,8 +26,7 @@ function Profile() {
     units: [],
     lines: [],
   });
-
-  const [isEditing, setIsEditing] = useState(false);
+  
   const [updating, setUpdating] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -120,7 +119,6 @@ function Profile() {
     const updatedFields = getDiff(employee, formData);
     if (Object.keys(updatedFields).length === 0) {
       toastId = toast("No changes made!")
-      setIsEditing(false);
       return;
     }
     try {
@@ -145,7 +143,6 @@ function Profile() {
         ...prevData,
         ...updatedEmployee,
       }));
-      setIsEditing(false);
     } catch (err) {
       setEmployee([])
       toast.error("Error updating profile" + err.message, { id: toastId });
@@ -153,8 +150,6 @@ function Profile() {
       setUpdating(false);
     }
   };
-
-  console.log(formData)
 
   return (
     <Fragment>
@@ -219,22 +214,19 @@ function Profile() {
                       <Input
                         value={formData?.name || ''}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Username</label>
                       <Input
                         value={formData?.username || ''}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        readOnly={!isEditing} />
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Designation</label>
                       <Input
                         value={formData?.designation || ''}
                         onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>       
                    <div className="space-y-2">
@@ -247,7 +239,6 @@ function Profile() {
                                   line_manager_id: value
                                 }));
                             }}
-                            disabled={!isEditing}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="-- Select manager id --" />
@@ -272,7 +263,6 @@ function Profile() {
                             department_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select department --" />
@@ -292,7 +282,6 @@ function Profile() {
                       <Input
                         value={formData?.confirmed || ''}
                         onChange={(e) => setFormData({ ...formData, confirmed: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -305,7 +294,6 @@ function Profile() {
                             unit_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select unit --" />
@@ -323,8 +311,7 @@ function Profile() {
                       <label className="text-sm font-medium text-[#1F2328]">Employee ID</label>
                       <Input
                         value={Number(formData?.id) + 1000 || ''}
-                        onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-                        readOnly={!isEditing} className="bg-gray-50" />
+                        onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} className="bg-gray-50" />
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -333,7 +320,6 @@ function Profile() {
                       <Input
                         value={formData?.email || ''}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -341,7 +327,6 @@ function Profile() {
                       <Input
                         value={formData?.phone || ''}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -354,7 +339,6 @@ function Profile() {
                             division_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select division --" />
@@ -374,7 +358,6 @@ function Profile() {
                         type="date"
                         value={formData?.joining_date ? formData.joining_date.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -387,7 +370,6 @@ function Profile() {
                             sub_department_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select sub department --" />
@@ -407,22 +389,19 @@ function Profile() {
                         type="date"
                         value={formData?.confirmation_date ? formData.confirmation_date.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Default Shift</label>
                       <Input
                         value={formData?.default_shift || ''}
-                        onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })}
-                        readOnly={!isEditing} />
+                        onChange={(e) => setFormData({ ...formData, confirmation_date: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Employment Type</label>
                       <Input
                         value={formData?.emp_type || ''}
-                        onChange={(e) => setFormData({ ...formData, emp_type: e.target.value })}
-                        readOnly={!isEditing} />
+                        onChange={(e) => setFormData({ ...formData, emp_type: e.target.value })} />
                     </div>
                   </div>
                 </div>
@@ -432,11 +411,11 @@ function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-black">Official Laptop's Mac</label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-black">Personal Device's Mac</label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
                   </div>
                 </div>
               </TabsContent>
@@ -446,14 +425,13 @@ function Profile() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Father’s Name</label>
-                      <Input defaultValue="Md. Mofiz Uddin Fakir(N/A)" readOnly />
+                      <Input defaultValue="Md. Mofiz Uddin Fakir(N/A)" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">Gender</label>
                       <Select
                         value={formData?.gender || ''}
                         onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select Gender --" />
@@ -471,7 +449,6 @@ function Profile() {
                         type="date"
                         value={formData?.birthday ? formData.birthday.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -479,7 +456,6 @@ function Profile() {
                       <Textarea
                         value={formData?.present_address || ''}
                         onChange={(e) => setFormData({ ...formData, present_address: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -487,7 +463,6 @@ function Profile() {
                       <Select
                         value={formData?.relationship_status || ''}
                         onValueChange={(value) => setFormData({ ...formData, relationship_status: value })}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select Status --" />
@@ -511,7 +486,6 @@ function Profile() {
                       <Select
                         value={formData?.religion || ''}
                         onValueChange={(value) => setFormData({ ...formData, religion: value })}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select Religion --" />
@@ -530,7 +504,6 @@ function Profile() {
                         type="date"
                         value={formData?.official_birthday ? formData.official_birthday.split("T")[0] : ''}
                         onChange={(e) => setFormData({ ...formData, official_birthday: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -538,7 +511,6 @@ function Profile() {
                       <Textarea
                         value={formData?.permanent_address || ''}
                         onChange={(e) => setFormData({ ...formData, permanent_address: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -546,7 +518,6 @@ function Profile() {
                       <Select
                         value={formData?.blood_group || ''}
                         onValueChange={(value) => setFormData({ ...formData, blood_group: value })}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select Blood Group --" />
@@ -575,7 +546,6 @@ function Profile() {
                       <Input
                         value={formData?.nid || ''}
                         onChange={(e) => setFormData({ ...formData, nid: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -583,7 +553,6 @@ function Profile() {
                       <Input
                         value={formData?.skype || ''}
                         onChange={(e) => setFormData({ ...formData, skype: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -591,7 +560,6 @@ function Profile() {
                       <Input
                         value={formData?.github || ''}
                         onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -599,7 +567,6 @@ function Profile() {
                       <Input
                         value={formData?.bank_name || ''}
                         onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                   </div>
@@ -609,7 +576,6 @@ function Profile() {
                       <Input
                         value={formData?.tin || ''}
                         onChange={(e) => setFormData({ ...formData, tin: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -617,7 +583,6 @@ function Profile() {
                       <Input
                         value={formData?.official_gmail || ''}
                         onChange={(e) => setFormData({ ...formData, official_gmail: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -625,7 +590,6 @@ function Profile() {
                       <Input
                         value={formData?.bank_account_no || ''}
                         onChange={(e) => setFormData({ ...formData, bank_account_no: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                     <div className="space-y-2">
@@ -633,7 +597,6 @@ function Profile() {
                       <Input
                         value={formData?.gitlab || ''}
                         onChange={(e) => setFormData({ ...formData, gitlab: e.target.value })}
-                        readOnly={!isEditing}
                       />
                     </div>
                   </div>
@@ -647,7 +610,6 @@ function Profile() {
                     <Input
                       value={formData?.website || ''}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -655,7 +617,6 @@ function Profile() {
                     <Input
                       value={formData?.facebook || ''}
                       onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -663,7 +624,6 @@ function Profile() {
                     <Input
                       value={formData?.twitter || ''}
                       onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -671,7 +631,6 @@ function Profile() {
                     <Input
                       value={formData?.linkedin || ''}
                       onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -679,7 +638,6 @@ function Profile() {
                     <Input
                       value={formData?.instagram || ''}
                       onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -687,7 +645,6 @@ function Profile() {
                     <Input
                       value={formData?.github || ''}
                       onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                 </div>
@@ -746,11 +703,9 @@ function Profile() {
             </Tabs>
 
             <div className="mt-6 flex justify-end gap-4">
-              {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)}>Edit</Button>
-              ) : (
-                <Button disabled={updating} onClick={handleSaveProfile}>{updating ? "Saving Profile.." : "Save Profile"}</Button>
-              )}
+              <Button disabled={updating} onClick={handleSaveProfile}>
+                {updating ? "Saving Profile.." : "Save Profile"}
+              </Button>
             </div>
           </div>
         </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}
