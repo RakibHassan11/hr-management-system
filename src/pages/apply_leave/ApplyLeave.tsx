@@ -10,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 export default function ApplyLeave() {
   const [leaveType, setLeaveType] = useState('');
-  const [leaveStatus, setLeaveStatus] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [description, setDescription] = useState('');
@@ -58,7 +57,6 @@ export default function ApplyLeave() {
       toast.success(data.message, { id: toastId });
       
       setLeaveType('');
-      setLeaveStatus('');
       setStartDate('');
       setEndDate('');
       setDescription('');
@@ -103,7 +101,6 @@ export default function ApplyLeave() {
                 </SelectContent>
               </Select>
             </div>
-
             <div>
               <label className="block text-sm font-medium">Start Date:</label>
               <Input
