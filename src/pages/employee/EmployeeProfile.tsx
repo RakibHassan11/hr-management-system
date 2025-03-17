@@ -17,18 +17,20 @@ function EmployeeProfile() {
     department_id: null,
     sub_department_id: null,
     unit_id: null,
+    line_manager_id: null
   });
   const [categoryOptions, setCategoryOptions] = useState({
     divisions: [],
     departments: [],
     subDepartments: [],
     units: [],
+    lines: [],
   });
-  const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
@@ -49,11 +51,12 @@ function EmployeeProfile() {
 
     const fetchData = async () => {
       try {
-        const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes] = await Promise.all([
+        const [divisionsRes, departmentsRes, subDepartmentsRes, unitsRes, lineRes] = await Promise.all([
           axios.get(`${API_URL}/divisions/list`, config),
           axios.get(`${API_URL}/departments/list`, config),
           axios.get(`${API_URL}/sub-departments/list`, config),
           axios.get(`${API_URL}/units/list`, config),
+          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=2`, config),
         ]);
 
         const divisions = divisionsRes.data.data.map(division => ({
@@ -73,11 +76,17 @@ function EmployeeProfile() {
           title: unit.title,
         }));
 
+        const lines = lineRes.data.data.map(line => ({
+          id: Number(line.id),
+          name: line.name,
+        }));
+
         setCategoryOptions({
           divisions,
           departments,
           subDepartments,
           units,
+          lines
         });
 
         const response = await fetch(`${API_URL}/employee/my-profile?id=${id}`, {
@@ -102,6 +111,7 @@ function EmployeeProfile() {
           department_id: employeeData.department_id || null,
           sub_department_id: employeeData.sub_department_id || null,
           unit_id: employeeData.unit_id || null,
+          line_manager_id: employeeData.line_manager_id || null,
         }));
 
         setEmployee(employeeData);
@@ -128,10 +138,10 @@ function EmployeeProfile() {
     const updatedFields = getDiff(employee, formData);
     if (Object.keys(updatedFields).length === 0) {
       toastId = toast("No changes made!");
-      setIsEditing(false);
       return;
     }
     const req_body = { ...updatedFields, id: Number(id) };
+
     try {
       setUpdating(true);
       toastId = toast.loading("Saving profile...");
@@ -155,7 +165,6 @@ function EmployeeProfile() {
         ...prevData,
         ...updatedEmployee,
       }));
-      setIsEditing(false);
     } catch (err) {
       setEmployee([])
       toast.error("Error updating profile: " + err.message, { id: toastId });
@@ -229,7 +238,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, employee_id: e.target.value })
                       }
-                      readOnly={!isEditing}
                       className="bg-gray-50"
                     />
                   </div>
@@ -238,7 +246,6 @@ function EmployeeProfile() {
                     <Input
                       value={formData?.name || ''}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -248,7 +255,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, username: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -258,7 +264,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -268,7 +273,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, phone: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -278,7 +282,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, designation: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -291,7 +294,6 @@ function EmployeeProfile() {
                             division_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select division" />
@@ -316,7 +318,6 @@ function EmployeeProfile() {
                             department_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select department" />
@@ -343,7 +344,6 @@ function EmployeeProfile() {
                             sub_department_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select sub department" />
@@ -368,7 +368,6 @@ function EmployeeProfile() {
                             unit_id: value,
                           }));
                         }}
-                        disabled={!isEditing}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select unit" />
@@ -382,10 +381,29 @@ function EmployeeProfile() {
                         </SelectContent>
                       </Select>
                     </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
-                    <Input value={formData?.line_manager_id || ''} readOnly />
-                  </div>
+                    <div className="space-y-2">
+                          <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
+                          <Select
+                            value={formData.line_manager_id || ''}
+                            onValueChange={(value) => {
+                                setFormData(prevData => ({
+                                  ...prevData,
+                                  line_manager_id: value
+                                }));
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="-- Select manager id --" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-300 shadow-md">
+                            {categoryOptions.lines?.map(manager => (
+                            <SelectItem key={manager.id} value={manager.id}>
+                              {manager.name}
+                            </SelectItem>
+                          ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Joining Date</label>
                     <Input
@@ -398,7 +416,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, joining_date: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -408,7 +425,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, confirmed: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -423,7 +439,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, confirmation_date: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -433,7 +448,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, default_shift: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -443,7 +457,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, emp_type: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                 </div>
@@ -454,11 +467,11 @@ function EmployeeProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-black">Official Laptop's Mac</label>
-                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-black">Personal Device's Mac</label>
-                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" readOnly={!isEditing} />
+                  <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
                 </div>
               </div>
             </TabsContent>
@@ -473,7 +486,6 @@ function EmployeeProfile() {
                       onValueChange={(value) =>
                         setFormData({ ...formData, gender: value })
                       }
-                      disabled={!isEditing}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -492,7 +504,6 @@ function EmployeeProfile() {
                       onValueChange={(value) =>
                         setFormData({ ...formData, religion: value })
                       }
-                      disabled={!isEditing}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -517,7 +528,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, birthday: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -532,7 +542,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, official_birthday: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -542,7 +551,6 @@ function EmployeeProfile() {
                       onValueChange={(value) =>
                         setFormData({ ...formData, blood_group: value })
                       }
-                      disabled={!isEditing}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -576,7 +584,6 @@ function EmployeeProfile() {
                       onValueChange={(value) =>
                         setFormData({ ...formData, relationship_status: value })
                       }
-                      disabled={!isEditing}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -596,7 +603,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, present_address: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                   <div className="space-y-2">
@@ -606,7 +612,6 @@ function EmployeeProfile() {
                       onChange={(e) =>
                         setFormData({ ...formData, permanent_address: e.target.value })
                       }
-                      readOnly={!isEditing}
                     />
                   </div>
                 </div>
@@ -618,37 +623,37 @@ function EmployeeProfile() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Skype [Official]</label>
-                    <Input value={formData?.skype || ''} onChange={(e) => setFormData({ ...formData, skype: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.skype || ''} onChange={(e) => setFormData({ ...formData, skype: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Gmail [Official]</label>
-                    <Input value={formData?.official_gmail || ''} onChange={(e) => setFormData({ ...formData, official_gmail: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.official_gmail || ''} onChange={(e) => setFormData({ ...formData, official_gmail: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">GitLab [Official]</label>
-                    <Input value={formData?.gitlab || ''} onChange={(e) => setFormData({ ...formData, gitlab: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.gitlab || ''} onChange={(e) => setFormData({ ...formData, gitlab: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">GitHub [Official]</label>
-                    <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">NID</label>
-                    <Input value={formData?.nid || ''} onChange={(e) => setFormData({ ...formData, nid: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.nid || ''} onChange={(e) => setFormData({ ...formData, nid: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">TIN</label>
-                    <Input value={formData?.tin || ''} onChange={(e) => setFormData({ ...formData, tin: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.tin || ''} onChange={(e) => setFormData({ ...formData, tin: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Bank Name</label>
-                    <Input value={formData?.bank_name || ''} onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.bank_name || ''} onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[#1F2328]">Bank Account No</label>
-                    <Input value={formData?.bank_account_no || ''} onChange={(e) => setFormData({ ...formData, bank_account_no: e.target.value })} readOnly={!isEditing} />
+                    <Input value={formData?.bank_account_no || ''} onChange={(e) => setFormData({ ...formData, bank_account_no: e.target.value })} />
                   </div>
                 </div>
               </div>
@@ -657,27 +662,27 @@ function EmployeeProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Website</label>
-                  <Input value={formData?.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.website || ''} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Facebook</label>
-                  <Input value={formData?.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.facebook || ''} onChange={(e) => setFormData({ ...formData, facebook: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Twitter</label>
-                  <Input value={formData?.twitter || ''} onChange={(e) => setFormData({ ...formData, twitter: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.twitter || ''} onChange={(e) => setFormData({ ...formData, twitter: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">LinkedIn</label>
-                  <Input value={formData?.linkedin || ''} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.linkedin || ''} onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Instagram</label>
-                  <Input value={formData?.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Github</label>
-                  <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} readOnly={!isEditing} />
+                  <Input value={formData?.github || ''} onChange={(e) => setFormData({ ...formData, github: e.target.value })} />
                 </div>
               </div>
             </TabsContent>
@@ -732,11 +737,9 @@ function EmployeeProfile() {
             </TabsContent>
           </Tabs>
           <div className="mt-6 flex justify-end gap-4">
-            {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)}>Edit</Button>
-            ) : (
-              <Button disabled={updating} onClick={handleSaveProfile}>{updating ? "Saving Profile.." : "Save Profile"}</Button>
-            )}
+              <Button disabled={updating} onClick={handleSaveProfile}>
+                {updating ? "Saving Profile.." : "Save Profile"}
+              </Button>
           </div>
         </div>
         </div>) : (<p className="text-center text-gray-600">Loading profile...</p>)}

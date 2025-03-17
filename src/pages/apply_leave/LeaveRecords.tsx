@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { formatDate } from '@/components/utils/dateHelper';
 
 export default function LeaveRecords() {
   const [records, setRecords] = useState(null);
@@ -37,8 +38,6 @@ export default function LeaveRecords() {
     fetchRecords();
   }, [API_URL, token]);
 
-  console.log(records)
-
   if(error) <p className="text-center text-red-500">{error}</p>
 
   return (
@@ -70,8 +69,12 @@ export default function LeaveRecords() {
                       <TableCell className="text-[#1F2328]">{record.name}</TableCell>
                       <TableCell className="text-[#1F2328]">{record.permission_value}</TableCell>
                       <TableCell className="text-[#1F2328]">{record.type}</TableCell>
-                      <TableCell className="text-[#1F2328]">{record.start_date}</TableCell>
-                      <TableCell className="text-[#1F2328]">{record.end_date}</TableCell>
+                      <TableCell className="text-[#1F2328]">
+                        {formatDate(record.start_date)}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328]">
+                        {formatDate(record.end_date)}
+                      </TableCell>
                       <TableCell className="text-[#1F2328]">{record.status}</TableCell>
                       <TableCell className="text-[#1F2328]">{record.description}</TableCell>
                     </TableRow>

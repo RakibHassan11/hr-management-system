@@ -5,22 +5,48 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import logo from '../lovable-uploads/orangetoolz-logo-orange.png';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store'; 
+import { RootState } from '@/store';
 
 const menuItems = [
-  { icon: Home, label: 'Home', path: '/user/home' },
-  { icon: User, label: 'Profile', path: '/user/profile' },
-  { icon: Clock, label: 'View Attendance', path: '/user/view-attendance' },
-  { icon: FileEdit, label: 'Apply for Time Update', path: '/user/time-update' },
-  { icon: Plane, label: 'View Leave', path: '/user/view-leave' },
-  { icon: FileEdit, label: 'Apply for Leave', path: '/user/apply-leave' },
-  { icon: Calendar, label: 'Holidays', path: '/user/holidays' },
-  { icon: HardDrive, label: 'MAC Address', path: '/user/mac-address' },
-  { icon: LinkIcon, label: 'Important Links', path: '/user/important-links' },
-  { icon: Building2, label: 'Employee', path: '/user/employee' },
-  { icon: Users, label: 'Team', path: '/user/team' },
-  { icon: Users, label: 'Leave Records', path: '/user/teamleaverecords' },
-  { icon: Users, label: 'Attendance Records', path: '/user/teamattendancerecords' },
+  { icon: Home, label: 'Home', path: '/user/home', hideCondition: () => false },
+  { icon: User, label: 'Profile', path: '/user/profile', hideCondition: () => false },
+  { icon: Clock, label: 'View Attendance', path: '/user/view-attendance', hideCondition: () => false },
+  { 
+    icon: Clock, 
+    label: 'All Attendance', 
+    path: '/user/all-attendance', 
+    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' 
+  },
+  { icon: FileEdit, label: 'Time Update', path: '/user/time-update', hideCondition: () => false },
+  { icon: Plane, label: 'View Leave', path: '/user/view-leave', hideCondition: () => false },
+  { icon: FileEdit, label: 'Apply for Leave', path: '/user/apply-leave', hideCondition: () => false },
+  { icon: Calendar, label: 'Holidays', path: '/user/holidays', hideCondition: () => false },
+  { icon: HardDrive, label: 'MAC Address', path: '/user/mac-address', hideCondition: () => false },
+  { icon: LinkIcon, label: 'Important Links', path: '/user/important-links', hideCondition: () => false },
+  { 
+    icon: Building2, 
+    label: 'Employee', 
+    path: '/user/employee', 
+    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' 
+  },
+  { 
+    icon: Users, 
+    label: 'Team', 
+    path: '/user/team', 
+    hideCondition: (user) => user?.permission_value === 'HR' 
+  },
+  { 
+    icon: Users, 
+    label: 'Leave Records', 
+    path: '/user/teamleaverecords', 
+    hideCondition: (user) => user?.permission_value === 'HR'
+  },
+  { 
+    icon: Users, 
+    label: 'Attendance Records', 
+    path: '/user/teamattendancerecords', 
+    hideCondition: (user) => user?.permission_value === 'HR'
+  },
 ];
 
 export function Sidebar() {
@@ -29,15 +55,7 @@ export function Sidebar() {
 
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const filteredMenuItems = menuItems.filter(item => {
-    if (item.label === 'Employee' && user?.permission_value === 'TEAM LEAD') {
-      return false;
-    }
-    if (item.label === 'Team' && user?.permission_value === 'HR') {
-      return false; 
-    }
-    return true; 
-  });
+  const filteredMenuItems = menuItems.filter(item => !item.hideCondition(user));
 
   return (
     <div 

@@ -66,7 +66,6 @@ export default function TimeUpdate() {
         toast.error(data.message || "Error updating time", { id: toastId });
       }
     } catch (error) {
-      console.error("Error updating time:", error);
       toast.error("Error updating time", { id: toastId });
       setErrorUpdating(error);
     } finally {
