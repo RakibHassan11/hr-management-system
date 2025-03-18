@@ -30,7 +30,8 @@ function EmployeeProfile() {
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { permission_value } = useSelector((state: RootState) => state.auth.user);
+  const permission = permission_value === 1 ? 'HR' : permission_value === 2 ? 'TEAM LEAD' : 'EMPLOYEE'
 
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
@@ -56,7 +57,7 @@ function EmployeeProfile() {
           axios.get(`${API_URL}/departments/list`, config),
           axios.get(`${API_URL}/sub-departments/list`, config),
           axios.get(`${API_URL}/units/list`, config),
-          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=2`, config),
+          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=${permission}`, config),
         ]);
 
         const divisions = divisionsRes.data.data.map(division => ({
@@ -178,7 +179,7 @@ function EmployeeProfile() {
       {employee !== null ?
       (<div className="animate-fadeIn">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#1F2328]">Employee Profile</h1>
+          <h1 className="text-2xl font-bold text-[#1F2328]">Update Employee Profile</h1>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -393,7 +394,7 @@ function EmployeeProfile() {
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="-- Select manager id --" />
+                              <SelectValue placeholder="-- Select manager --" />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-gray-300 shadow-md">
                             {categoryOptions.lines?.map(manager => (

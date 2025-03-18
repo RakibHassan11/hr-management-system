@@ -15,7 +15,7 @@ const menuItems = [
     icon: Clock, 
     label: 'All Attendance', 
     path: '/user/all-attendance', 
-    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' 
+    hideCondition: (user) => user?.permission_value === 2 && user?.permission_value === 3
   },
   { icon: FileEdit, label: 'Time Update', path: '/user/time-update', hideCondition: () => false },
   { icon: Plane, label: 'View Leave', path: '/user/view-leave', hideCondition: () => false },
@@ -27,25 +27,25 @@ const menuItems = [
     icon: Building2, 
     label: 'Employee', 
     path: '/user/employee', 
-    hideCondition: (user) => user?.permission_value === 'TEAM LEAD' || user?.permission_value === 'EMPLOYEE' 
+    hideCondition: (user) => user?.permission_value === 3 
   },
   { 
     icon: Users, 
     label: 'Team', 
     path: '/user/team', 
-    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE' 
+    hideCondition: (user) => user?.permission_value === 3 
   },
   { 
     icon: Users, 
     label: 'Leave Records', 
     path: '/user/teamleaverecords', 
-    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE'
+    hideCondition: (user) => user?.permission_value === 3
   },
   { 
     icon: Users, 
     label: 'Attendance Records', 
     path: '/user/teamattendancerecords', 
-    hideCondition: (user) => user?.permission_value === 'HR' || user?.permission_value === 'EMPLOYEE'
+    hideCondition: (user) => user?.permission_value === 3
   },
 ];
 
