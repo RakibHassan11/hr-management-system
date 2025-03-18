@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { RootState } from '@/store';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import moment from 'moment-timezone';

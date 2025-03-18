@@ -133,15 +133,13 @@ export default function AllAttendance() {
                     ID {sortOn === 'employee_id' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead className="text-[#1F2328] cursor-pointer">
-                    Employee ID
+                        Employee ID
                   </TableHead>
                   <TableHead className="text-[#1F2328] cursor-pointer">
-                    Date
+                        Check In
                   </TableHead>
-                  <TableHead className="text-[#1F2328]">Time</TableHead>
-                  <TableHead className="text-[#1F2328]">Device</TableHead>
-                  <TableHead className="text-[#1F2328]">Comment</TableHead>
-                  <TableHead className="text-[#1F2328]">Status</TableHead>
+                  <TableHead className="text-[#1F2328]">Check Out</TableHead>
+                  <TableHead className="text-[#1F2328]">Total Punch</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -157,11 +155,9 @@ export default function AllAttendance() {
                   >
                     <TableCell className="text-[#1F2328]">{employee.id}</TableCell>
                     <TableCell className="text-[#1F2328]">{employee.employee_id}</TableCell>
-                    <TableCell className="text-[#1F2328]">{formatDate(employee.date)}</TableCell>
-                    <TableCell className="text-[#1F2328]">{formatTime(employee.time)}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.device}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.comment}</TableCell>
-                    <TableCell className="text-[#1F2328]">{employee.status}</TableCell>
+                    <TableCell className="text-[#1F2328]">{formatTime(employee.check_in_time)}</TableCell>
+                    <TableCell className="text-[#1F2328]">{formatTime(employee.check_out_time)}</TableCell>
+                    <TableCell className="text-[#1F2328]">{employee.total_punch}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

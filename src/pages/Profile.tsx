@@ -32,7 +32,8 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
   const user = useSelector((state: RootState) => state.auth.user);
-  console.log(user)
+  const { permission_value } = useSelector((state: RootState) => state.auth.user);
+  const permission = permission_value === 1 ? 'HR' : permission_value === 2 ? 'TEAM LEAD' : 'EMPLOYEE'
 
   let toastId;
   useEffect(() => {
@@ -54,7 +55,7 @@ function Profile() {
           axios.get(`${API_URL}/departments/list`, config),
           axios.get(`${API_URL}/sub-departments/list`, config),
           axios.get(`${API_URL}/units/list`, config),
-          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=2`, config),
+          axios.get(`${API_URL}/employee/employee-list-by-role?permission_value=${permission}`, config),
         ]);
 
         const divisions = divisionsRes.data.data.map(division => ({
@@ -248,7 +249,7 @@ function Profile() {
                                   line_manager_id: value
                                 }));
                             }}
-                            disabled
+                            
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="-- Select manager id --" />

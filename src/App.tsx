@@ -26,7 +26,6 @@ import { AdminLayout } from "@/components/Admin/AdminLayout";
 import AdminHome from "./components/Admin/Home";
 import AdminEmployee from "./components/Admin/AdminEmployee";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
-import UpdateEmployeeInfo from "./pages/employee/UpdateEmployeeInfo";
 import LeaveRecords from "./pages/apply_leave/LeaveRecords";
 import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
 import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx";
@@ -42,7 +41,9 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<Login />} />
+
             <Route path="/adminlogin" element={<SuperAdminLogin />} />
 
             <Route path="/user" element={<Navigate to="/user/home" />} />
@@ -75,7 +76,6 @@ const UserRoutes = () => (
     <Route path="important-links" element={<ImportantLinks />} />
     <Route path="employee" element={<Employee />} />
     <Route path="employee/profile" element={<EmployeeProfile />} />
-    <Route path="employee/edit/:emp_id" element={<UpdateEmployeeInfo />} />
     <Route path="team" element={<Team />} />
     <Route path="teamleaverecords" element={<TeamLeaveRecords/>} />
     <Route path="teamattendancerecords" element={<TeamAttendanceRecords/>} />

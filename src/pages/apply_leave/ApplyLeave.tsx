@@ -86,7 +86,7 @@ export default function ApplyLeave() {
       
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
         <div className="space-y-4">
-          <div className="flex gap-4">
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-sm font-medium">Leave Type:</label>
               <Select onValueChange={(value) => setLeaveType(value)}>
