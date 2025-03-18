@@ -28,8 +28,8 @@ import AdminEmployee from "./components/Admin/AdminEmployee";
 import EmployeeProfile from "./pages/employee/EmployeeProfile";
 import LeaveRecords from "./pages/apply_leave/LeaveRecords";
 import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
-import TeamLeaveRecords from "./pages/TeamLeaveRecords";
-import TeamAttendanceRecords from "./pages/TeamAttendanceRecord.tsx";
+import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx";
+import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx";
 
 const queryClient = new QueryClient();
 
