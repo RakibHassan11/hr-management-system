@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { RootState } from '@/store';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { formatDate, formatText } from '@/components/utils/dateHelper';
 
 export default function ViewLeave() {
 
@@ -39,6 +40,8 @@ export default function ViewLeave() {
   useEffect(() => {
     fetchLeaveData();
   }, [API_URL, token]);
+  
+  console.log(leaveData)
 
   return (
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
@@ -66,7 +69,6 @@ export default function ViewLeave() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-100">
-                <TableHead className="text-[#1F2328]">Id</TableHead>
                 <TableHead className="text-[#1F2328]">Name</TableHead>
                 <TableHead className="text-[#1F2328]">Days</TableHead>
                 <TableHead className="text-[#1F2328]">Description</TableHead>
@@ -79,26 +81,17 @@ export default function ViewLeave() {
             <TableBody>
               {leaveData.map((leave) => (
                 <TableRow key={leave.id}>
-                  <TableCell className="text-[#1F2328]">{leave.id}</TableCell>
-                  <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.employee_name}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.days}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.description}</TableCell>
                   <TableCell className="text-[#1F2328]">
-                    {leave.start_date ? new Date(leave.start_date).toLocaleDateString('en-BD', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                    }) : 'N/A'}
+                    {formatDate(leave.start_date)}
                   </TableCell>
                   <TableCell className="text-[#1F2328]">
-                    {leave.end_date ? new Date(leave.end_date).toLocaleDateString('en-BD', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                    }) : 'N/A'}
+                    {formatDate(leave.end_date)}
                   </TableCell>
-                  <TableCell className="text-[#1F2328]">{leave.type}</TableCell>
-                  <TableCell className="text-[#1F2328]">{leave.status}</TableCell>
+                  <TableCell className="text-[#1F2328] capitalize">{formatText(leave.type)}</TableCell>
+                  <TableCell className="text-[#1F2328] capitalize">{formatText(leave.status)}</TableCell>
                 </TableRow>))}
             </TableBody>
           </Table>

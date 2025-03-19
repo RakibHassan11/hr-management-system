@@ -306,7 +306,6 @@ export default function AdminEmployee() {
     return manager ? manager.name : 'Not Selected';
   };
 
-  // Permission update logic
   const handlePermissionUpdate = async () => {
     if (!permissionEmployee) return;
     setPermissionLoading(true);

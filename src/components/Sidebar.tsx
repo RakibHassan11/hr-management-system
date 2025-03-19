@@ -31,21 +31,33 @@ const menuItems = [
   },
   { 
     icon: Users, 
-    label: 'Team', 
-    path: '/user/team', 
-    hideCondition: (user) => user?.permission_value === 3 
-  },
-  { 
-    icon: Users, 
     label: 'Leave Records', 
-    path: '/user/teamleaverecords', 
-    hideCondition: (user) => user?.permission_value === 3
+    path: 'employee/leave-records', 
+    hideCondition: (user) => user?.permission_value === 3 || user?.permission_value === 2
   },
   { 
     icon: Users, 
     label: 'Attendance Records', 
-    path: '/user/teamattendancerecords', 
-    hideCondition: (user) => user?.permission_value === 3
+    path: 'employee/attendance-records', 
+    hideCondition: (user) => user?.permission_value === 3 || user?.permission_value === 2
+  },
+  { 
+    icon: Users, 
+    label: 'Team', 
+    path: '/user/team', 
+    hideCondition: (user) => user?.permission_value === 3 || user?.permission_value === 1
+  },
+  { 
+    icon: Users, 
+    label: 'Leave Records', 
+    path: '/user/team/leave-records', 
+    hideCondition: (user) => user?.permission_value === 3 || user?.permission_value === 1
+  },
+  { 
+    icon: Users, 
+    label: 'Attendance Records', 
+    path: '/user/team/attendance-records', 
+    hideCondition: (user) => user?.permission_value === 3 || user?.permission_value === 1
   },
 ];
 

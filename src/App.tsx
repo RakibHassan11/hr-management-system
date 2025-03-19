@@ -21,7 +21,7 @@ import Login from "./pages/Login";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "@/components/PrivateRoute";
-import {Layout} from "@/components/Layout";
+import { Layout } from "@/components/Layout";
 import { AdminLayout } from "@/components/Admin/AdminLayout";
 import AdminHome from "./components/Admin/Home";
 import AdminEmployee from "./components/Admin/AdminEmployee";
@@ -30,35 +30,41 @@ import LeaveRecords from "./pages/apply_leave/LeaveRecords";
 import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
 import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx";
 import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx";
+import { useSessionTimeout } from "./utils/useSessionTimeout.ts";
+import EmployeeLeaveRecords from "./pages/employee/EmployeeLeaveRecords.tsx";
+import EmployeeAttendanceRecords from "./pages/employee/EmployeeAttendanceRecords.tsx";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <Provider store={store}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/login" element={<Login />} />
+const App = () => {
+  useSessionTimeout();
 
-            <Route path="/adminlogin" element={<SuperAdminLogin />} />
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" />} />
+              <Route path="/login" element={<PrivateRoute element={<Login />} />} />
+              <Route path="/adminlogin" element={<PrivateRoute element={<SuperAdminLogin />} />} />
 
-            <Route path="/user" element={<Navigate to="/user/home" />} />
-            <Route path="/user/*" element={<PrivateRoute element={<Layout><UserRoutes /></Layout>} />} />
+              <Route path="/user" element={<Navigate to="/user/home" />} />
+              <Route path="/user/*" element={<PrivateRoute element={<Layout><UserRoutes /></Layout>} />} />
 
-            <Route path="/admin" element={<Navigate to="/admin/AdminHome" />} />
-            <Route path="/admin/*" element={<PrivateRoute element={<AdminLayout><AdminRoutes /></AdminLayout>} />} />
+              <Route path="/admin" element={<Navigate to="/admin/AdminHome" />} />
+              <Route path="/admin/*" element={<PrivateRoute element={<AdminLayout><AdminRoutes /></AdminLayout>} />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </Provider>
-  </QueryClientProvider>
-);
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </Provider>
+    </QueryClientProvider>
+  )
+};
 
 const UserRoutes = () => (
   <Routes>
@@ -76,16 +82,18 @@ const UserRoutes = () => (
     <Route path="important-links" element={<ImportantLinks />} />
     <Route path="employee" element={<Employee />} />
     <Route path="employee/profile" element={<EmployeeProfile />} />
+    <Route path="employee/leave-records" element={<EmployeeLeaveRecords />} />
+    <Route path="employee/attendance-records" element={<EmployeeAttendanceRecords/>} />
     <Route path="team" element={<Team />} />
-    <Route path="teamleaverecords" element={<TeamLeaveRecords/>} />
-    <Route path="teamattendancerecords" element={<TeamAttendanceRecords/>} />
+    <Route path="team/leave-records" element={<TeamLeaveRecords/>} />
+    <Route path="team/attendance-records" element={<TeamAttendanceRecords/>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
 const AdminRoutes = () => (
   <Routes>
-    <Route path="home" element={<AdminHome />} />
+    <Route path="AdminHome" element={<AdminHome />} />
     <Route path="employee" element={<AdminEmployee />} />
     <Route path="*" element={<NotFound />} />
   </Routes>

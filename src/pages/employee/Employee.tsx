@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Employee() {
   const [employees, setEmployees] = useState([]);
@@ -89,6 +90,8 @@ export default function Employee() {
   const handleEditClick = (employee) => {
     navigate(`/user/employee/profile?id=${employee.id}`);
   };
+
+  console.log(employees)
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
