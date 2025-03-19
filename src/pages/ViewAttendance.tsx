@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useNavigate } from 'react-router-dom';
-import { formatDate, formatTime } from '@/components/utils/dateHelper';
 
 export default function ViewAttendance() {
   const [employees, setEmployees] = useState([]);
@@ -117,10 +116,10 @@ export default function ViewAttendance() {
     return <p className="text-center text-gray-600">Loading attendances...</p>;
   }
   if (error) {
-    return (
-      <p className="text-center text-red-500">{error}</p>
-    )
-  } 
+    return <p className="text-center text-red-500">{error}</p>;
+  }
+
+  console.log(employees)
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
@@ -154,13 +153,8 @@ export default function ViewAttendance() {
                       <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('check_in_time')}>
                         Date {sortOn === 'check_in_time' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </TableHead>
-                      <TableHead className="text-[#1F2328] cursor-pointer">
-                        Date
-                      </TableHead>
-                      <TableHead className="text-[#1F2328]">Time</TableHead>
-                      <TableHead className="text-[#1F2328]">Device</TableHead>
-                      <TableHead className="text-[#1F2328]">Comment</TableHead>
-                      <TableHead className="text-[#1F2328]">Status</TableHead>
+                      <TableHead className="text-[#1F2328]">Check Out</TableHead>
+                      <TableHead className="text-[#1F2328]">Total Punch</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -176,11 +170,9 @@ export default function ViewAttendance() {
                       >
                        
                         <TableCell className="text-[#1F2328]">{employee.employee_id}</TableCell>
-                        <TableCell className="text-[#1F2328]">{formatDate(employee.date)}</TableCell>
-                        <TableCell className="text-[#1F2328]">{formatTime(employee.time)}</TableCell>
-                        <TableCell className="text-[#1F2328]">{employee.device}</TableCell>
-                        <TableCell className="text-[#1F2328]">{employee.comment}</TableCell>
-                        <TableCell className="text-[#1F2328]">{employee.active}</TableCell>
+                        <TableCell className="text-[#1F2328]">{formatTime(employee.check_in_time)}</TableCell>
+                        <TableCell className="text-[#1F2328]">{formatTime(employee.check_out_time)}</TableCell>
+                        <TableCell className="text-[#1F2328]">{employee.total_punch}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

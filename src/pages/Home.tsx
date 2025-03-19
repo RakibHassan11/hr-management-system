@@ -11,17 +11,20 @@ interface LeaveBalance {
 }
 
 interface AttendanceRecord {
-  date: string; // e.g., "Tue 28"
-  in: string; // e.g., "03:07"
-  out: string; // e.g., "later time or -"
+  date: string; // Still "Thu 27" for now
+  in: string;
+  out: string;
   duration?: string;
 }
 
 interface ApiAttendanceRecord {
   id: number;
   employee_id: number;
-  date: string; // ISO format: "2025-03-28T03:07:11.000Z"
-  time: string; // "03:07:11"
+  check_in_time: string;
+  check_out_time: string;
+  total_punch: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function Home() {
@@ -56,9 +59,10 @@ export default function Home() {
       }
 
       try {
-        console.log('API_BASE_URL:', API_BASE_URL); // Debug the base URL
-        const url = `${API_BASE_URL}/employee-attendance/attendance-list`; // Adjusted path
-        console.log('Fetching attendance from:', url);
+        console.log('API_BASE_URL:', API_BASE_URL);
+        const url = `${API_BASE_URL}/employee-attendance/attendance-list`;
+        console.log('Fetching from:', url);
+        console.log('Using token:', storedToken);
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -69,28 +73,27 @@ export default function Home() {
         });
 
         const result = await response.json();
+        console.log('API Response:', result);
         if (response.ok && result.success && result.message === 'Employee attendance records retrieved successfully') {
           const apiData: ApiAttendanceRecord[] = result.data;
 
-          // Group by date and extract in/out times
-          const groupedByDate: { [key: string]: ApiAttendanceRecord[] } = apiData.reduce((acc, record) => {
-            const dateStr = moment(record.date).format('YYYY-MM-DD');
-            acc[dateStr] = acc[dateStr] || [];
-            acc[dateStr].push(record);
-            return acc;
-          }, {});
+          const processedRecords: AttendanceRecord[] = apiData.map((record) => {
+            const inMoment = moment.tz(record.check_in_time, 'UTC').tz('Asia/Dhaka');
+            const outMoment = moment.tz(record.check_out_time, 'UTC').tz('Asia/Dhaka');
+            const dateStr = inMoment.format('ddd DD');
+            const inTime = inMoment.format('HH:mm');
+            const outTime = outMoment.isValid() && outMoment.isAfter(inMoment) ? outMoment.format('HH:mm') : '-';
 
-          const processedRecords: AttendanceRecord[] = Object.entries(groupedByDate).map(([date, records]) => {
-            const sortedRecords = records.sort((a, b) => a.time.localeCompare(b.time));
-            const inTime = sortedRecords[0]?.time.slice(0, 5) || '-'; // Earliest time
-            const outTime = sortedRecords.length > 1 ? sortedRecords[sortedRecords.length - 1].time.slice(0, 5) : '-'; // Latest time
-            const dayName = moment(date).format('ddd DD');
-            return { date: dayName, in: inTime, out: outTime };
+            return {
+              date: dateStr,
+              in: inTime,
+              out: outTime,
+            };
           });
 
           setAttendanceRecords(processedRecords);
         } else {
-          console.log('Failed to fetch attendance:', result.message || 'Unknown error', result);
+          console.log('Failed to fetch attendance:', result.message || 'Unknown error');
         }
       } catch (error) {
         console.log('Attendance fetch error:', error);
@@ -101,14 +104,13 @@ export default function Home() {
     fetchAttendanceRecords();
   }, [userToken, API_BASE_URL]);
 
-  const calculateDuration = (inTime: string, outTime: string, date: string) => {
+  const calculateDuration = (inTime: string, outTime: string) => {
     if (inTime === '-' || outTime === '-') return '-';
 
-    const baseDate = moment(date, 'ddd DD').isValid() ? moment().month('March').date(parseInt(date.split(' ')[1])).format('YYYY-MM-DD') : '2025-03-01';
-    const inMoment = moment(`${baseDate} ${inTime}`, 'YYYY-MM-DD HH:mm');
-    const outMoment = moment(`${baseDate} ${outTime}`, 'YYYY-MM-DD HH:mm');
+    const inMoment = moment(inTime, 'HH:mm');
+    const outMoment = moment(outTime, 'HH:mm');
 
-    if (!inMoment.isValid() || !outMoment.isValid()) return '-';
+    if (!inMoment.isValid() || !outMoment.isValid() || outMoment.isBefore(inMoment)) return '-';
 
     const duration = moment.duration(outMoment.diff(inMoment));
     const hours = Math.floor(duration.asHours()).toString().padStart(2, '0');
@@ -121,11 +123,7 @@ export default function Home() {
       <div className="flex gap-6">
         <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328] flex-1">
           <div className="flex items-center gap-6 mb-6">
-            <img
-              src={ima}
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-orange-500"
-            />
+            <img src={ima} alt="Profile" className="w-24 h-24 rounded-full border-4 border-orange-500" />
             <div>
               <h1 className="text-2xl font-semibold">{user?.name}</h1>
               <p className="text-lg text-gray-700">{user?.designation}</p>
@@ -155,46 +153,46 @@ export default function Home() {
           </table>
         </div>
       </div>
-
-      <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+<div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
         <h2 className="text-xl font-semibold mb-4">Attendances</h2>
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="py-2 px-4 border border-gray-300"></th>
+              <th className="py-2 px-4  text-left">Date</th>
               {attendanceRecords.map((record) => (
-                <th key={record.date} className="py-2 px-4 border border-gray-300">{record.date}</th>
+                <th key={record.date} className="py-2 px-4 border border-gray-300">
+                  {record.date.split(' ')[0]}
+                  <br />
+                  {record.date.split(' ')[1]}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             <tr className="text-center">
-              <td className="py-2 px-4 font-medium border border-gray-300">In:</td>
+              <td className="flex py-2 px-4 font-medium border border-gray-300">First Check-in</td>
               {attendanceRecords.map((record) => (
-                <td key={`${record.date}-in`} className="py-2 px-4 border border-gray-300">
-                  {record.in}
-                </td>
+                <td key={`${record.date}-in`} className="py-2 px-4 border border-gray-300">{record.in}</td>
               ))}
             </tr>
             <tr className="text-center">
-              <td className="py-2 px-4 font-medium border border-gray-300">Out:</td>
+              <td className="flex py-2 px-4 font-medium border border-gray-300">Last Check-out</td>
               {attendanceRecords.map((record) => (
-                <td key={`${record.date}-out`} className="py-2 px-4 border border-gray-300">
-                  {record.out}
-                </td>
+                <td key={`${record.date}-out`} className="py-2 px-4 border border-gray-300">{record.out}</td>
               ))}
             </tr>
             <tr className="text-center">
-              <td className="py-2 px-4 font-medium border border-gray-300">Duration:</td>
+              <td className="py-2 px-4 font-medium border border-gray-300 flex">Total Duration</td>
               {attendanceRecords.map((record) => (
                 <td key={`${record.date}-duration`} className="py-2 px-4 border border-gray-300">
-                  {calculateDuration(record.in, record.out, record.date)}
+                  {calculateDuration(record.in, record.out)}
                 </td>
               ))}
             </tr>
           </tbody>
         </table>
       </div>
+      
     </div>
   );
 }

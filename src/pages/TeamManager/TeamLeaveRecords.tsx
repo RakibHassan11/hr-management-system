@@ -10,15 +10,16 @@ import Swal from 'sweetalert2';
 interface LeaveRecord {
   id: number;
   employee_id: number;
-  employee_name: string;
-  permission_value: string;
+  name: string;
   type: string;
   start_date: string;
   end_date: string;
   days: number;
-  status: string;
+  status: 'PENDING' | 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER' | 'APPROVED_BY_HR' | 'REJECTED_BY_HR' | string;
   description: string;
   created_at: string;
+  updated_at?: string;
+  without_pay?: boolean;
 }
 
 const TeamLeaveRecords = () => {
@@ -49,8 +50,6 @@ const TeamLeaveRecords = () => {
       }
 
       const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
-      console.log('Fetching leave records from:', url);
-
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -61,19 +60,22 @@ const TeamLeaveRecords = () => {
         });
 
         const result = await response.json();
-        console.log('GET response:', result);
-
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
-          setLeaveRecords(result.data);
+          console.log('Fetched leave records:', result.data);
+          const mappedRecords = result.data.map((record: any) => ({
+            ...record,
+            name: record.name || record.employee_name,
+          }));
+          setLeaveRecords(mappedRecords);
         } else if (response.status === 401) {
           setError('Unauthorized: Invalid or expired token. Please log in again.');
         } else if (response.status === 403) {
-          setError('Forbidden: You lack permission to view these records. Contact your administrator.');
+          setError('Forbidden: You lack permission to view these records.');
         } else {
           setError(result.message || 'Failed to fetch leave records.');
         }
       } catch (error) {
-        setError('Network error: Failed to fetch leave records. Please try again later.');
+        setError('Network error: Failed to fetch leave records.');
       } finally {
         setIsLoading(false);
       }
@@ -86,14 +88,31 @@ const TeamLeaveRecords = () => {
     return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
   };
 
-  const handleAction = async (recordId: number, newStatus: string) => {
+  const getReadableStatus = (status: string) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pending';
+      case 'APPROVED_BY_LINE_MANAGER':
+        return 'Approved by Line Manager';
+      case 'REJECTED_BY_LINE_MANAGER':
+        return 'Rejected by Line Manager';
+      case 'APPROVED_BY_HR':
+        return 'Approved by HR';
+      case 'REJECTED_BY_HR':
+        return 'Rejected by HR';
+      default:
+        return status; // Fallback for unexpected statuses
+    }
+  };
+
+  const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
     const storedToken = localStorage.getItem('token_user') || userToken;
     if (!storedToken) {
       toast.error('No authentication token found. Please log in.');
       return;
     }
 
-    const actionText = newStatus === 'APPROVED' ? 'approve' : 'reject';
+    const actionText = newStatus === 'APPROVED_BY_LINE_MANAGER' ? 'approve' : 'reject';
     const result = await Swal.fire({
       title: `Are you sure you want to ${actionText} this leave request?`,
       text: "This action will update the leave status.",
@@ -110,16 +129,19 @@ const TeamLeaveRecords = () => {
     }
 
     try {
+      const payload = { id: recordId, status: newStatus };
+      console.log('Sending PUT request with payload:', payload);
       const response = await fetch('https://api.allinall.social/api/otz-hrm/employee/update-leave-status', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: recordId, status: newStatus }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
+      console.log('PUT response:', result);
       if (response.ok && result.success) {
         setLeaveRecords((prevRecords) =>
           prevRecords.map((record) =>
@@ -131,11 +153,11 @@ const TeamLeaveRecords = () => {
         toast.error(result.message || 'Failed to update leave record.');
       }
     } catch (error) {
-      toast.error('Network error: Failed to update leave record. Please try again later.');
+      console.error('Network error:', error);
+      toast.error('Network error: Failed to update leave record.');
     }
   };
 
-  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = leaveRecords.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -179,7 +201,7 @@ const TeamLeaveRecords = () => {
             ) : currentRecords.length > 0 ? (
               currentRecords.map((record) => (
                 <TableRow key={record.id}>
-                  <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
+                  <TableCell className="text-[#1F2328] font-medium">{record.name}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{formatDate(record.start_date)}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{formatDate(record.end_date)}</TableCell>
@@ -187,32 +209,34 @@ const TeamLeaveRecords = () => {
                   <TableCell className="text-[#1F2328] font-medium">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        record.status === 'APPROVED'
+                        record.status === 'APPROVED_BY_LINE_MANAGER' || record.status === 'APPROVED_BY_HR'
                           ? 'bg-green-100 text-green-800'
-                          : record.status === 'REJECTED'
+                          : record.status === 'REJECTED_BY_LINE_MANAGER' || record.status === 'REJECTED_BY_HR'
                           ? 'bg-red-100 text-red-800'
+                          : record.status === 'PENDING'
+                          ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {record.status}
+                      {getReadableStatus(record.status)}
                     </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium space-x-2">
-                    {record.status !== 'APPROVED' && (
-                      <button
-                        className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                        onClick={() => handleAction(record.id, 'APPROVED')}
-                      >
-                        <FaCheck />
-                      </button>
-                    )}
-                    {record.status !== 'REJECTED' && (
-                      <button
-                        className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                        onClick={() => handleAction(record.id, 'REJECTED')}
-                      >
-                        <FaTimes />
-                      </button>
+                    {record.status === 'PENDING' && (
+                      <>
+                        <button
+                          className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
+                          onClick={() => handleAction(record.id, 'APPROVED_BY_LINE_MANAGER')}
+                        >
+                          <FaCheck />
+                        </button>
+                        <button
+                          className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
+                          onClick={() => handleAction(record.id, 'REJECTED_BY_LINE_MANAGER')}
+                        >
+                          <FaTimes />
+                        </button>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>
@@ -251,4 +275,3 @@ const TeamLeaveRecords = () => {
 };
 
 export default TeamLeaveRecords;
-

@@ -1,5 +1,0 @@
-feat: Update user profile management and authentication
-
-- Enhanced the user profile management in Profile.tsx to include better state handling and error management.
-- Improved the login functionality in Login.tsx to provide feedback during the login process and handle errors more effectively.
-- Updated the form structure and validation for user inputs in both components to ensure a smoother user experience.
