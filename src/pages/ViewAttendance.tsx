@@ -108,10 +108,10 @@ export default function ViewAttendance() {
     )
   } 
   if (error) {
-    return (
-      <p className="text-center text-red-500">{error}</p>
-    )
-  } 
+    return <p className="text-center text-red-500">{error}</p>;
+  }
+
+  console.log(employees)
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
