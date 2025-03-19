@@ -18,6 +18,16 @@ const PrivateRoute: FC<PrivateRouteProps> = ({ element }) => {
 
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isUserRoute = location.pathname.startsWith('/user');
+  const isLoginRoute = location.pathname === '/login';
+  const isAdminLoginRoute = location.pathname === '/adminlogin';
+
+  if (isLoginRoute && isAuthenticatedUser) {
+    return <Navigate to="/user/home" replace />;
+  }
+
+  if (isAdminLoginRoute && isAuthenticatedAdmin) {
+    return <Navigate to="/admin/AdminHome" replace />;
+  }
 
   if (isAdminRoute) {
     return isAuthenticatedAdmin ? element : <Navigate to="/adminlogin" state={{ from: location }} replace />;
@@ -27,7 +37,7 @@ const PrivateRoute: FC<PrivateRouteProps> = ({ element }) => {
     return isAuthenticatedUser ? element : <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <Navigate to="/login" state={{ from: location }} replace />;
+  return element;
 };
 
 export default PrivateRoute;

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { useNavigate } from 'react-router-dom';
+import { formatTime } from '@/components/utils/dateHelper';
 
 export default function ViewAttendance() {
   const [employees, setEmployees] = useState([]);
@@ -18,7 +19,7 @@ export default function ViewAttendance() {
   const [perPage, setPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [sortDirection, setSortDirection] = useState('asc');
-  const [sortOn, setSortOn] = useState('id');
+  const [sortOn, setSortOn] = useState('name');
 
   const AttendanceFilterType = {
     NONE: 'NONE',
@@ -28,19 +29,8 @@ export default function ViewAttendance() {
   };
 
   const [employeeData, setEmployeeData] = useState({
-    filterType: AttendanceFilterType.NONE,
+    filterType: AttendanceFilterType.NONE, 
   });
-
-  // Simple date and time formatting (replace with your dateHelper if needed)
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-  };
-
-  const formatTime = (isoString) => {
-    const date = new Date(isoString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
 
   const fetchEmployees = (filterType = employeeData.filterType, page = currentPage, itemsPerPage = perPage, sortDir = sortDirection, sortField = sortOn) => {
     setLoading(true);
@@ -58,18 +48,18 @@ export default function ViewAttendance() {
       },
     })
       .then((response) => {
+        console.log(response);
         if (!response.ok) {
-          throw new Error('Failed to fetch attendance data');
+          throw new Error('Failed to fetch employee data');
         }
         return response.json();
       })
       .then((data) => {
         setEmployees(data.data || []);
-        // Note: API response doesn’t include extraData for pagination; assuming single page for now
-        setTotalPages(1); // Update if API supports pagination
-        setCurrentPage(1);
-        setPerPage(itemsPerPage);
-        setTotalItems(data.data.length);
+        setTotalPages(data?.extraData?.totalPages || 1);
+        setCurrentPage(data?.extraData?.currentPage || 1);
+        setPerPage(data?.extraData?.perPage || 10);
+        setTotalItems(data?.extraData?.total || 0);
         setLoading(false);
       })
       .catch((error) => {
@@ -109,12 +99,14 @@ export default function ViewAttendance() {
     const newFilterType = e.target.value;
     setEmployeeData({ ...employeeData, filterType: newFilterType });
     setCurrentPage(1);
-    fetchEmployees(newFilterType, 1);
+    fetchEmployees(newFilterType, 1); 
   };
 
   if (loading) {
-    return <p className="text-center text-gray-600">Loading attendances...</p>;
-  }
+    return (
+        <p className="text-center text-gray-600">Loading attendances...</p>
+    )
+  } 
   if (error) {
     return <p className="text-center text-red-500">{error}</p>;
   }
@@ -148,10 +140,13 @@ export default function ViewAttendance() {
                   <TableHeader>
                     <TableRow className="bg-gray-100">
                       <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('employee_id')}>
-                        Employee ID {sortOn === 'employee_id' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        ID {sortOn === 'employee_id' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </TableHead>
-                      <TableHead className="text-[#1F2328] cursor-pointer" onClick={() => handleSortChange('check_in_time')}>
-                        Date {sortOn === 'check_in_time' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      <TableHead className="text-[#1F2328] cursor-pointer">
+                        Employee ID
+                      </TableHead>
+                      <TableHead className="text-[#1F2328] cursor-pointer">
+                        Check In
                       </TableHead>
                       <TableHead className="text-[#1F2328]">Check Out</TableHead>
                       <TableHead className="text-[#1F2328]">Total Punch</TableHead>
@@ -160,7 +155,7 @@ export default function ViewAttendance() {
                   <TableBody>
                     {employees.map((employee) => (
                       <TableRow
-                        key={employee.id}
+                        key={employee.employee_id}
                         onClick={(e) => {
                           if (!e.target.closest('button')) {
                             navigate(`/user/employee/profile?id=${employee.id}`);
@@ -168,7 +163,7 @@ export default function ViewAttendance() {
                         }}
                         style={{ cursor: 'pointer' }}
                       >
-                       
+                        <TableCell className="text-[#1F2328]">{employee.id}</TableCell>
                         <TableCell className="text-[#1F2328]">{employee.employee_id}</TableCell>
                         <TableCell className="text-[#1F2328]">{formatTime(employee.check_in_time)}</TableCell>
                         <TableCell className="text-[#1F2328]">{formatTime(employee.check_out_time)}</TableCell>
@@ -213,7 +208,7 @@ export default function ViewAttendance() {
                     </Button>
                   </div>
 
-                  <span>Total: {totalItems} records</span>
+                  <span>Total: {totalItems} employees</span>
                 </div>
               </>
             )}

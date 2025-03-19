@@ -38,7 +38,9 @@ export default function LeaveRecords() {
     fetchRecords();
   }, [API_URL, token]);
 
-  if(error) <p className="text-center text-red-500">{error}</p>
+  if (error) <p className="text-center text-red-500">{error}</p>
+  
+  console.log(records)
 
   return (
     <Fragment>
