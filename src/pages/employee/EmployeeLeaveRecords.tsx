@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { formatDate } from '@/components/utils/dateHelper';
+import { formatDate, formatText } from '@/components/utils/dateHelper';
 import Swal from 'sweetalert2';
 
 interface LeaveRecord {
@@ -31,25 +31,17 @@ const EmployeeLeaveRecords = () => {
   const { userToken } = useSelector((state: RootState) => state.auth);
   const { id } = useSelector((state: RootState) => state.auth.user);
   const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const storedToken = localStorage.getItem('token_user') || userToken;
+
+  if (!storedToken) {
+    setError('No authentication token found. Please log in.');
+    setIsLoading(false);
+    return;
+  }
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
-      const storedToken = localStorage.getItem('token_user') || userToken;
-      const lineManagerId = id;
-
-      if (!storedToken) {
-        setError('No authentication token found. Please log in.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!lineManagerId) {
-        setError('User ID not found. Please ensure you are logged in correctly.');
-        setIsLoading(false);
-        return;
-      }
-
-      const url = `${API_BASE_URL}/employee/leave-records-list?line_manager_id=${lineManagerId}`;
+      const url = `${API_BASE_URL}/employee/all-leave-record-list`;
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -60,21 +52,12 @@ const EmployeeLeaveRecords = () => {
         });
 
         const result = await response.json();
-        if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
-          console.log('Fetched leave records:', result.data);
-          const mappedRecords = result.data.map((record: any) => ({
+        const mappedRecords = result?.map((record: any) => ({
             ...record,
             name: record.name || record.employee_name,
-          }));
-          setLeaveRecords(mappedRecords);
-        } else if (response.status === 401) {
-          setError('Unauthorized: Invalid or expired token. Please log in again.');
-        } else if (response.status === 403) {
-          setError('Forbidden: You lack permission to view these records.');
-        } else {
-          setError(result.message || 'Failed to fetch leave records.');
-        }
-      } catch (error) {
+        }));
+        setLeaveRecords(mappedRecords);
+        } catch (error) {
         setError('Network error: Failed to fetch leave records.');
       } finally {
         setIsLoading(false);
@@ -84,31 +67,10 @@ const EmployeeLeaveRecords = () => {
     fetchLeaveRecords();
   }, [userToken, id, API_BASE_URL]);
 
-  const getReadableStatus = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'Pending';
-      case 'APPROVED_BY_LINE_MANAGER':
-        return 'Approved by Line Manager';
-      case 'REJECTED_BY_LINE_MANAGER':
-        return 'Rejected by Line Manager';
-      case 'APPROVED_BY_HR':
-        return 'Approved by HR';
-      case 'REJECTED_BY_HR':
-        return 'Rejected by HR';
-      default:
-        return status;
-    }
-  };
+  console.log(leaveRecords)
 
-  const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
-    const storedToken = localStorage.getItem('token_user') || userToken;
-    if (!storedToken) {
-      toast.error('No authentication token found. Please log in.');
-      return;
-    }
-
-    const actionText = newStatus === 'APPROVED_BY_LINE_MANAGER' ? 'approve' : 'reject';
+  const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_HR' | 'REJECTED_BY_HR') => {
+    const actionText = newStatus === 'APPROVED_BY_HR' ? 'approve' : 'reject';
     const result = await Swal.fire({
       title: `Are you sure you want to ${actionText} this leave request?`,
       text: "This action will update the leave status.",
@@ -126,7 +88,7 @@ const EmployeeLeaveRecords = () => {
 
     try {
       const payload = { id: recordId, status: newStatus };
-      const response = await fetch('https://api.allinall.social/api/otz-hrm/employee/update-leave-status', {
+      const response = await fetch(`${API_BASE_URL}/employee/update-leave-status`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${storedToken}`,
@@ -214,21 +176,21 @@ const EmployeeLeaveRecords = () => {
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {getReadableStatus(record.status)}
+                      {formatText(record.status)}
                     </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium space-x-2">
-                    {record.status === 'PENDING' && (
+                    {record.status === 'APPROVED_BY_LINE_MANAGER' && (
                       <>
                         <button
                           className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                          onClick={() => handleAction(record.id, 'APPROVED_BY_LINE_MANAGER')}
+                          onClick={() => handleAction(record.id, 'APPROVED_BY_HR')}
                         >
                           <FaCheck />
                         </button>
                         <button
                           className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                          onClick={() => handleAction(record.id, 'REJECTED_BY_LINE_MANAGER')}
+                          onClick={() => handleAction(record.id, 'REJECTED_BY_HR')}
                         >
                           <FaTimes />
                         </button>
