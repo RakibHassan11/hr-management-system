@@ -170,19 +170,19 @@ export default function Home() {
           </thead>
           <tbody>
             <tr className="text-center">
-              <td className="flex py-2 px-4 font-medium border border-gray-300">First Check-in</td>
+              <td className="flex py-2 px-4 font-medium border border-gray-300">Check-in</td>
               {attendanceRecords.map((record) => (
                 <td key={`${record.date}-in`} className="py-2 px-4 border border-gray-300">{record.in}</td>
               ))}
             </tr>
             <tr className="text-center">
-              <td className="flex py-2 px-4 font-medium border border-gray-300">Last Check-out</td>
+              <td className="flex py-2 px-4 font-medium border border-gray-300">Check-out</td>
               {attendanceRecords.map((record) => (
                 <td key={`${record.date}-out`} className="py-2 px-4 border border-gray-300">{record.out}</td>
               ))}
             </tr>
             <tr className="text-center">
-              <td className="py-2 px-4 font-medium border border-gray-300 flex">Total Duration</td>
+              <td className="py-2 px-4 font-medium border border-gray-300 flex">Duration</td>
               {attendanceRecords.map((record) => (
                 <td key={`${record.date}-duration`} className="py-2 px-4 border border-gray-300">
                   {calculateDuration(record.in, record.out)}
