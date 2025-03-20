@@ -27,6 +27,8 @@ export default function Holidays() {
   const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
 
+
+  
   useEffect(() => {
     const fetchHolidays = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
@@ -43,6 +45,7 @@ export default function Holidays() {
             'Content-Type': 'application/json',
           },
         });
+        
         console.log('GET response:', response.data);
 
         if (response.status === 200 && response.data.success) {
