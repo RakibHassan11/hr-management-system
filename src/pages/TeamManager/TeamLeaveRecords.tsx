@@ -6,6 +6,7 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import moment from 'moment-timezone';
 import Swal from 'sweetalert2';
+import axios from 'axios'; // Added Axios import
 
 interface LeaveRecord {
   id: number;
@@ -51,15 +52,14 @@ const TeamLeaveRecords = () => {
 
       const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
       try {
-        const response = await fetch(url, {
-          method: 'GET',
+        const response = await axios.get(url, { // Replaced fetch with axios.get
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
           },
         });
 
-        const result = await response.json();
+        const result = response.data; // Axios gives parsed data directly
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
           console.log('Fetched leave records:', result.data);
           const mappedRecords = result.data.map((record: any) => ({
@@ -101,7 +101,7 @@ const TeamLeaveRecords = () => {
       case 'REJECTED_BY_HR':
         return 'Rejected by HR';
       default:
-        return status; // Fallback for unexpected statuses
+        return status;
     }
   };
 
@@ -131,16 +131,14 @@ const TeamLeaveRecords = () => {
     try {
       const payload = { id: recordId, status: newStatus };
       console.log('Sending PUT request with payload:', payload);
-      const response = await fetch('https://api.allinall.social/api/otz-hrm/employee/update-leave-status', {
-        method: 'PUT',
+      const response = await axios.put(`${API_BASE_URL}/employee/update-leave-status`, payload, { // Replaced fetch with axios.put
         headers: {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const result = response.data; // Axios parses JSON
       console.log('PUT response:', result);
       if (response.ok && result.success) {
         setLeaveRecords((prevRecords) =>
