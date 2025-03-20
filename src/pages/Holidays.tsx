@@ -3,12 +3,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+import { API_BASE_URL } from '@/config/api';
 
 interface Holiday {
   id: number;
   title: string;
-  start_date: string; // Renamed for consistency with GET API
-  end_date: string;   // Renamed for consistency with GET API
+  start_date: string;
+  end_date: string;
   active: boolean;
   total_days?: number;
 }
@@ -21,6 +23,8 @@ export default function Holidays() {
   const [endDate, setEndDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
@@ -33,28 +37,26 @@ export default function Holidays() {
       }
 
       try {
-        const response = await fetch('https://api.allinall.social/api/otz-hrm/Holiday/holiday-list', {
-          method: 'GET',
+        const response = await axios.get(`${API_BASE_URL}/Holiday/holiday-list`, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
           },
         });
-        const result = await response.json();
-        console.log('GET response:', result);
+        console.log('GET response:', response.data);
 
-        if (response.ok && result.success) {
-          const formattedHolidays: Holiday[] = result.data.map((holiday: any) => ({
+        if (response.status === 200 && response.data.success) {
+          const formattedHolidays: Holiday[] = response.data.data.map((holiday: any) => ({
             id: holiday.id,
             title: holiday.title,
-            start_date: holiday.start_date.split('T')[0], // Format to YYYY-MM-DD
-            end_date: holiday.end_date.split('T')[0],     // Format to YYYY-MM-DD
+            start_date: holiday.start_date.split('T')[0],
+            end_date: holiday.end_date.split('T')[0],
             active: holiday.status === 'ACTIVE',
             total_days: holiday.total_days,
           }));
           setHolidays(formattedHolidays);
         } else {
-          toast.error(result.message || 'Failed to fetch holidays');
+          toast.error(response.data.message || 'Failed to fetch holidays');
         }
       } catch (error) {
         console.error('GET error:', error);
@@ -91,38 +93,38 @@ export default function Holidays() {
     setIsSaving(true);
     const holidayData = {
       title,
-      startday: startDate, // POST API expects 'startday'
-      endday: endDate,     // POST API expects 'endday'
+      startday: startDate,
+      endday: endDate,
     };
 
     try {
-      const response = await fetch('https://api.allinall.social/api/otz-hrm/Holiday/create-holiday', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(holidayData),
-      });
-      const result = await response.json();
-      console.log('POST response:', result);
+      const response = await axios.post(
+        `${API_BASE_URL}/Holiday/create-holiday`,
+        holidayData,
+        {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      console.log('POST response:', response.data);
 
-      if (response.status === 201 && result.success) {
+      if (response.status === 201 && response.data.success) {
         toast.success('Holiday created successfully');
         setIsSaving(false);
         toggleModal();
+
         // Refetch holidays
         setIsLoading(true);
-        const fetchResponse = await fetch('https://api.allinall.social/api/otz-hrm/Holiday/holiday-list', {
-          method: 'GET',
+        const fetchResponse = await axios.get(`${API_BASE_URL}Holiday/holiday-list`, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
           },
         });
-        const fetchResult = await fetchResponse.json();
-        if (fetchResponse.ok && fetchResult.success) {
-          const formattedHolidays: Holiday[] = fetchResult.data.map((holiday: any) => ({
+        if (fetchResponse.status === 200 && fetchResponse.data.success) {
+          const formattedHolidays: Holiday[] = fetchResponse.data.data.map((holiday: any) => ({
             id: holiday.id,
             title: holiday.title,
             start_date: holiday.start_date.split('T')[0],
@@ -131,16 +133,29 @@ export default function Holidays() {
             total_days: holiday.total_days,
           }));
           setHolidays(formattedHolidays);
+          setCurrentPage(1);
         }
         setIsLoading(false);
       } else {
-        toast.error(result.message || `Failed to create holiday (Status: ${response.status})`);
+        toast.error(response.data.message || `Failed to create holiday (Status: ${response.status})`);
         setIsSaving(false);
       }
     } catch (error) {
       console.error('POST error:', error);
       toast.error('Network error: Could not create holiday');
       setIsSaving(false);
+    }
+  };
+
+  // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentHolidays = holidays.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(holidays.length / recordsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -177,7 +192,7 @@ export default function Holidays() {
             </TableHeader>
             <TableBody>
               {holidays.length > 0 ? (
-                holidays.map((holiday) => (
+                currentHolidays.map((holiday) => (
                   <TableRow
                     key={holiday.id}
                     className="hover:bg-gray-50 transition-colors border-b border-gray-100"
@@ -217,6 +232,27 @@ export default function Holidays() {
               )}
             </TableBody>
           </Table>
+          {holidays.length > 0 && !isLoading && (
+            <div className="flex justify-between items-center p-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span className="text-[#1F2328]">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
