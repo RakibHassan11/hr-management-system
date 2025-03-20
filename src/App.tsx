@@ -1,43 +1,43 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Provider } from "react-redux";
-import { store } from "./store";
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
-import ViewAttendance from "./pages/ViewAttendance.tsx";
-import AllAttendance from "./pages/AllAttendance.tsx";
-import TimeUpdate from "./pages/time_update/TimeUpdate";
-import ViewLeave from "./pages/ViewLeave";
-import ApplyLeave from "./pages/apply_leave/ApplyLeave";
-import Holidays from "./pages/Holidays";
-import MacAddress from "./pages/MacAddress";
-import ImportantLinks from "./pages/ImportantLinks";
-import Employee from "./pages/employee/Employee";
-import Team from "./pages/Team";
-import Login from "./pages/Login";
-import SuperAdminLogin from "./pages/SuperAdminLogin";
-import NotFound from "./pages/NotFound";
-import PrivateRoute from "@/components/PrivateRoute";
-import { Layout } from "@/components/Layout";
-import { AdminLayout } from "@/components/Admin/AdminLayout";
-import AdminHome from "./components/Admin/Home";
-import AdminEmployee from "./components/Admin/AdminEmployee";
-import EmployeeProfile from "./pages/employee/EmployeeProfile";
-import LeaveRecords from "./pages/apply_leave/LeaveRecords";
-import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
-import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx";
-import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx";
-import { useSessionTimeout } from "./utils/useSessionTimeout.ts";
-import EmployeeLeaveRecords from "./pages/employee/EmployeeLeaveRecords.tsx";
-import EmployeeAttendanceRecords from "./pages/employee/EmployeeAttendanceRecords.tsx";
+import { Toaster } from "@/components/ui/toaster"
+import { Toaster as Sonner } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { Provider } from "react-redux"
+import { store } from "./store"
+import Home from "./pages/Home"
+import Profile from "./pages/Profile"
+import ViewAttendance from "./pages/ViewAttendance.tsx"
+import AllAttendance from "./pages/AllAttendance.tsx"
+import TimeUpdate from "./pages/time_update/TimeUpdate"
+import ViewLeave from "./pages/ViewLeave"
+import ApplyLeave from "./pages/apply_leave/ApplyLeave"
+import Holidays from "./pages/Holidays"
+import MacAddress from "./pages/MacAddress"
+import ImportantLinks from "./pages/ImportantLinks"
+import Employee from "./pages/employee/Employee"
+import Team from "./pages/Team"
+import Login from "./pages/Login"
+import SuperAdminLogin from "./pages/SuperAdminLogin"
+import NotFound from "./pages/NotFound"
+import PrivateRoute from "@/components/PrivateRoute"
+import { Layout } from "@/components/Layout"
+import { AdminLayout } from "@/components/Admin/AdminLayout"
+import AdminHome from "./components/Admin/Home"
+import AdminEmployee from "./components/Admin/AdminEmployee"
+import EmployeeProfile from "./pages/employee/EmployeeProfile"
+import LeaveRecords from "./pages/apply_leave/LeaveRecords"
+import TimeUpdatesList from "./pages/time_update/TimeUpdatesList"
+import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx"
+import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx"
+import { useSessionTimeout } from "./utils/useSessionTimeout.ts"
+import EmployeeLeaveRecords from "./pages/employee/EmployeeLeaveRecords.tsx"
+import EmployeeAttendanceRecords from "./pages/employee/EmployeeAttendanceRecords.tsx"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 const App = () => {
-  useSessionTimeout();
+  useSessionTimeout()
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -48,14 +48,45 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Navigate to="/login" />} />
-              <Route path="/login" element={<PrivateRoute element={<Login />} />} />
-              <Route path="/adminlogin" element={<PrivateRoute element={<SuperAdminLogin />} />} />
+              <Route
+                path="/login"
+                element={<PrivateRoute element={<Login />} />}
+              />
+              <Route
+                path="/adminlogin"
+                element={<PrivateRoute element={<SuperAdminLogin />} />}
+              />
 
               <Route path="/user" element={<Navigate to="/user/home" />} />
-              <Route path="/user/*" element={<PrivateRoute element={<Layout><UserRoutes /></Layout>} />} />
+              <Route
+                path="/user/*"
+                element={
+                  <PrivateRoute
+                    element={
+                      <Layout>
+                        <UserRoutes />
+                      </Layout>
+                    }
+                  />
+                }
+              />
 
-              <Route path="/admin" element={<Navigate to="/admin/AdminHome" />} />
-              <Route path="/admin/*" element={<PrivateRoute element={<AdminLayout><AdminRoutes /></AdminLayout>} />} />
+              <Route
+                path="/admin"
+                element={<Navigate to="/admin/AdminHome" />}
+              />
+              <Route
+                path="/admin/*"
+                element={
+                  <PrivateRoute
+                    element={
+                      <AdminLayout>
+                        <AdminRoutes />
+                      </AdminLayout>
+                    }
+                  />
+                }
+              />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -64,7 +95,7 @@ const App = () => {
       </Provider>
     </QueryClientProvider>
   )
-};
+}
 
 const UserRoutes = () => (
   <Routes>
@@ -83,13 +114,16 @@ const UserRoutes = () => (
     <Route path="employee" element={<Employee />} />
     <Route path="employee/profile" element={<EmployeeProfile />} />
     <Route path="employee/leave-records" element={<EmployeeLeaveRecords />} />
-    <Route path="employee/attendance-records" element={<EmployeeAttendanceRecords/>} />
+    <Route
+      path="employee/attendance-records"
+      element={<EmployeeAttendanceRecords />}
+    />
     <Route path="team" element={<Team />} />
-    <Route path="team/leave-records" element={<TeamLeaveRecords/>} />
-    <Route path="team/attendance-records" element={<TeamAttendanceRecords/>} />
+    <Route path="team/leave-records" element={<TeamLeaveRecords />} />
+    <Route path="team/attendance-records" element={<TeamAttendanceRecords />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
-);
+)
 
 const AdminRoutes = () => (
   <Routes>
@@ -97,6 +131,6 @@ const AdminRoutes = () => (
     <Route path="employee" element={<AdminEmployee />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
-);
+)
 
-export default App;
+export default App
