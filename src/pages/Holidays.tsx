@@ -45,7 +45,7 @@ export default function Holidays() {
             'Content-Type': 'application/json',
           },
         });
-
+        
         console.log('GET response:', response.data);
 
         if (response.status === 200 && response.data.success) {
@@ -111,6 +111,7 @@ export default function Holidays() {
           },
         }
       );
+      console.log('POST response:', response.data);
 
       if (response.status === 201 && response.data.success) {
         toast.success('Holiday created successfully');

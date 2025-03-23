@@ -3,15 +3,16 @@ import ima from '../lovable-uploads/pet.jpg';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import moment from 'moment-timezone';
+import axios from 'axios';
 
 interface LeaveBalance {
   type: string;
   current: string;
-  joining: string;
+  startOfYear: string;
 }
 
 interface AttendanceRecord {
-  date: string; // Still "Thu 27" for now
+  date: string;
   in: string;
   out: string;
   duration?: string;
@@ -32,20 +33,42 @@ export default function Home() {
   const { userToken } = useSelector((state: RootState) => state.auth);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.allinall.social';
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveBalances = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
-      if (!storedToken) return;
+      if (!storedToken) {
+        console.log('No token available');
+        return;
+      }
 
       try {
-        const mockData: LeaveBalance[] = [
-          { type: 'Annual', current: '0.00', joining: '0.00' },
-          { type: 'Sick', current: '0.00', joining: '0.00' },
-          { type: 'Emergency', current: '0.00', joining: '0.00' },
-        ];
-        setLeaveBalances(mockData);
+        console.log('API_BASE_URL:', API_BASE_URL);
+        const url = `${API_BASE_URL}/employee/leave-balance`;
+        console.log('Fetching leave balances from:', url);
+        const response = await axios.get(url, {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = response.data;
+        console.log('Leave balance response:', result);
+        if (result.success && result.message === 'Leave balance fetched successfully') {
+          const apiData = result.data[0];
+          const leaveBalances: LeaveBalance[] = [
+            { type: 'Previous', current: apiData.previous_leave_balance.toString(), startOfYear: apiData.previous_leave_balance.toString() },
+            { type: 'Annual', current: apiData.annual_leave_balance.toString(), startOfYear: apiData.annual_leave_balance.toString() },
+            { type: 'Sick', current: apiData.sick_leave_balance.toString(), startOfYear: apiData.sick_leave_balance.toString() },
+
+          ];
+          setLeaveBalances(leaveBalances);
+          console.log('Leave balances set:', leaveBalances);
+        } else {
+          console.log('Failed to fetch leave balances:', result.message || 'Unknown error');
+        }
       } catch (error) {
         console.log('Leave balance fetch error:', error);
       }
@@ -54,17 +77,15 @@ export default function Home() {
     const fetchAttendanceRecords = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
       if (!storedToken) {
-        console.log('No authentication token available');
+        console.log('No token available for attendance');
         return;
       }
 
       try {
         console.log('API_BASE_URL:', API_BASE_URL);
-        const url = `${API_BASE_URL}/employee-attendance/attendance-list`;
-        console.log('Fetching from:', url);
-        console.log('Using token:', storedToken);
-        const response = await fetch(url, {
-          method: 'GET',
+        const url = `${API_BASE_URL}/employee-attendance/attendance-list?filterType=MONTHLY`;
+        console.log('Fetching attendance from:', url);
+        const response = await axios.get(url, { // Switched to Axios for consistency
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
@@ -72,26 +93,20 @@ export default function Home() {
           },
         });
 
-        const result = await response.json();
-        console.log('API Response:', result);
-        if (response.ok && result.success && result.message === 'Employee attendance records retrieved successfully') {
+        const result = response.data;
+        console.log('Attendance response:', result);
+        if (result.success && result.message === 'Employee attendance records retrieved successfully') {
           const apiData: ApiAttendanceRecord[] = result.data;
-
           const processedRecords: AttendanceRecord[] = apiData.map((record) => {
             const inMoment = moment.tz(record.check_in_time, 'UTC').tz('Asia/Dhaka');
             const outMoment = moment.tz(record.check_out_time, 'UTC').tz('Asia/Dhaka');
             const dateStr = inMoment.format('ddd DD');
             const inTime = inMoment.format('HH:mm');
             const outTime = outMoment.isValid() && outMoment.isAfter(inMoment) ? outMoment.format('HH:mm') : '-';
-
-            return {
-              date: dateStr,
-              in: inTime,
-              out: outTime,
-            };
+            return { date: dateStr, in: inTime, out: outTime };
           });
-
           setAttendanceRecords(processedRecords);
+          console.log('Attendance records set:', processedRecords);
         } else {
           console.log('Failed to fetch attendance:', result.message || 'Unknown error');
         }
@@ -106,12 +121,9 @@ export default function Home() {
 
   const calculateDuration = (inTime: string, outTime: string) => {
     if (inTime === '-' || outTime === '-') return '-';
-
     const inMoment = moment(inTime, 'HH:mm');
     const outMoment = moment(outTime, 'HH:mm');
-
     if (!inMoment.isValid() || !outMoment.isValid() || outMoment.isBefore(inMoment)) return '-';
-
     const duration = moment.duration(outMoment.diff(inMoment));
     const hours = Math.floor(duration.asHours()).toString().padStart(2, '0');
     const minutes = duration.minutes().toString().padStart(2, '0');
@@ -119,6 +131,7 @@ export default function Home() {
   };
 
   return (
+    // JSX remains unchanged
     <div className="animate-fadeIn p-6 flex flex-col gap-6">
       <div className="flex gap-6">
         <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328] flex-1">
@@ -146,19 +159,19 @@ export default function Home() {
                 <tr key={leave.type} className="text-center">
                   <td className="py-2 px-4 border border-gray-300">{leave.type}</td>
                   <td className="py-2 px-4 border border-gray-300">{leave.current}</td>
-                  <td className="py-2 px-4 border border-gray-300">{leave.joining}</td>
+                  <td className="py-2 px-4 border border-gray-300">{leave.startOfYear}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-<div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+      <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
         <h2 className="text-xl font-semibold mb-4">Attendances</h2>
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="py-2 px-4  text-left">Date</th>
+              <th className="py-2 px-4 text-left">Date</th>
               {attendanceRecords.map((record) => (
                 <th key={record.date} className="py-2 px-4 border border-gray-300">
                   {record.date.split(' ')[0]}
@@ -192,7 +205,6 @@ export default function Home() {
           </tbody>
         </table>
       </div>
-      
     </div>
   );
 }
