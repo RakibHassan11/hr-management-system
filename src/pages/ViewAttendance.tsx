@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import { formatTime } from "@/components/utils/dateHelper"
+import { formatDate, formatTime } from "@/components/utils/dateHelper"
 
 export default function ViewAttendance() {
   const [employees, setEmployees] = useState([])
@@ -143,20 +143,10 @@ export default function ViewAttendance() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-100">
-                      <TableHead
-                        className="text-[#1F2328] cursor-pointer"
-                        onClick={() => handleSortChange("employee_id")}
-                      >
-                        Employee ID{" "}
-                        {sortOn === "employee_id" &&
-                          (sortDirection === "asc" ? "↑" : "↓")}
-                      </TableHead>
-                      <TableHead className="text-[#1F2328] cursor-pointer">
+                      <TableHead className="text-[#1F2328]">
                         Employee Name
                       </TableHead>
-                      <TableHead className="text-[#1F2328] cursor-pointer">
-                        Check In
-                      </TableHead>
+                      <TableHead className="text-[#1F2328]">Check In</TableHead>
                       <TableHead className="text-[#1F2328]">
                         Check Out
                       </TableHead>
@@ -169,15 +159,14 @@ export default function ViewAttendance() {
                     {employees.map((employee, index) => (
                       <TableRow key={index}>
                         <TableCell className="text-[#1F2328]">
-                          {employee.employee_id}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328]">
                           {employee.name}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
+                          {formatDate(employee.check_in_time)}{" "}
                           {formatTime(employee.check_in_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
+                          {formatDate(employee.check_out_time)}{" "}
                           {formatTime(employee.check_out_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
@@ -188,45 +177,47 @@ export default function ViewAttendance() {
                   </TableBody>
                 </Table>
 
-                <div className="mt-6 flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <span>Show</span>
-                    <select
-                      value={perPage}
-                      onChange={e =>
-                        handlePerPageChange(Number(e.target.value))
-                      }
-                      className="border border-gray-300 rounded-md p-1"
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                    </select>
-                    <span>per page</span>
-                  </div>
+                {employees?.length >= perPage && (
+                  <div className="mt-6 flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <span>Show</span>
+                      <select
+                        value={perPage}
+                        onChange={e =>
+                          handlePerPageChange(Number(e.target.value))
+                        }
+                        className="border border-gray-300 rounded-md p-1"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <span>per page</span>
+                    </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                    >
-                      Previous
-                    </Button>
-                    <span>
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                    >
-                      Next
-                    </Button>
-                  </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                      >
+                        Previous
+                      </Button>
+                      <span>
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                      >
+                        Next
+                      </Button>
+                    </div>
 
-                  <span>Total: {totalItems} employees</span>
-                </div>
+                    <span>Total: {totalItems} employees</span>
+                  </div>
+                )}
               </>
             )}
           </>

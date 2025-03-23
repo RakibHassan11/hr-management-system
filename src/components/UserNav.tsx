@@ -68,6 +68,13 @@ export function UserNav() {
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
         <DropdownMenuItem
+          className="text-[#1F2328] hover:bg-[#F97316] hover:text-white"
+          onClick={() => navigate("/user/change-password")}
+        >
+          Change Password
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-[rgb(74,182,201,0.2)]" />
+        <DropdownMenuItem
           onClick={handleLogout}
           className="text-[#1F2328] hover:bg-[#F97316] hover:text-white"
         >

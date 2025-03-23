@@ -9,7 +9,11 @@ import {
 import { Fragment, useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import { formatTime, formatDate } from "@/components/utils/dateHelper"
+import {
+  formatTime,
+  formatDate,
+  formatText
+} from "@/components/utils/dateHelper"
 
 export default function TimeUpdatesList() {
   const [records, setRecords] = useState(null)
@@ -89,7 +93,21 @@ export default function TimeUpdatesList() {
                       {record.type}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {record.status}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          record.status === "APPROVED_BY_LINE_MANAGER" ||
+                          record.status === "APPROVED_BY_HR"
+                            ? "bg-green-100 text-green-800"
+                            : record.status === "REJECTED_BY_LINE_MANAGER" ||
+                              record.status === "REJECTED_BY_HR"
+                            ? "bg-red-100 text-red-800"
+                            : record.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {formatText(record.status)}
+                      </span>
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
                       {record.description}

@@ -33,6 +33,7 @@ import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx"
 import { useSessionTimeout } from "./utils/useSessionTimeout.ts"
 import EmployeeLeaveRecords from "./pages/employee/EmployeeLeaveRecords.tsx"
 import EmployeeAttendanceRecords from "./pages/employee/EmployeeAttendanceRecords.tsx"
+import ChangePassword from "./pages/ChangePassword.tsx"
 
 const queryClient = new QueryClient()
 
@@ -111,6 +112,7 @@ const UserRoutes = () => (
     <Route path="holidays" element={<Holidays />} />
     <Route path="mac-address" element={<MacAddress />} />
     <Route path="important-links" element={<ImportantLinks />} />
+    <Route path="change-password" element={<ChangePassword />} />
     <Route path="employee" element={<Employee />} />
     <Route path="employee/profile" element={<EmployeeProfile />} />
     <Route path="employee/leave-records" element={<EmployeeLeaveRecords />} />

@@ -38,7 +38,7 @@ const menuItems = [
     label: "All Attendance",
     path: "/user/all-attendance",
     hideCondition: user =>
-      user?.permission_value === 2 && user?.permission_value === 3
+      user?.permission_value === 2 || user?.permission_value === 3
   },
   {
     icon: FileEdit,
