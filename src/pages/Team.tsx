@@ -72,7 +72,6 @@ const TeamPage = () => {
               <TableHead className="text-[#1F2328] font-semibold">Role</TableHead>
               <TableHead className="text-[#1F2328] font-semibold">Email</TableHead>
               <TableHead className="text-[#1F2328] font-semibold">Phone</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +88,6 @@ const TeamPage = () => {
                 <TableCell className="text-[#1F2328] font-medium">{member.role}</TableCell>
                 <TableCell className="text-[#1F2328] font-medium">{member.email}</TableCell>
                 <TableCell className="text-[#1F2328] font-medium">{member.phone}</TableCell>
-                <TableCell className="text-[#1F2328] font-medium">{member.status}</TableCell>
               </TableRow>
             ))}
           </TableBody>

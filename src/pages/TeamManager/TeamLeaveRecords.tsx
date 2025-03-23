@@ -6,7 +6,7 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import moment from 'moment-timezone';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // Added Axios import
+import axios from 'axios';
 
 interface LeaveRecord {
   id: number;
@@ -52,14 +52,14 @@ const TeamLeaveRecords = () => {
 
       const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
       try {
-        const response = await axios.get(url, { // Replaced fetch with axios.get
+        const response = await axios.get(url, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
           },
         });
 
-        const result = response.data; // Axios gives parsed data directly
+        const result = response.data;
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
           console.log('Fetched leave records:', result.data);
           const mappedRecords = result.data.map((record: any) => ({
@@ -131,22 +131,23 @@ const TeamLeaveRecords = () => {
     try {
       const payload = { id: recordId, status: newStatus };
       console.log('Sending PUT request with payload:', payload);
-      const response = await axios.put(`${API_BASE_URL}/employee/update-leave-status`, payload, { // Replaced fetch with axios.put
+      const response = await axios.put(`${API_BASE_URL}/employee/update-leave-status`, payload, {
         headers: {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json',
         },
       });
 
-      const result = response.data; // Axios parses JSON
+      const result = response.data;
       console.log('PUT response:', result);
-      if (response.ok && result.success) {
+
+      if (response.status === 200 && result.success) {
         setLeaveRecords((prevRecords) =>
           prevRecords.map((record) =>
             record.id === recordId ? { ...record, ...result.data } : record
           )
         );
-        toast.success('Leave status updated successfully');
+        toast.success(`Leave request ${actionText}d successfully`);
       } else {
         toast.error(result.message || 'Failed to update leave record.');
       }

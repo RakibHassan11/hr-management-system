@@ -59,7 +59,6 @@ export default function Home() {
         if (result.success && result.message === 'Leave balance fetched successfully') {
           const apiData = result.data[0];
           const leaveBalances: LeaveBalance[] = [
-            { type: 'Previous', current: apiData.previous_leave_balance.toString(), startOfYear: apiData.previous_leave_balance.toString() },
             { type: 'Annual', current: apiData.annual_leave_balance.toString(), startOfYear: apiData.annual_leave_balance.toString() },
             { type: 'Sick', current: apiData.sick_leave_balance.toString(), startOfYear: apiData.sick_leave_balance.toString() },
 
