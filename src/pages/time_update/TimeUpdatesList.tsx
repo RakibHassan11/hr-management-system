@@ -51,6 +51,8 @@ export default function TimeUpdatesList() {
 
   if (error) <p className="text-center text-red-500">{error}</p>
 
+  console.log(records)
+
   return (
     <Fragment>
       {records !== null ? (
@@ -63,9 +65,6 @@ export default function TimeUpdatesList() {
                 <TableRow className="bg-gray-100">
                   <TableHead className="text-[#1F2328]">
                     Employee Name
-                  </TableHead>
-                  <TableHead className="text-[#1F2328]">
-                    Permission Value
                   </TableHead>
                   <TableHead className="text-[#1F2328]">Date</TableHead>
                   <TableHead className="text-[#1F2328]">Time</TableHead>
@@ -81,16 +80,13 @@ export default function TimeUpdatesList() {
                       {record.employee_name}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {record.permission_value}
-                    </TableCell>
-                    <TableCell className="text-[#1F2328]">
                       {formatDate(record.date)}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
                       {formatTime(record.time)}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {record.type}
+                      {formatText(record.type)}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
                       <span

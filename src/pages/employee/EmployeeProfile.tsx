@@ -682,13 +682,29 @@ function EmployeeProfile() {
                       <label className="text-sm font-medium text-[#1F2328]">
                         Father’s Name
                       </label>
-                      <Input defaultValue="Md. Mofiz Uddin Fakir(N/A)" />
+                      <Input
+                        value={formData?.fathers_name || ""}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            fathers_name: e.target.value
+                          })
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Mother’s Name
                       </label>
-                      <Input defaultValue="Umme Sara(N/A)" />
+                      <Input
+                        value={formData?.mothers_name || ""}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            mothers_name: e.target.value
+                          })
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">

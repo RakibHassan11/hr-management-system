@@ -58,9 +58,7 @@ export default function LeaveRecords() {
               <TableHeader>
                 <TableRow className="bg-gray-100">
                   <TableHead className="text-[#1F2328]">Name</TableHead>
-                  <TableHead className="text-[#1F2328]">
-                    Permission Value
-                  </TableHead>
+                  <TableHead className="text-[#1F2328]">Days</TableHead>
                   <TableHead className="text-[#1F2328]">Type</TableHead>
                   <TableHead className="text-[#1F2328]">Start Date</TableHead>
                   <TableHead className="text-[#1F2328]">End Date</TableHead>
@@ -75,10 +73,10 @@ export default function LeaveRecords() {
                       {record.name}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {record.permission_value}
+                      {record.days}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {record.type}
+                      {formatText(record.type)}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
                       {formatDate(record.start_date)}
