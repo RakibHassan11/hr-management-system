@@ -573,8 +573,12 @@ function Profile() {
                         Father’s Name
                       </label>
                       <Input
-                        defaultValue={
-                          formData.fathers_name || "Md. Mofiz Uddin Fakir(N/A)"
+                        value={formData?.fathers_name || ""}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            fathers_name: e.target.value
+                          })
                         }
                       />
                     </div>
@@ -659,7 +663,13 @@ function Profile() {
                         Mother’s Name
                       </label>
                       <Input
-                        defaultValue={formData.mothers_name || "Umme Sara(N/A)"}
+                        value={formData?.mothers_name || ""}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            mothers_name: e.target.value
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
