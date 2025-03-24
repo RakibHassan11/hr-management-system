@@ -37,8 +37,7 @@ const menuItems = [
     icon: Clock,
     label: "All Attendance",
     path: "/user/all-attendance",
-    hideCondition: user =>
-      user?.permission_value === 2 || user?.permission_value === 3
+    hideCondition: user => [2, "2", 3, "3"].includes(user?.permission_value)
   },
   {
     icon: FileEdit,
@@ -80,42 +79,37 @@ const menuItems = [
     icon: Building2,
     label: "Employee",
     path: "/user/employee",
-    hideCondition: user => user?.permission_value === 3
+    hideCondition: user => [3, "3"].includes(user?.permission_value)
   },
   {
     icon: Users,
     label: "Leave Records",
     path: "/user/employee/leave-records",
-    hideCondition: user =>
-      user?.permission_value === 3 || user?.permission_value === 2
+    hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
   },
   {
     icon: Users,
     label: "Attendance Records",
     path: "/user/employee/attendance-records",
-    hideCondition: user =>
-      user?.permission_value === 3 || user?.permission_value === 2
+    hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
   },
   {
     icon: Users,
     label: "Team",
     path: "/user/team",
-    hideCondition: user =>
-      user?.permission_value === 3 || user?.permission_value === 1
+    hideCondition: user => [3, "3", 1, "1"].includes(user?.permission_value)
   },
   {
     icon: Users,
     label: "Leave Records",
     path: "/user/team/leave-records",
-    hideCondition: user =>
-      user?.permission_value === 3 || user?.permission_value === 1
+    hideCondition: user => [3, "3", 1, "1"].includes(user?.permission_value)
   },
   {
     icon: Users,
     label: "Attendance Records",
     path: "/user/team/attendance-records",
-    hideCondition: user =>
-      user?.permission_value === 3 || user?.permission_value === 1
+    hideCondition: user => [3, "3", 1, "1"].includes(user?.permission_value)
   }
 ]
 
