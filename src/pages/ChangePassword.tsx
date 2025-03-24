@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Eye, EyeOff, ArrowLeft, Lock, CheckCircle } from "lucide-react"
+import { Eye, EyeOff, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import toast from "react-hot-toast"
 const PasswordInput = ({
@@ -11,20 +11,12 @@ const PasswordInput = ({
   placeholder,
   showPassword,
   toggleShowPassword
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  placeholder: string
-  showPassword: boolean
-  toggleShowPassword: () => void
 }) => {
   return (
-    <div className="animate-fade-in mb-6">
+    <div className="space-y-2">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-2"
+        className="block text-sm font-medium text-[#1F2328]"
       >
         {label}
       </label>
@@ -40,7 +32,7 @@ const PasswordInput = ({
         <button
           type="button"
           onClick={toggleShowPassword}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 form-input-transition"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
           aria-label={showPassword ? "Hide password" : "Show password"}
         >
           {showPassword ? (
@@ -64,7 +56,7 @@ const ChangePassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (
@@ -101,20 +93,17 @@ const ChangePassword = () => {
   console.log(currentPassword, newPassword, confirmPassword)
 
   return (
-    <div className="p-6 bg-gradient-to-b from-white to-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-4">
-        Change Password
-      </h1>
-      <div className="flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-2">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/5">
-              <Lock size={24} className="text-primary animate-pulse-subtle" />
-            </div>
-          </div>
+    <div className="h-[100vh] bg-white text-[#1F2328] flex flex-col">
+      <div className="">
+        <h1 className="text-2xl font-bold text-left">Change Password</h1>
+      </div>
 
-          <div className="glassmorphism rounded-xl p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Centered content closer to heading */}
+      <div className="flex justify-center mt-4">
+        <div className="w-full max-w-md space-y-4">
+          {/* Form container */}
+          <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <PasswordInput
                 id="current-password"
                 label="Current Password"
@@ -122,12 +111,8 @@ const ChangePassword = () => {
                 onChange={e => setCurrentPassword(e.target.value)}
                 placeholder="Enter your current password"
                 showPassword={showCurrentPassword}
-                toggleShowPassword={() =>
-                  setShowCurrentPassword(!showCurrentPassword)
-                }
+                toggleShowPassword={() => setShowCurrentPassword(!showCurrentPassword)}
               />
-
-              <div className="w-full h-px bg-gray-200 my-4"></div>
 
               <PasswordInput
                 id="new-password"
@@ -146,18 +131,16 @@ const ChangePassword = () => {
                 onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your new password"
                 showPassword={showConfirmPassword}
-                toggleShowPassword={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
-                }
+                toggleShowPassword={() => setShowConfirmPassword(!showConfirmPassword)}
               />
 
               <Button
                 type="submit"
-                className="w-full py-6 mt-8 hover-scale button-press"
+                className="w-full mt-4"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     <svg
                       className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                       xmlns="http://www.w3.org/2000/svg"
@@ -181,20 +164,23 @@ const ChangePassword = () => {
                     Processing...
                   </span>
                 ) : (
-                  <span className="flex items-center">
+                  <span className="flex items-center justify-center">
                     Update Password
-                    <CheckCircle size={16} className="ml-2 animate-float" />
+                    <CheckCircle size={16} className="ml-2" />
                   </span>
                 )}
               </Button>
             </form>
           </div>
 
-          <div className="mt-4 text-center text-sm text-gray-500">
-            <p>
-              Password must be at least 8 characters long and should include
-              letters, numbers, and special characters.
-            </p>
+          <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+            <h2 className="text-lg font-semibold mb-4">Password Requirements</h2>
+            <div className="space-y-4">
+              <ul className="list-disc list-inside text-sm text-gray-600">
+                <li>Minimum 8 characters long</li>
+                <li>Should include letters, numbers, and special characters</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
