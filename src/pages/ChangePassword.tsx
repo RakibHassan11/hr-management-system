@@ -132,7 +132,7 @@ const ChangePassword = () => {
   }
 
   return (
-    <div className="h-[100vh] bg-white text-[#1F2328] flex flex-col">
+    <div className="h-[100vh text-[#1F2328] flex flex-col">
       <div className="">
         <h1 className="text-2xl font-bold text-left">Change Password</h1>
       </div>
