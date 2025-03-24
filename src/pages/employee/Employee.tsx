@@ -39,7 +39,6 @@ export default function Employee() {
     sortDir = sortDirection,
     sortField = sortOn
   ) => {
-    setLoading(true)
     let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
     if (query) {
       url += `&query=${query}`
@@ -73,6 +72,7 @@ export default function Employee() {
   }
 
   useEffect(() => {
+    setLoading(true)
     fetchEmployees()
   }, [token, API_URL])
 

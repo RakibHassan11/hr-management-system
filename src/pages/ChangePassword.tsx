@@ -2,8 +2,7 @@ import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-
+import toast from "react-hot-toast"
 const PasswordInput = ({
   id,
   label,
@@ -28,8 +27,7 @@ const PasswordInput = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
+          className="w-full px-4 py-3 rounded-md border border-gray-200 focus-ring form-input-transition"
         />
         <button
           type="button"
@@ -57,26 +55,26 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
-  const { toast } = useToast()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (
+      currentPassword === "" ||
+      newPassword === "" ||
+      confirmPassword === ""
+    ) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "New password and confirmation must match.",
-        variant: "destructive"
-      })
+      toast.error("Passwords don't match")
       return
     }
 
     if (newPassword.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "New password must be at least 8 characters long.",
-        variant: "destructive"
-      })
+      toast.error("Password must be at least 8 characters long")
       return
     }
 
@@ -84,17 +82,18 @@ const ChangePassword = () => {
 
     setTimeout(() => {
       setIsSubmitting(false)
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully."
-      })
-      navigate("/")
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      toast.success("Password has been changed successfully")
+      // navigate("/user/home")
     }, 1500)
   }
 
+  console.log(currentPassword, newPassword, confirmPassword)
+
   return (
     <div className="h-[100vh] bg-white text-[#1F2328] flex flex-col">
-      {/* Heading with reduced top margin */}
       <div className="">
         <h1 className="text-2xl font-bold text-left">Change Password</h1>
       </div>
@@ -174,7 +173,6 @@ const ChangePassword = () => {
             </form>
           </div>
 
-          {/* Requirements container */}
           <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
             <h2 className="text-lg font-semibold mb-4">Password Requirements</h2>
             <div className="space-y-4">
