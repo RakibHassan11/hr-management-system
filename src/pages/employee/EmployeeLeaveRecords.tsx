@@ -184,7 +184,7 @@ const EmployeeLeaveRecords = () => {
                     {record.name}
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
-                    {record.type}
+                    {formatText(record.type)}
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
                     {formatDate(record.start_date)}

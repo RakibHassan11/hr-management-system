@@ -153,6 +153,8 @@ const TeamAttendanceRecord = () => {
     return <div className="p-6 text-center text-red-600">{error}</div>
   }
 
+  console.log(attendanceRecords)
+
   return (
     <div className="bg-white text-[#1F2328] p-6">
       <h1 className="text-2xl font-bold text-[#1F2328] mb-6">
@@ -191,7 +193,7 @@ const TeamAttendanceRecord = () => {
                     {formatTime(record.time)}
                   </TableCell>
                   <TableCell className="text-[#1F2328]">
-                    {record.type}
+                    {formatText(record.type)}
                   </TableCell>
                   <TableCell className="text-[#1F2328] truncate max-w-xs">
                     {record.description}
