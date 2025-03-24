@@ -11,7 +11,9 @@ import {
   Link as LinkIcon,
   Users,
   Building2,
-  Timer
+  Timer,
+  History,
+  ListChecks
 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
@@ -76,19 +78,19 @@ const menuItems = [
     hideCondition: () => false
   },
   {
-    icon: Building2,
+    icon: Users,
     label: "Employee",
     path: "/user/employee",
     hideCondition: user => [3, "3"].includes(user?.permission_value)
   },
   {
-    icon: Users,
+    icon: ListChecks,
     label: "Leave Records",
     path: "/user/employee/leave-records",
     hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
   },
   {
-    icon: Users,
+    icon: History ,
     label: "Attendance Records",
     path: "/user/employee/attendance-records",
     hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)

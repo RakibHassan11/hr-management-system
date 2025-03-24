@@ -6,13 +6,13 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import moment from 'moment'; // v2.30.1
-import 'moment-timezone'; // v0.5.47
+import moment from 'moment';
+import 'moment-timezone';
 
 interface AttendanceRecord {
   id: number;
   employee_id: number;
-  employee_name: string;
+  employee_name?: string;
   date: string;
   time: string;
   type: string;
@@ -57,6 +57,7 @@ const TeamAttendanceRecord = () => {
         });
 
         const result = response.data;
+        console.log('Raw API Response:', result);
         if (response.status === 200 && result.message === 'ATTENDANCE_REQUESTS_FETCHED') {
           setAttendanceRecords(result.data);
         } else {
@@ -73,13 +74,23 @@ const TeamAttendanceRecord = () => {
     fetchAttendanceRecords();
   }, [authToken, lineManagerDbId, API_BASE_URL]);
 
-  const formatDate = (dateString: string) => {
-    return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
-  };
+  const formatDateTime = (dateString: string, timeString: string) => {
+    const datePart = dateString.split('T')[0]; // Extract date portion
+    const combined = `${datePart}T${timeString}Z`; // Combine with time as UTC
+    const dhakaMoment = moment.utc(combined).tz('Asia/Dhaka');
 
-  const formatTime = (timeString: string) => {
-    const time = timeString.includes('T') ? timeString : `1970-01-01T${timeString}Z`;
-    return moment.utc(time).tz('Asia/Dhaka').format('hh:mm A');
+    if (!dhakaMoment.isValid()) {
+      console.error(`Invalid datetime: ${combined}`);
+      return { date: 'Invalid Date', time: 'Invalid Time' };
+    }
+
+    const formattedDate = dhakaMoment.format('MMMM D, YYYY');
+    const formattedTime = dhakaMoment.format('hh:mm A');
+    console.log(`UTC: ${combined} -> Dhaka: ${dhakaMoment.format('YYYY-MM-DD HH:mm:ss')} -> Time: ${formattedTime}`);
+    return {
+      date: formattedDate,
+      time: formattedTime,
+    };
   };
 
   const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
@@ -171,45 +182,49 @@ const TeamAttendanceRecord = () => {
                 <TableCell colSpan={7} className="text-center text-[#1F2328]">Loading...</TableCell>
               </TableRow>
             ) : currentRecords.length > 0 ? (
-              currentRecords.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell className="text-[#1F2328] font-medium">{record.employee_name}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">{formatDate(record.date)}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">{formatTime(record.time)}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium truncate max-w-xs">{record.description}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        record.status.includes('APPROVED') ? 'bg-green-100 text-green-800' :
-                        record.status.includes('REJECTED') ? 'bg-red-100 text-red-800' :
-                        record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {getReadableStatus(record.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium space-x-2">
-                    {record.status === 'PENDING' && (
-                      <>
-                        <button
-                          className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                          onClick={() => handleAction(record.id, 'APPROVED_BY_LINE_MANAGER')}
-                        >
-                          <FaCheck />
-                        </button>
-                        <button
-                          className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                          onClick={() => handleAction(record.id, 'REJECTED_BY_LINE_MANAGER')}
-                        >
-                          <FaTimes />
-                        </button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
+              currentRecords.map((record) => {
+                console.log('Rendering record:', record);
+                const { date, time } = formatDateTime(record.date, record.time);
+                return (
+                  <TableRow key={record.id}>
+                    <TableCell className="text-[#1F2328] font-medium">{record.employee_name || 'Unknown'}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">{date}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">{time}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium truncate max-w-xs">{record.description}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                          record.status.includes('APPROVED') ? 'bg-green-100 text-green-800' :
+                          record.status.includes('REJECTED') ? 'bg-red-100 text-red-800' :
+                          record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {getReadableStatus(record.status)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium space-x-2">
+                      {record.status === 'PENDING' && (
+                        <>
+                          <button
+                            className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
+                            onClick={() => handleAction(record.id, 'APPROVED_BY_LINE_MANAGER')}
+                          >
+                            <FaCheck />
+                          </button>
+                          <button
+                            className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
+                            onClick={() => handleAction(record.id, 'REJECTED_BY_LINE_MANAGER')}
+                          >
+                            <FaTimes />
+                          </button>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-[#1F2328]">No attendance records available</TableCell>
