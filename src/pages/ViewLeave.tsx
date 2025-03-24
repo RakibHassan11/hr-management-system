@@ -26,7 +26,7 @@ export default function ViewLeave() {
   const token = useSelector((state: RootState) => state.auth.userToken)
 
   const fetchLeaveData = (query = "") => {
-    const url = `${API_URL}/team/leave-records?line_manager_id=2`
+    const url = `${API_URL}/employee/leave-record-list`
     fetch(url, {
       method: "GET",
       headers: {
@@ -53,8 +53,6 @@ export default function ViewLeave() {
     fetchLeaveData()
   }, [API_URL, token])
 
-  console.log(leaveData)
-
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -63,7 +61,7 @@ export default function ViewLeave() {
 
       {leaveData !== null ? (
         <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          {/* <div className="grid grid-cols-3 gap-4 mb-4">
             <Select>
               <SelectTrigger className="border border-gray-300 bg-white">
                 <SelectValue placeholder="Leave Type" />
@@ -84,7 +82,7 @@ export default function ViewLeave() {
               className="border border-gray-300"
               defaultValue="2025-12-31"
             />
-          </div>
+          </div> */}
 
           <Table>
             <TableHeader>
@@ -101,9 +99,7 @@ export default function ViewLeave() {
             <TableBody>
               {leaveData.map(leave => (
                 <TableRow key={leave.id}>
-                  <TableCell className="text-[#1F2328]">
-                    {leave.employee_name}
-                  </TableCell>
+                  <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
                   <TableCell className="text-[#1F2328]">{leave.days}</TableCell>
                   <TableCell className="text-[#1F2328]">
                     {leave.description}
