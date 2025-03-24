@@ -6,6 +6,8 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import moment from 'moment'; // v2.30.1
+import 'moment-timezone'; // v0.5.47
 
 interface AttendanceRecord {
   id: number;
@@ -72,16 +74,12 @@ const TeamAttendanceRecord = () => {
   }, [authToken, lineManagerDbId, API_BASE_URL]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
   };
 
   const formatTime = (timeString: string) => {
-    const date = new Date(timeString.includes('T') ? timeString : `1970-01-01T${timeString}Z`);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const time = timeString.includes('T') ? timeString : `1970-01-01T${timeString}Z`;
+    return moment.utc(time).tz('Asia/Dhaka').format('hh:mm A');
   };
 
   const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
