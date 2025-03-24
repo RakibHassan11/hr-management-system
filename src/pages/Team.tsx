@@ -7,7 +7,6 @@ import axios from 'axios';
 interface TeamMember {
   id: number;
   name: string;
-  role: string;
   email: string;
   status: string;
   phone: string;
@@ -47,7 +46,6 @@ const TeamPage = () => {
           const mappedData = result.data.map((member: any) => ({
             id: member.id,
             name: member.name,
-            role: member.designation,
             email: member.email,
             status: member.status,
             phone: member.phone,
@@ -78,7 +76,6 @@ const TeamPage = () => {
           <TableHeader>
             <TableRow className="bg-[#E0E0E0]">
               <TableHead className="text-[#1F2328] font-semibold">Name</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Role</TableHead>
               <TableHead className="text-[#1F2328] font-semibold">Email</TableHead>
               <TableHead className="text-[#1F2328] font-semibold">Phone</TableHead>
             </TableRow>
@@ -92,7 +89,6 @@ const TeamPage = () => {
               teamMembers.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell className="text-[#1F2328] font-medium">{member.name}</TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">{member.role}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{member.email}</TableCell>
                   <TableCell className="text-[#1F2328] font-medium">{member.phone}</TableCell>
                 </TableRow>

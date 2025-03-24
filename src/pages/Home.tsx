@@ -59,9 +59,16 @@ export default function Home() {
         if (result.success && result.message === 'Leave balance fetched successfully') {
           const apiData = result.data[0];
           const leaveBalances: LeaveBalance[] = [
-            { type: 'Annual', current: apiData.annual_leave_balance.toString(), startOfYear: apiData.annual_leave_balance.toString() },
-            { type: 'Sick', current: apiData.sick_leave_balance.toString(), startOfYear: apiData.sick_leave_balance.toString() },
-
+            { 
+              type: 'Annual', 
+              current: apiData.annual_leave_balance.toString(), 
+              startOfYear: apiData.beginning_of_year_balance.toString() 
+            },
+            { 
+              type: 'Sick', 
+              current: apiData.sick_leave_balance.toString(), 
+              startOfYear: '0' // Sick leave starts at 0 per requirement
+            },
           ];
           setLeaveBalances(leaveBalances);
           console.log('Leave balances set:', leaveBalances);
@@ -84,7 +91,7 @@ export default function Home() {
         console.log('API_BASE_URL:', API_BASE_URL);
         const url = `${API_BASE_URL}/employee-attendance/attendance-list?filterType=MONTHLY`;
         console.log('Fetching attendance from:', url);
-        const response = await axios.get(url, { // Switched to Axios for consistency
+        const response = await axios.get(url, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
             'Content-Type': 'application/json',
@@ -130,7 +137,6 @@ export default function Home() {
   };
 
   return (
-    // JSX remains unchanged
     <div className="animate-fadeIn p-6 flex flex-col gap-6">
       <div className="flex gap-6">
         <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328] flex-1">
