@@ -25,32 +25,26 @@ interface LeaveRecord {
 
 const TeamLeaveRecords = () => {
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const recordsPerPage = 10;
-  const { userToken } = useSelector((state: RootState) => state.auth);
-  const { id } = useSelector((state: RootState) => state.auth.user);
+  const { userToken: authToken } = useSelector((state: RootState) => state.auth);
+  const { id: lineManagerDbId } = useSelector((state: RootState) => state.auth.user || {});
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
-      const storedToken = localStorage.getItem('token_user') || userToken;
-      const lineManagerId = id;
+      const storedToken = localStorage.getItem('token_user') || authToken;
+      const managerId = lineManagerDbId || localStorage.getItem('lineManagerDbId');
 
-      if (!storedToken) {
-        setError('No authentication token found. Please log in.');
+      if (!storedToken || !managerId) {
+        setError('Authentication token or manager ID missing. Please log in.');
         setIsLoading(false);
         return;
       }
 
-      if (!lineManagerId) {
-        setError('User ID not found. Please ensure you are logged in correctly.');
-        setIsLoading(false);
-        return;
-      }
-
-      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${lineManagerId}`;
+      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${managerId}`;
       try {
         const response = await axios.get(url, {
           headers: {
@@ -61,20 +55,16 @@ const TeamLeaveRecords = () => {
 
         const result = response.data;
         if (response.status === 200 && result.message === 'LEAVE_RECORDS_FETCHED') {
-          console.log('Fetched leave records:', result.data);
           const mappedRecords = result.data.map((record: any) => ({
             ...record,
             name: record.name || record.employee_name,
           }));
           setLeaveRecords(mappedRecords);
-        } else if (response.status === 401) {
-          setError('Unauthorized: Invalid or expired token. Please log in again.');
-        } else if (response.status === 403) {
-          setError('Forbidden: You lack permission to view these records.');
         } else {
           setError(result.message || 'Failed to fetch leave records.');
         }
       } catch (error) {
+        console.error('Fetch error:', error);
         setError('Network error: Failed to fetch leave records.');
       } finally {
         setIsLoading(false);
@@ -82,40 +72,34 @@ const TeamLeaveRecords = () => {
     };
 
     fetchLeaveRecords();
-  }, [userToken, id, API_BASE_URL]);
+  }, [authToken, lineManagerDbId, API_BASE_URL]);
 
   const formatDate = (dateString: string) => {
     return moment.utc(dateString).tz('Asia/Dhaka').format('MMMM D, YYYY');
   };
 
   const getReadableStatus = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'Pending';
-      case 'APPROVED_BY_LINE_MANAGER':
-        return 'Approved by Line Manager';
-      case 'REJECTED_BY_LINE_MANAGER':
-        return 'Rejected by Line Manager';
-      case 'APPROVED_BY_HR':
-        return 'Approved by HR';
-      case 'REJECTED_BY_HR':
-        return 'Rejected by HR';
-      default:
-        return status;
-    }
+    const statusMap: { [key: string]: string } = {
+      PENDING: 'Pending',
+      APPROVED_BY_LINE_MANAGER: 'Approved by Line Manager',
+      REJECTED_BY_LINE_MANAGER: 'Rejected by Line Manager',
+      APPROVED_BY_HR: 'Approved by HR',
+      REJECTED_BY_HR: 'Rejected by HR',
+    };
+    return statusMap[status] || status;
   };
 
   const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
-    const storedToken = localStorage.getItem('token_user') || userToken;
+    const storedToken = localStorage.getItem('token_user') || authToken;
     if (!storedToken) {
-      toast.error('No authentication token found. Please log in.');
+      toast.error('No authentication token found.');
       return;
     }
 
     const actionText = newStatus === 'APPROVED_BY_LINE_MANAGER' ? 'approve' : 'reject';
     const result = await Swal.fire({
       title: `Are you sure you want to ${actionText} this leave request?`,
-      text: "This action will update the leave status.",
+      text: 'This action will update the leave status.',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -124,13 +108,10 @@ const TeamLeaveRecords = () => {
       cancelButtonText: 'No',
     });
 
-    if (!result.isConfirmed) {
-      return;
-    }
+    if (!result.isConfirmed) return;
 
     try {
       const payload = { id: recordId, status: newStatus };
-      console.log('Sending PUT request with payload:', payload);
       const response = await axios.put(`${API_BASE_URL}/employee/update-leave-status`, payload, {
         headers: {
           'Authorization': `Bearer ${storedToken}`,
@@ -139,13 +120,9 @@ const TeamLeaveRecords = () => {
       });
 
       const result = response.data;
-      console.log('PUT response:', result);
-
       if (response.status === 200 && result.success) {
-        setLeaveRecords((prevRecords) =>
-          prevRecords.map((record) =>
-            record.id === recordId ? { ...record, ...result.data } : record
-          )
+        setLeaveRecords((prev) =>
+          prev.map((record) => (record.id === recordId ? { ...record, ...result.data } : record))
         );
         toast.success(`Leave request ${actionText}d successfully`);
       } else {
@@ -163,20 +140,14 @@ const TeamLeaveRecords = () => {
   const totalPages = Math.ceil(leaveRecords.length / recordsPerPage);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
-  if (error) {
-    return <div className="p-6 text-center text-red-600">{error}</div>;
-  }
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
     <div className="animate-fadeIn p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#1F2328]">Team Leave Records</h1>
-      </div>
+      <h1 className="text-3xl font-bold text-[#1F2328] mb-6">Team Leave Records</h1>
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1F2328]/30">
         <Table>
           <TableHeader>
@@ -193,9 +164,7 @@ const TeamLeaveRecords = () => {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">
-                  Loading...
-                </TableCell>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">Loading...</TableCell>
               </TableRow>
             ) : currentRecords.length > 0 ? (
               currentRecords.map((record) => (
@@ -208,13 +177,10 @@ const TeamLeaveRecords = () => {
                   <TableCell className="text-[#1F2328] font-medium">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        record.status === 'APPROVED_BY_LINE_MANAGER' || record.status === 'APPROVED_BY_HR'
-                          ? 'bg-green-100 text-green-800'
-                          : record.status === 'REJECTED_BY_LINE_MANAGER' || record.status === 'REJECTED_BY_HR'
-                          ? 'bg-red-100 text-red-800'
-                          : record.status === 'PENDING'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
+                        record.status.includes('APPROVED') ? 'bg-green-100 text-green-800' :
+                        record.status.includes('REJECTED') ? 'bg-red-100 text-red-800' :
+                        record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}
                     >
                       {getReadableStatus(record.status)}
@@ -242,9 +208,7 @@ const TeamLeaveRecords = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">
-                  No leave records available
-                </TableCell>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">No leave records available</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -257,9 +221,7 @@ const TeamLeaveRecords = () => {
           >
             Previous
           </button>
-          <span className="text-[#1F2328]">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-[#1F2328]">Page {currentPage} of {totalPages}</span>
           <button
             className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
             onClick={() => handlePageChange(currentPage + 1)}

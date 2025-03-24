@@ -27,8 +27,6 @@ export default function Holidays() {
   const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
 
-
-  
   useEffect(() => {
     const fetchHolidays = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
@@ -40,12 +38,9 @@ export default function Holidays() {
 
       try {
         const response = await axios.get(`${API_BASE_URL}/Holiday/holiday-list`, {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
         });
-        
+
         console.log('GET response:', response.data);
 
         if (response.status === 200 && response.data.success) {
@@ -94,23 +89,12 @@ export default function Holidays() {
     }
 
     setIsSaving(true);
-    const holidayData = {
-      title,
-      startday: startDate,
-      endday: endDate,
-    };
+    const holidayData = { title, startday: startDate, endday: endDate };
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/Holiday/create-holiday`,
-        holidayData,
-        {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await axios.post(`${API_BASE_URL}/Holiday/create-holiday`, holidayData, {
+        headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
+      });
       console.log('POST response:', response.data);
 
       if (response.status === 201 && response.data.success) {
@@ -118,13 +102,9 @@ export default function Holidays() {
         setIsSaving(false);
         toggleModal();
 
-        // Refetch holidays
         setIsLoading(true);
-        const fetchResponse = await axios.get(`${API_BASE_URL}Holiday/holiday-list`, {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json',
-          },
+        const fetchResponse = await axios.get(`${API_BASE_URL}/Holiday/holiday-list`, {
+          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
         });
         if (fetchResponse.status === 200 && fetchResponse.data.success) {
           const formattedHolidays: Holiday[] = fetchResponse.data.data.map((holiday: any) => ({
@@ -150,23 +130,20 @@ export default function Holidays() {
     }
   };
 
-  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentHolidays = holidays.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(holidays.length / recordsPerPage);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   return (
     <>
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Holidays</h1>
+          <h1 className="text-3xl font-bold">Holidays</h1>
           <button
             className="bg-[#F97316] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#EA580C]"
             onClick={toggleModal}
@@ -179,16 +156,16 @@ export default function Holidays() {
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328] text-lg rounded-tl-lg">
+                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Title
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328] text-lg">
+                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Start Date
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328] text-lg">
+                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   End Date
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328] text-lg rounded-tr-lg">
+                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Total Days
                 </TableHead>
               </TableRow>
@@ -196,39 +173,30 @@ export default function Holidays() {
             <TableBody>
               {holidays.length > 0 ? (
                 currentHolidays.map((holiday) => (
-                  <TableRow
-                    key={holiday.id}
-                    className="hover:bg-gray-50 transition-colors border-b border-gray-100"
-                  >
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] font-medium text-base truncate">
+                  <TableRow key={holiday.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] font-medium truncate">
                       {holiday.title}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] text-base truncate">
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.start_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] text-base truncate">
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.end_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] text-base truncate">
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.total_days ?? 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))
               ) : isLoading ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="py-6 px-6 text-center text-[#1F2328] font-medium text-base"
-                  >
+                  <TableCell colSpan={4} className="py-6 px-6 text-center text-[#1F2328] font-medium">
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="py-6 px-6 text-center text-[#1F2328] font-medium text-base"
-                  >
+                  <TableCell colSpan={4} className="py-6 px-6 text-center text-[#1F2328] font-medium">
                     No holidays available
                   </TableCell>
                 </TableRow>
@@ -264,7 +232,7 @@ export default function Holidays() {
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-semibold mb-4">Add Holiday</h2>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1F2328]">Holiday Title</label>
+              <label className="block font-medium text-[#1F2328]">Holiday Title</label>
               <input
                 type="text"
                 value={title}
@@ -275,7 +243,7 @@ export default function Holidays() {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1F2328]">Start Date</label>
+              <label className="block font-medium text-[#1F2328]">Start Date</label>
               <input
                 type="date"
                 value={startDate}
@@ -285,7 +253,7 @@ export default function Holidays() {
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-[#1F2328]">End Date</label>
+              <label className="block font-medium text-[#1F2328]">End Date</label>
               <input
                 type="date"
                 value={endDate}
