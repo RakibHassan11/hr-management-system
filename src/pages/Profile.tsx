@@ -38,15 +38,19 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
   const user = useSelector((state: RootState) => state.auth.user)
-  const { permission_value } = useSelector(
-    (state: RootState) => state.auth.user
-  )
-  const permission =
-    permission_value === 1
-      ? "HR"
-      : permission_value === 2
-      ? "TEAM LEAD"
-      : "EMPLOYEE"
+  console.log(user)
+
+  // const { permission_value } = useSelector(
+  //   (state: RootState) => state.auth.user
+  // )
+  // const permission =
+  //   permission_value === 1
+  //     ? "HR"
+  //     : permission_value === 2
+  //     ? "TEAM LEAD"
+  //     : "EMPLOYEE"
+
+  const list_type = "TEAM LEAD"
 
   let toastId
   useEffect(() => {
@@ -75,7 +79,7 @@ function Profile() {
           axios.get(`${API_URL}/sub-departments/list`, config),
           axios.get(`${API_URL}/units/list`, config),
           axios.get(
-            `${API_URL}/employee/employee-list-by-role?permission_value=${permission}`,
+            `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}`,
             config
           )
         ])
@@ -182,6 +186,8 @@ function Profile() {
     }
   }
 
+  console.log(formData)
+
   return (
     <Fragment>
       {employee !== null ? (
@@ -251,7 +257,7 @@ function Profile() {
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Username
                       </label>
@@ -261,7 +267,7 @@ function Profile() {
                           setFormData({ ...formData, username: e.target.value })
                         }
                       />
-                    </div>
+                    </div> */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Designation
@@ -566,7 +572,11 @@ function Profile() {
                       <label className="text-sm font-medium text-[#1F2328]">
                         Father’s Name
                       </label>
-                      <Input defaultValue="Md. Mofiz Uddin Fakir(N/A)" />
+                      <Input
+                        defaultValue={
+                          formData.fathers_name || "Md. Mofiz Uddin Fakir(N/A)"
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
@@ -648,7 +658,9 @@ function Profile() {
                       <label className="text-sm font-medium text-[#1F2328]">
                         Mother’s Name
                       </label>
-                      <Input defaultValue="Umme Sara(N/A)" readOnly />
+                      <Input
+                        defaultValue={formData.mothers_name || "Umme Sara(N/A)"}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
