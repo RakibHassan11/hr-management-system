@@ -1,8 +1,11 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import toast from "react-hot-toast"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
+
 const PasswordInput = ({
   id,
   label,
@@ -14,10 +17,7 @@ const PasswordInput = ({
 }) => {
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-[#1F2328]"
-      >
+      <label htmlFor={id} className="block text-sm font-medium text-[#1F2328]">
         {label}
       </label>
       <div className="relative">
@@ -55,8 +55,10 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
+  const token = useSelector((state: RootState) => state.auth.userToken)
+  const API_URL = import.meta.env.VITE_API_URL
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
 
     if (
@@ -64,33 +66,70 @@ const ChangePassword = () => {
       newPassword === "" ||
       confirmPassword === ""
     ) {
-      toast.error("Please fill in all fields")
+      toast.error("Please fill in all fields", {
+        position: "top-right",
+        duration: 3000
+      })
       return
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords don't match")
+      toast.error("Passwords don't match", {
+        position: "top-right",
+        duration: 3000
+      })
       return
     }
 
     if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long")
+      toast.error("Password must be at least 8 characters long", {
+        position: "top-right",
+        duration: 3000
+      })
       return
     }
 
     setIsSubmitting(true)
 
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      const response = await fetch(`${API_URL}/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          old_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to change password")
+      }
+
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
-      toast.success("Password has been changed successfully")
-      // navigate("/user/home")
-    }, 1500)
+      toast.success("Password has been changed successfully", {
+        position: "top-right",
+        duration: 3000
+      })
+      // navigate("/user/home");
+    } catch (error) {
+      toast.error(
+        error.message || "An error occurred while changing the password",
+        {
+          position: "top-right",
+          duration: 3000
+        }
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-
-  console.log(currentPassword, newPassword, confirmPassword)
 
   return (
     <div className="h-[100vh] bg-white text-[#1F2328] flex flex-col">
@@ -98,10 +137,8 @@ const ChangePassword = () => {
         <h1 className="text-2xl font-bold text-left">Change Password</h1>
       </div>
 
-      {/* Centered content closer to heading */}
       <div className="flex justify-center mt-4">
         <div className="w-full max-w-md space-y-4">
-          {/* Form container */}
           <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
             <form onSubmit={handleSubmit} className="space-y-3">
               <PasswordInput
@@ -111,7 +148,9 @@ const ChangePassword = () => {
                 onChange={e => setCurrentPassword(e.target.value)}
                 placeholder="Enter your current password"
                 showPassword={showCurrentPassword}
-                toggleShowPassword={() => setShowCurrentPassword(!showCurrentPassword)}
+                toggleShowPassword={() =>
+                  setShowCurrentPassword(!showCurrentPassword)
+                }
               />
 
               <PasswordInput
@@ -131,7 +170,9 @@ const ChangePassword = () => {
                 onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your new password"
                 showPassword={showConfirmPassword}
-                toggleShowPassword={() => setShowConfirmPassword(!showConfirmPassword)}
+                toggleShowPassword={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
               />
 
               <Button
@@ -174,7 +215,9 @@ const ChangePassword = () => {
           </div>
 
           <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-            <h2 className="text-lg font-semibold mb-4">Password Requirements</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Password Requirements
+            </h2>
             <div className="space-y-4">
               <ul className="list-disc list-inside text-sm text-gray-600">
                 <li>Minimum 8 characters long</li>
