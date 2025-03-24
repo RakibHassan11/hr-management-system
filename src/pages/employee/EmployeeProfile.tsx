@@ -221,12 +221,12 @@ function EmployeeProfile() {
                 >
                   Basic
                 </TabsTrigger>
-                <TabsTrigger
+                {/* <TabsTrigger
                   value="device"
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
                 >
                   Device
-                </TabsTrigger>
+                </TabsTrigger> */}
                 <TabsTrigger
                   value="personal"
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
@@ -251,12 +251,12 @@ function EmployeeProfile() {
                 >
                   Meal
                 </TabsTrigger>
-                <TabsTrigger
+                {/* <TabsTrigger
                   value="leave"
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
                 >
                   Leave
-                </TabsTrigger>
+                </TabsTrigger> */}
               </TabsList>
 
               <TabsContent value="basic" className="space-y-6">
@@ -553,7 +553,7 @@ function EmployeeProfile() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="device" className="space-y-6">
+              {/* <TabsContent value="device" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-black">
@@ -568,7 +568,7 @@ function EmployeeProfile() {
                     <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
                   </div>
                 </div>
-              </TabsContent>
+              </TabsContent> */}
 
               <TabsContent value="personal" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -937,7 +937,7 @@ function EmployeeProfile() {
                   </div>
                 </div>
               </TabsContent>
-              <TabsContent value="leave" className="space-y-6">
+              {/* <TabsContent value="leave" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <table className="w-full border-collapse border border-gray-300">
                     <thead className="bg-gray-100">
@@ -968,7 +968,7 @@ function EmployeeProfile() {
                     </tbody>
                   </table>
                 </div>
-              </TabsContent>
+              </TabsContent> */}
               <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <table className="w-full border-collapse border border-gray-300">
