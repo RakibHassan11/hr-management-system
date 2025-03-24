@@ -44,7 +44,6 @@ export default function Home() {
       }
 
       try {
-        console.log('API_BASE_URL:', API_BASE_URL);
         const url = `${API_BASE_URL}/employee/leave-balance`;
         console.log('Fetching leave balances from:', url);
         const response = await axios.get(url, {
