@@ -15,7 +15,6 @@ import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
-import { User } from "lucide-react"
 
 function EmployeeProfile() {
   const [employee, setEmployee] = useState(null)
@@ -24,7 +23,11 @@ function EmployeeProfile() {
     department_id: null,
     sub_department_id: null,
     unit_id: null,
-    line_manager_id: null
+    line_manager_id: null,
+    breakfast: 0,
+    lunch: 0,
+    beef: 0,
+    fish: 0
   })
   const [categoryOptions, setCategoryOptions] = useState({
     divisions: [],
@@ -169,7 +172,14 @@ function EmployeeProfile() {
       toastId = toast("No changes made!")
       return
     }
-    const req_body = { ...updatedFields, id: Number(id) }
+    const req_body = {
+      ...updatedFields,
+      id: Number(id),
+      breakfast: formData.breakfast === 1,
+      lunch: formData.lunch === 1,
+      beef: formData.beef === 1,
+      fish: formData.fish === 1
+    }
 
     try {
       setUpdating(true)
@@ -196,7 +206,9 @@ function EmployeeProfile() {
       }))
     } catch (err) {
       setEmployee([])
-      toast.error("Error updating profile: " + err.message, { id: toastId })
+      toast.error("Error updating profile, Access denied: " + err.message, {
+        id: toastId
+      })
     } finally {
       setUpdating(false)
     }
@@ -969,7 +981,7 @@ function EmployeeProfile() {
                   </table>
                 </div>
               </TabsContent> */}
-              <TabsContent value="meal" className="space-y-6">
+              {/* <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <table className="w-full border-collapse border border-gray-300">
                     <thead className="bg-gray-100">
@@ -1012,6 +1024,80 @@ function EmployeeProfile() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </TabsContent> */}
+              {/* <TabsContent value="meal" className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+                  <div className="grid grid-cols-2 gap-6">
+                    {[
+                      { label: "Breakfast", key: "breakfast" },
+                      { label: "Lunch", key: "lunch" },
+                      { label: "Beef", key: "beef" },
+                      { label: "Fish", key: "fish" }
+                    ].map(meal => (
+                      <div key={meal.key} className="space-y-2">
+                        <label className="text-sm font-medium text-[#1F2328] block">
+                          {meal.label}
+                        </label>
+                        <Select
+                          value={formData?.[meal.key] === 1 ? "Yes" : "No"}
+                          onValueChange={value =>
+                            setFormData({
+                              ...formData,
+                              [meal.key]: value === "Yes" ? 1 : 0
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
+                            <SelectValue
+                              placeholder={`-- Select ${meal.label} --`}
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-gray-300 shadow-md">
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent> */}
+              <TabsContent value="meal" className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+                  <div className="grid grid-cols-2 gap-6">
+                    {[
+                      { label: "Breakfast", key: "breakfast" },
+                      { label: "Lunch", key: "lunch" },
+                      { label: "Beef", key: "beef" },
+                      { label: "Fish", key: "fish" }
+                    ].map(meal => (
+                      <div key={meal.key} className="space-y-2">
+                        <label className="text-sm font-medium text-[#1F2328] block">
+                          {meal.label}
+                        </label>
+                        <Select
+                          value={formData?.[meal.key] === 1 ? "Yes" : "No"}
+                          onValueChange={value =>
+                            setFormData({
+                              ...formData,
+                              [meal.key]: value === "Yes" ? 1 : 0
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
+                            <SelectValue
+                              placeholder={`-- Select ${meal.label} --`}
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-gray-300 shadow-md">
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
