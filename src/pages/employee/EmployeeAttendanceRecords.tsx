@@ -52,10 +52,11 @@ const EmployeeAttendanceRecords = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL
   const storedToken = localStorage.getItem("token_user") || userToken
 
+  // Token check inside component body
   if (!storedToken) {
     setError("No authentication token found. Please log in.")
     setIsLoading(false)
-    return
+    return <div className="p-6 text-center text-red-600">{error}</div>
   }
 
   useEffect(() => {
@@ -72,7 +73,9 @@ const EmployeeAttendanceRecords = () => {
 
         const result = await response.json()
         if (response.status === 200) {
-          setAttendanceRecords(result)
+          // Normalize result to ensure it's an array
+          const records = Array.isArray(result) ? result : result.data || []
+          setAttendanceRecords(records)
         } else {
           setError(result.message || "Failed to fetch attendance records.")
         }
@@ -87,7 +90,7 @@ const EmployeeAttendanceRecords = () => {
     }
 
     fetchAttendanceRecords()
-  }, [userToken, id, API_BASE_URL])
+  }, [storedToken, id, API_BASE_URL]) // Updated dependency array
 
   const handleAction = async (
     recordId: number,

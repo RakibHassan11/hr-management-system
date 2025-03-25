@@ -46,10 +46,11 @@ const EmployeeLeaveRecords = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL
   const storedToken = localStorage.getItem("token_user") || userToken
 
+  // Move token check inside the component body
   if (!storedToken) {
     setError("No authentication token found. Please log in.")
     setIsLoading(false)
-    return
+    return <div className="p-6 text-center text-red-600">{error}</div>
   }
 
   useEffect(() => {
@@ -66,21 +67,21 @@ const EmployeeLeaveRecords = () => {
 
         const result = await response.json()
         if (response.status === 200) {
-          setLeaveRecords(result)
+          // Ensure result is an array; adjust based on actual API response structure
+          const records = Array.isArray(result) ? result : result.data || []
+          setLeaveRecords(records)
         } else {
           setError(result.message || "Failed to fetch leave records.")
         }
       } catch (error) {
-        setError("Network error:" + error.message)
+        setError("Network error: " + error.message)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchLeaveRecords()
-  }, [userToken, id, API_BASE_URL])
-
-  console.log(leaveRecords)
+  }, [storedToken, id, API_BASE_URL])
 
   const handleAction = async (
     recordId: number,
