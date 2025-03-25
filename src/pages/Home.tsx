@@ -52,24 +52,32 @@ export default function Home() {
         });
 
         const result = response.data;
-        if (result.success && result.message === 'Leave balance fetched successfully') {
+        if (
+          result.success &&
+          result.message === 'Leave balance fetched successfully' &&
+          Array.isArray(result.data) &&
+          result.data.length > 0
+        ) {
           const apiData = result.data[0];
           const leaveBalances: LeaveBalance[] = [
-            { 
-              type: 'Annual', 
-              current: apiData.annual_leave_balance.toString(), 
-              startOfYear: apiData.beginning_of_year_balance.toString() 
+            {
+              type: 'Annual',
+              current: apiData.annual_leave_balance.toString(),
+              startOfYear: apiData.beginning_of_year_balance.toString(),
             },
-            { 
-              type: 'Sick', 
-              current: apiData.sick_leave_balance.toString(), 
-              startOfYear: '0' // Sick leave starts at 0 per requirement
+            {
+              type: 'Sick',
+              current: apiData.sick_leave_balance.toString(),
+              startOfYear: '0', // Sick leave starts at 0 per requirement
             },
           ];
           setLeaveBalances(leaveBalances);
+        } else {
+          setLeaveBalances([]); // Set to empty array if no valid data
         }
       } catch (error) {
-        console.log('Leave balance fetch error:', error);
+        console.error('Leave balance fetch error:', error);
+        setLeaveBalances([]); // Set to empty array on error
       }
     };
 
@@ -90,7 +98,11 @@ export default function Home() {
         });
 
         const result = response.data;
-        if (result.success && result.message === 'Employee attendance records retrieved successfully') {
+        if (
+          result.success &&
+          result.message === 'Employee attendance records retrieved successfully' &&
+          Array.isArray(result.data)
+        ) {
           const apiData: ApiAttendanceRecord[] = result.data;
           const processedRecords: AttendanceRecord[] = apiData.map((record) => {
             const inMoment = moment.tz(record.check_in_time, 'UTC').tz('Asia/Dhaka');
@@ -101,9 +113,12 @@ export default function Home() {
             return { date: dateStr, in: inTime, out: outTime };
           });
           setAttendanceRecords(processedRecords);
+        } else {
+          setAttendanceRecords([]); // Set to empty array if no valid data
         }
       } catch (error) {
-        console.log('Attendance fetch error:', error);
+        console.error('Attendance records fetch error:', error);
+        setAttendanceRecords([]); // Set to empty array on error
       }
     };
 
@@ -146,7 +161,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {leaveBalances.map((leave) => (
+              {leaveBalances?.map((leave) => (
                 <tr key={leave.type} className="text-center">
                   <td className="py-2 px-4 border border-gray-300">{leave.type}</td>
                   <td className="py-2 px-4 border border-gray-300">{leave.current}</td>
