@@ -1,5 +1,6 @@
 import moment from "moment" // v2.30.1
 import "moment-timezone" // v0.5.47
+
 export const formatDate = (dateString: string) => {
   return moment.utc(dateString).tz("Asia/Dhaka").format("MMMM D, YYYY")
 }

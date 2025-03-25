@@ -954,7 +954,7 @@ function Profile() {
                 </div>
               </TabsContent> */}
 
-              <TabsContent value="meal" className="space-y-6">
+              {/* <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <table className="w-full border-collapse border border-gray-300">
                     <thead className="bg-gray-100">
@@ -997,6 +997,43 @@ function Profile() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </TabsContent> */}
+              <TabsContent value="meal" className="space-y-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
+                  <div className="grid grid-cols-2 gap-6">
+                    {[
+                      { label: "Breakfast", key: "breakfast" },
+                      { label: "Lunch", key: "lunch" },
+                      { label: "Beef", key: "beef" },
+                      { label: "Fish", key: "fish" }
+                    ].map(meal => (
+                      <div key={meal.key} className="space-y-2">
+                        <label className="text-sm font-medium text-[#1F2328] block">
+                          {meal.label}
+                        </label>
+                        <Select
+                          value={formData?.[meal.key] === 1 ? "Yes" : "No"}
+                          onValueChange={value =>
+                            setFormData({
+                              ...formData,
+                              [meal.key]: value === "Yes" ? 1 : 0
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
+                            <SelectValue
+                              placeholder={`-- Select ${meal.label} --`}
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-gray-300 shadow-md">
+                            <SelectItem value="Yes">Yes</SelectItem>
+                            <SelectItem value="No">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>
