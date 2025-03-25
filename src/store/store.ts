@@ -12,7 +12,6 @@ export const store = configureStore({
   },
 });
 
-// console.log('Store initialized successfully at:', new Date().toISOString());
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

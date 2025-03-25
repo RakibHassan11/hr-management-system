@@ -41,7 +41,6 @@ export default function Holidays() {
           headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
         });
 
-        console.log('GET response:', response.data);
 
         if (response.status === 200 && response.data.success) {
           const formattedHolidays: Holiday[] = response.data.data.map((holiday: any) => ({
@@ -124,7 +123,6 @@ export default function Holidays() {
         setIsSaving(false);
       }
     } catch (error) {
-      console.error('POST error:', error);
       toast.error('Network error: Could not create holiday');
       setIsSaving(false);
     }

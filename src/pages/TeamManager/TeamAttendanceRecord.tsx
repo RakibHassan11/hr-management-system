@@ -46,7 +46,6 @@ const TeamAttendanceRecord = () => {
       }
 
       const url = `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}`;
-      console.log('Fetching attendance records from:', url);
 
       try {
         const response = await axios.get(url, {
@@ -57,7 +56,6 @@ const TeamAttendanceRecord = () => {
         });
 
         const result = response.data;
-        console.log('Raw API Response:', result);
         if (response.status === 200 && result.message === 'ATTENDANCE_REQUESTS_FETCHED') {
           setAttendanceRecords(result.data);
         } else {
@@ -80,13 +78,11 @@ const TeamAttendanceRecord = () => {
     const dhakaMoment = moment.utc(combined).tz('Asia/Dhaka');
 
     if (!dhakaMoment.isValid()) {
-      console.error(`Invalid datetime: ${combined}`);
       return { date: 'Invalid Date', time: 'Invalid Time' };
     }
 
     const formattedDate = dhakaMoment.format('MMMM D, YYYY');
     const formattedTime = dhakaMoment.format('hh:mm A');
-    console.log(`UTC: ${combined} -> Dhaka: ${dhakaMoment.format('YYYY-MM-DD HH:mm:ss')} -> Time: ${formattedTime}`);
     return {
       date: formattedDate,
       time: formattedTime,
@@ -133,7 +129,6 @@ const TeamAttendanceRecord = () => {
         toast.error(result.message || 'Failed to update attendance record.');
       }
     } catch (error) {
-      console.error('Network error:', error);
       toast.error('Network error: Failed to update attendance record.');
     }
   };
@@ -183,7 +178,6 @@ const TeamAttendanceRecord = () => {
               </TableRow>
             ) : currentRecords.length > 0 ? (
               currentRecords.map((record) => {
-                console.log('Rendering record:', record);
                 const { date, time } = formatDateTime(record.date, record.time);
                 return (
                   <TableRow key={record.id}>

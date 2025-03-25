@@ -55,7 +55,6 @@ export default function AllAttendance() {
       }
     })
       .then(response => {
-        console.log(response)
         if (!response.ok) {
           throw new Error("Failed to fetch employee data")
         }
