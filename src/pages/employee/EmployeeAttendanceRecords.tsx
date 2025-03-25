@@ -39,7 +39,7 @@ interface AttendanceRecord {
   active?: boolean
 }
 
-const TeamAttendanceRecord = () => {
+const EmployeeAttendanceRecords = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<
     AttendanceRecord[]
   >([])
@@ -71,7 +71,11 @@ const TeamAttendanceRecord = () => {
         })
 
         const result = await response.json()
-        setAttendanceRecords(result)
+        if (response.status === 200) {
+          setAttendanceRecords(result)
+        } else {
+          setError(result.message || "Failed to fetch attendance records.")
+        }
       } catch (error) {
         console.error("Fetch error:", error)
         setError(
@@ -270,4 +274,4 @@ const TeamAttendanceRecord = () => {
   )
 }
 
-export default TeamAttendanceRecord
+export default EmployeeAttendanceRecords

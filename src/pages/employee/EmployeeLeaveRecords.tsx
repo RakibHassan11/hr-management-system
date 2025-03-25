@@ -65,13 +65,12 @@ const EmployeeLeaveRecords = () => {
         })
 
         const result = await response.json()
-        // const mappedRecords = result?.map((record: any) => ({
-        //   ...record,
-        //   name: record.name || record.employee_name
-        // }))
-        setLeaveRecords(result)
+        if (response.status === 200) {
+          setLeaveRecords(result)
+        } else {
+          setError(result.message || "Failed to fetch leave records.")
+        }
       } catch (error) {
-        console.log(error)
         setError("Network error:" + error.message)
       } finally {
         setIsLoading(false)
@@ -80,6 +79,8 @@ const EmployeeLeaveRecords = () => {
 
     fetchLeaveRecords()
   }, [userToken, id, API_BASE_URL])
+
+  console.log(leaveRecords)
 
   const handleAction = async (
     recordId: number,
