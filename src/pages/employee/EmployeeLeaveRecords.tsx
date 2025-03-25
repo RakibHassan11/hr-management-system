@@ -65,13 +65,14 @@ const EmployeeLeaveRecords = () => {
         })
 
         const result = await response.json()
-        const mappedRecords = result?.map((record: any) => ({
-          ...record,
-          name: record.name || record.employee_name
-        }))
-        setLeaveRecords(mappedRecords)
+        // const mappedRecords = result?.map((record: any) => ({
+        //   ...record,
+        //   name: record.name || record.employee_name
+        // }))
+        setLeaveRecords(result)
       } catch (error) {
-        setError("Network error: Failed to fetch leave records.")
+        console.log(error)
+        setError("Network error:" + error.message)
       } finally {
         setIsLoading(false)
       }
@@ -133,11 +134,11 @@ const EmployeeLeaveRecords = () => {
 
   const indexOfLastRecord = currentPage * recordsPerPage
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = leaveRecords.slice(
+  const currentRecords = leaveRecords?.slice(
     indexOfFirstRecord,
     indexOfLastRecord
   )
-  const totalPages = Math.ceil(leaveRecords.length / recordsPerPage)
+  const totalPages = Math.ceil(leaveRecords?.length / recordsPerPage) || 1
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -176,7 +177,7 @@ const EmployeeLeaveRecords = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : currentRecords.length > 0 ? (
+            ) : currentRecords?.length > 0 ? (
               currentRecords.map(record => (
                 <TableRow key={record.id}>
                   <TableCell className="text-[#1F2328] font-medium">

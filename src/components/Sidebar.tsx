@@ -39,7 +39,7 @@ const menuItems = [
     hideCondition: () => false
   },
   {
-    icon: CalendarClock ,
+    icon: CalendarClock,
     label: "All Attendance",
     path: "/user/all-attendance",
     hideCondition: user => [2, "2", 3, "3"].includes(user?.permission_value)
@@ -93,7 +93,7 @@ const menuItems = [
     hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
   },
   {
-    icon: History ,
+    icon: History,
     label: "Attendance Records",
     path: "/user/employee/attendance-records",
     hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)

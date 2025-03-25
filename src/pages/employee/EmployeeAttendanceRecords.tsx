@@ -137,11 +137,11 @@ const TeamAttendanceRecord = () => {
 
   const indexOfLastRecord = currentPage * recordsPerPage
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = attendanceRecords.slice(
+  const currentRecords = attendanceRecords?.slice(
     indexOfFirstRecord,
     indexOfLastRecord
   )
-  const totalPages = Math.ceil(attendanceRecords.length / recordsPerPage)
+  const totalPages = Math.ceil(attendanceRecords?.length / recordsPerPage) || 1
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -152,7 +152,6 @@ const TeamAttendanceRecord = () => {
   if (error) {
     return <div className="p-6 text-center text-red-600">{error}</div>
   }
-
 
   return (
     <div className="bg-white text-[#1F2328] p-6">
@@ -179,7 +178,7 @@ const TeamAttendanceRecord = () => {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : currentRecords.length > 0 ? (
+            ) : currentRecords?.length > 0 ? (
               currentRecords.map(record => (
                 <TableRow key={record.id}>
                   <TableCell className="text-[#1F2328]">
