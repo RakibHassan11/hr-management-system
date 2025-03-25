@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
@@ -27,25 +26,23 @@ export default function AllAttendance() {
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortOn, setSortOn] = useState("name")
 
+  const AttendanceFilterType = {
+    WEEKLY: "WEEKLY",
+    MONTHLY: "MONTHLY"
+  }
+
   const [employeeData, setEmployeeData] = useState({
-    name: ""
+    filterType: AttendanceFilterType.WEEKLY
   })
 
   const fetchEmployees = (
-    query = "",
+    filterType = employeeData.filterType,
     page = currentPage,
     itemsPerPage = perPage,
     sortDir = sortDirection,
     sortField = sortOn
   ) => {
-    setLoading(true)
-    // let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
-
-    let url = `${API_URL}/employee-attendance/attendance-list?filterType=MONTHLY`
-
-    if (query) {
-      url += `&query=${query}`
-    }
+    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?filterType=${filterType}`
 
     fetch(url, {
       method: "GET",
@@ -61,11 +58,11 @@ export default function AllAttendance() {
         return response.json()
       })
       .then(data => {
-        setEmployees(data.data)
-        setTotalPages(data?.extraData?.totalPages)
-        setCurrentPage(data?.extraData?.currentPage)
-        setPerPage(data?.extraData?.perPage)
-        setTotalItems(data?.extraData?.total)
+        setEmployees(data.data || [])
+        setTotalPages(data?.extraData?.totalPages || 1)
+        setCurrentPage(data?.extraData?.currentPage || 1)
+        setPerPage(data?.extraData?.perPage || 10)
+        setTotalItems(data?.extraData?.total || 0)
         setLoading(false)
       })
       .catch(error => {
@@ -75,23 +72,19 @@ export default function AllAttendance() {
   }
 
   useEffect(() => {
-    fetchEmployees()
+    setLoading(true)
+    fetchEmployees(employeeData.filterType)
   }, [token, API_URL])
-
-  const handleSearch = () => {
-    setCurrentPage(1)
-    fetchEmployees(employeeData.name, 1)
-  }
 
   const handlePageChange = page => {
     setCurrentPage(page)
-    fetchEmployees(employeeData.name, page)
+    fetchEmployees(employeeData.filterType, page)
   }
 
   const handlePerPageChange = newPerPage => {
     setPerPage(newPerPage)
     setCurrentPage(1)
-    fetchEmployees(employeeData.name, 1, newPerPage)
+    fetchEmployees(employeeData.filterType, 1, newPerPage)
   }
 
   const handleSortChange = field => {
@@ -100,12 +93,21 @@ export default function AllAttendance() {
     setSortOn(field)
     setSortDirection(newSortDirection)
     fetchEmployees(
-      employeeData.name,
+      employeeData.filterType,
       currentPage,
       perPage,
       newSortDirection,
       field
     )
+  }
+
+  const handleFilterTypeChange = e => {
+    const newFilterType = e.target.value
+    if (newFilterType !== employeeData.filterType) {
+      setEmployeeData({ ...employeeData, filterType: newFilterType })
+      setCurrentPage(1)
+      fetchEmployees(newFilterType, 1)
+    }
   }
 
   if (loading) {
@@ -119,101 +121,106 @@ export default function AllAttendance() {
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Employee Attendance</h1>
-
-      <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
-        <div className="w-full flex items-center space-x-4">
-          <Input
-            placeholder="Employee Name"
-            className="border border-gray-300 w-full p-4"
-            value={employeeData.name}
-            onChange={e =>
-              setEmployeeData({ ...employeeData, name: e.target.value })
-            }
-            onKeyDown={e => {
-              if (e.key === "Enter") {
-                handleSearch()
-              }
-            }}
-          />
-          <Button onClick={handleSearch}>Search</Button>
-        </div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">All Attendance</h1>
+        <select
+          value={employeeData.filterType}
+          onChange={handleFilterTypeChange}
+          className="border border-gray-300 rounded-md px-4 py-2 outline-none"
+        >
+          <option value={AttendanceFilterType.WEEKLY}>Weekly</option>
+          <option value={AttendanceFilterType.MONTHLY}>Monthly</option>
+        </select>
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
         {!loading && !error && (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-100">
-                  <TableHead className="text-[#1F2328]">
-                    Employee Name
-                  </TableHead>
-                  <TableHead className="text-[#1F2328]">Check In</TableHead>
-                  <TableHead className="text-[#1F2328]">Check Out</TableHead>
-                  <TableHead className="text-[#1F2328]">Total Punch</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.map(employee => (
-                  <TableRow key={employee.employee_id}>
-                    <TableCell className="text-[#1F2328]">
-                      {employee.name}
-                    </TableCell>
-                    <TableCell className="text-[#1F2328]">
-                      {formatDate(employee.check_in_time)}{" "}
-                      {formatTime(employee.check_in_time)}
-                    </TableCell>
-                    <TableCell className="text-[#1F2328]">
-                      {formatDate(employee.check_out_time)}{" "}
-                      {formatTime(employee.check_out_time)}
-                    </TableCell>
-                    <TableCell className="text-[#1F2328]">
-                      {employee.total_punch}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {employees.length === 0 ? (
+              <p className="text-center text-gray-600">
+                No attendance data available.
+              </p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-100">
+                      <TableHead className="text-[#1F2328]">
+                        Employee Name
+                      </TableHead>
+                      <TableHead className="text-[#1F2328]">Check In</TableHead>
+                      <TableHead className="text-[#1F2328]">
+                        Check Out
+                      </TableHead>
+                      <TableHead className="text-[#1F2328]">
+                        Total Punch
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {employees.map((employee, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-[#1F2328]">
+                          {employee.name}
+                        </TableCell>
+                        <TableCell className="text-[#1F2328]">
+                          {formatDate(employee.check_in_time)}{" "}
+                          {formatTime(employee.check_in_time)}
+                        </TableCell>
+                        <TableCell className="text-[#1F2328]">
+                          {formatDate(employee.check_out_time)}{" "}
+                          {formatTime(employee.check_out_time)}
+                        </TableCell>
+                        <TableCell className="text-[#1F2328]">
+                          {employee.total_punch}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-            {employees?.length >= perPage && (
-              <div className="mt-6 flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <span>Show</span>
-                  <select
-                    value={perPage}
-                    onChange={e => handlePerPageChange(Number(e.target.value))}
-                    className="border border-gray-300 rounded-md p-1"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                  </select>
-                  <span>per page</span>
-                </div>
+                {employees?.length >= perPage && (
+                  <div className="mt-6 flex justify-between items-center">
+                    <div className="flex items-center space-x-2">
+                      <span>Show</span>
+                      <select
+                        value={perPage}
+                        onChange={e =>
+                          handlePerPageChange(Number(e.target.value))
+                        }
+                        className="border border-gray-300 rounded-md p-1"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                      <span>per page</span>
+                    </div>
 
-                <div className="flex items-center space-x-2">
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                  >
-                    Previous
-                  </Button>
-                  <span>
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                  >
-                    Next
-                  </Button>
-                </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                      >
+                        Previous
+                      </Button>
+                      <span>
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                      >
+                        Next
+                      </Button>
+                    </div>
 
-                <span>Total: {totalItems} employees</span>
-              </div>
+                    <span>Total: {totalItems} employees</span>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
