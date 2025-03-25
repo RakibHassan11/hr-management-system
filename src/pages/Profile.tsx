@@ -38,24 +38,12 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
   const user = useSelector((state: RootState) => state.auth.user)
-  console.log(user)
-
-  // const { permission_value } = useSelector(
-  //   (state: RootState) => state.auth.user
-  // )
-  // const permission =
-  //   permission_value === 1
-  //     ? "HR"
-  //     : permission_value === 2
-  //     ? "TEAM LEAD"
-  //     : "EMPLOYEE"
-
   const list_type = "TEAM LEAD"
 
   let toastId
   useEffect(() => {
     if (!user) {
-      toastId = toast("No authorized user provided!")
+      toastId = toast("No authorized user provided!");
       return
     }
 
@@ -186,7 +174,6 @@ function Profile() {
     }
   }
 
-  console.log(formData)
 
   return (
     <Fragment>

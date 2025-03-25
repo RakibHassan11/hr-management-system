@@ -39,13 +39,11 @@ export default function Home() {
     const fetchLeaveBalances = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
       if (!storedToken) {
-        console.log('No token available');
         return;
       }
 
       try {
         const url = `${API_BASE_URL}/employee/leave-balance`;
-        console.log('Fetching leave balances from:', url);
         const response = await axios.get(url, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
@@ -54,7 +52,6 @@ export default function Home() {
         });
 
         const result = response.data;
-        console.log('Leave balance response:', result);
         if (result.success && result.message === 'Leave balance fetched successfully') {
           const apiData = result.data[0];
           const leaveBalances: LeaveBalance[] = [
@@ -70,9 +67,6 @@ export default function Home() {
             },
           ];
           setLeaveBalances(leaveBalances);
-          console.log('Leave balances set:', leaveBalances);
-        } else {
-          console.log('Failed to fetch leave balances:', result.message || 'Unknown error');
         }
       } catch (error) {
         console.log('Leave balance fetch error:', error);
@@ -82,14 +76,11 @@ export default function Home() {
     const fetchAttendanceRecords = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
       if (!storedToken) {
-        console.log('No token available for attendance');
         return;
       }
 
       try {
-        console.log('API_BASE_URL:', API_BASE_URL);
         const url = `${API_BASE_URL}/employee-attendance/attendance-list?filterType=MONTHLY`;
-        console.log('Fetching attendance from:', url);
         const response = await axios.get(url, {
           headers: {
             'Authorization': `Bearer ${storedToken}`,
@@ -99,7 +90,6 @@ export default function Home() {
         });
 
         const result = response.data;
-        console.log('Attendance response:', result);
         if (result.success && result.message === 'Employee attendance records retrieved successfully') {
           const apiData: ApiAttendanceRecord[] = result.data;
           const processedRecords: AttendanceRecord[] = apiData.map((record) => {
@@ -111,9 +101,6 @@ export default function Home() {
             return { date: dateStr, in: inTime, out: outTime };
           });
           setAttendanceRecords(processedRecords);
-          console.log('Attendance records set:', processedRecords);
-        } else {
-          console.log('Failed to fetch attendance:', result.message || 'Unknown error');
         }
       } catch (error) {
         console.log('Attendance fetch error:', error);

@@ -51,8 +51,6 @@ export default function TimeUpdatesList() {
 
   if (error) <p className="text-center text-red-500">{error}</p>
 
-  console.log(records)
-
   return (
     <Fragment>
       {records !== null ? (

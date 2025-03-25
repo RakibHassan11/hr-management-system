@@ -153,7 +153,6 @@ const TeamAttendanceRecord = () => {
     return <div className="p-6 text-center text-red-600">{error}</div>
   }
 
-  console.log(attendanceRecords)
 
   return (
     <div className="bg-white text-[#1F2328] p-6">

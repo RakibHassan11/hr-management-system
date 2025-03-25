@@ -115,7 +115,6 @@ const EmployeeLeaveRecords = () => {
       )
 
       const result = await response.json()
-      console.log("PUT response:", result)
       if (response.ok && result.success) {
         setLeaveRecords(prevRecords =>
           prevRecords.map(record =>
