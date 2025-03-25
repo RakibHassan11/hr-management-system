@@ -13,7 +13,10 @@ import {
   Building2,
   Timer,
   History,
-  ListChecks
+  ListChecks,
+  UserRoundSearch,
+  CalendarClock,
+  PlaneTakeoff
 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
@@ -31,12 +34,12 @@ const menuItems = [
   },
   {
     icon: Clock,
-    label: "View Attendance",
+    label: "My Attendance",
     path: "/user/view-attendance",
     hideCondition: () => false
   },
   {
-    icon: Clock,
+    icon: CalendarClock ,
     label: "All Attendance",
     path: "/user/all-attendance",
     hideCondition: user => [2, "2", 3, "3"].includes(user?.permission_value)
@@ -78,13 +81,13 @@ const menuItems = [
     hideCondition: () => false
   },
   {
-    icon: Users,
+    icon: UserRoundSearch,
     label: "Employee",
     path: "/user/employee",
     hideCondition: user => [3, "3"].includes(user?.permission_value)
   },
   {
-    icon: ListChecks,
+    icon: PlaneTakeoff,
     label: "Leave Records",
     path: "/user/employee/leave-records",
     hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
