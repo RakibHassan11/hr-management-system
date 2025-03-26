@@ -279,7 +279,7 @@ function EmployeeProfile() {
                         Employee ID
                       </label>
                       <Input
-                        value={Number(id) + 1000 || ""}
+                        value={id || ""}
                         onChange={e =>
                           setFormData({
                             ...formData,

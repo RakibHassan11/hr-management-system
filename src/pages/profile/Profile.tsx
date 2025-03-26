@@ -43,7 +43,7 @@ function Profile() {
   let toastId
   useEffect(() => {
     if (!user) {
-      toastId = toast("No authorized user provided!");
+      toastId = toast("No authorized user provided!")
       return
     }
 
@@ -173,7 +173,6 @@ function Profile() {
       setUpdating(false)
     }
   }
-
 
   return (
     <Fragment>
@@ -373,7 +372,7 @@ function Profile() {
                         Employee ID
                       </label>
                       <Input
-                        value={Number(formData?.id) + 1000 || ""}
+                        value={formData?.id || ""}
                         onChange={e =>
                           setFormData({
                             ...formData,
