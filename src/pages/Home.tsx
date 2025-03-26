@@ -62,13 +62,13 @@ export default function Home() {
           const leaveBalances: LeaveBalance[] = [
             {
               type: 'Annual',
-              current: apiData.annual_leave_balance.toString(),
-              startOfYear: apiData.beginning_of_year_balance.toString(),
+              current: apiData.annual_leave_balance.toString()|| '0',
+              startOfYear: apiData.beginning_of_year_balance.toString() || '0',
             },
             {
               type: 'Sick',
-              current: apiData.sick_leave_balance.toString(),
-              startOfYear: '0', // Sick leave starts at 0 per requirement
+              current: apiData.sick_leave_balance.toString() || '0',
+              startOfYear: '0',
             },
           ];
           setLeaveBalances(leaveBalances);

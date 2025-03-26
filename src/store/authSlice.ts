@@ -12,6 +12,7 @@ interface UserInfo {
   username: string;
   email: string;
   password?: string;
+  permission_value?: number;
 }
 
 interface AuthState {
@@ -114,8 +115,8 @@ export const refreshAccessToken = createAsyncThunk(
       }
 
       const endpoint = isAdmin
-        ? 'https://api.allinall.social/api/otz-hrm/auth/super-admin/login'
-        : 'https://api.allinall.social/api/otz-hrm/auth/login';
+        ? `${import.meta.env.VITE_API_URL}/auth/super-admin/login`
+        : `${import.meta.env.VITE_API_URL}/auth/login`;
 
       const response = await axios.post(
         endpoint,

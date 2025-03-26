@@ -26,7 +26,9 @@ export default function Holidays() {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
+  const {permission_value} = useSelector((state: RootState) => state.auth.user);
 
+  
   useEffect(() => {
     const fetchHolidays = async () => {
       const storedToken = localStorage.getItem('token_user') || userToken;
@@ -142,12 +144,16 @@ export default function Holidays() {
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold">Holidays</h1>
+
+          {permission_value === 1 && (
           <button
             className="bg-[#F97316] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#EA580C]"
             onClick={toggleModal}
           >
             Add Holidays
           </button>
+        )}
+
         </div>
 
         <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">

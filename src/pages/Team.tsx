@@ -10,7 +10,7 @@ interface TeamMember {
   email: string;
   status: string;
   phone: string;
-  profile_image: string; // Kept in interface for completeness
+  profile_image: string; 
 }
 
 const TeamPage = () => {
