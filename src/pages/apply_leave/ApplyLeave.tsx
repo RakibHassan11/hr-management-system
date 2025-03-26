@@ -104,8 +104,8 @@ export default function ApplyLeave() {
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
                   <SelectItem value="ANNUAL">ANNUAL</SelectItem>
                   <SelectItem value="SICK">SICK</SelectItem>
-                  <SelectItem value="CASUAL">CASUAL</SelectItem>
-                  <SelectItem value="OTHER">OTHER</SelectItem>
+                  {/* <SelectItem value="CASUAL">CASUAL</SelectItem>
+                  <SelectItem value="OTHER">OTHER</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>

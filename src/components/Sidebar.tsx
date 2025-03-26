@@ -84,7 +84,7 @@ const menuItems = [
     icon: UserRoundSearch,
     label: "Employee",
     path: "/user/employee",
-    hideCondition: user => [3, "3"].includes(user?.permission_value)
+    hideCondition: user => [3, "3", 2, "2"].includes(user?.permission_value)
   },
   {
     icon: PlaneTakeoff,
