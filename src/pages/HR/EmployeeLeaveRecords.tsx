@@ -46,7 +46,6 @@ const EmployeeLeaveRecords = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL
   const storedToken = localStorage.getItem("token_user") || userToken
 
-  // Move token check inside the component body
   if (!storedToken) {
     setError("No authentication token found. Please log in.")
     setIsLoading(false)
@@ -67,7 +66,6 @@ const EmployeeLeaveRecords = () => {
 
         const result = await response.json()
         if (response.status === 200) {
-          // Ensure result is an array; adjust based on actual API response structure
           const records = Array.isArray(result) ? result : result.data || []
           setLeaveRecords(records)
         } else {
@@ -183,7 +181,7 @@ const EmployeeLeaveRecords = () => {
               currentRecords.map(record => (
                 <TableRow key={record.id}>
                   <TableCell className="text-[#1F2328] font-medium">
-                    {record.name}
+                    {record.employee_name || record.name}
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
                     {formatText(record.type)}
