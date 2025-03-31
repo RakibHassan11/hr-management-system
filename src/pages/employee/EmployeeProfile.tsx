@@ -180,6 +180,7 @@ function EmployeeProfile() {
       beef: formData.beef === 1,
       fish: formData.fish === 1
     }
+    console.log(req_body)
 
     try {
       setUpdating(true)

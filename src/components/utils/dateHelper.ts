@@ -6,7 +6,7 @@ export const formatDate = (dateString: string) => {
 }
 
 export const formatTime = (timeString: string) => {
-  const time = timeString.includes("T")
+  const time = timeString?.includes("T")
     ? timeString
     : `1970-01-01T${timeString}Z`
   return moment.utc(time).tz("Asia/Dhaka").format("hh:mm A")

@@ -25,24 +25,23 @@ export default function AllAttendance() {
   const [totalItems, setTotalItems] = useState(0)
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortOn, setSortOn] = useState("name")
-
-  const AttendanceFilterType = {
-    WEEKLY: "WEEKLY",
-    MONTHLY: "MONTHLY"
-  }
-
-  const [employeeData, setEmployeeData] = useState({
-    filterType: AttendanceFilterType.WEEKLY
-  })
+  const [query, setQuery] = useState("")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
 
   const fetchEmployees = (
-    filterType = employeeData.filterType,
     page = currentPage,
     itemsPerPage = perPage,
     sortDir = sortDirection,
-    sortField = sortOn
+    sortField = sortOn,
+    searchQuery = query,
+    start = startDate,
+    end = endDate
   ) => {
-    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?filterType=${filterType}`
+    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?needPagination=true`
+
+    if (searchQuery) url += `&query=${encodeURIComponent(searchQuery)}`
+    if (start && end) url += `&startdate=${start}&enddate=${end}`
 
     fetch(url, {
       method: "GET",
@@ -73,18 +72,22 @@ export default function AllAttendance() {
 
   useEffect(() => {
     setLoading(true)
-    fetchEmployees(employeeData.filterType)
+    fetchEmployees()
   }, [token, API_URL])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [token, API_URL, query, startDate, endDate])
 
   const handlePageChange = page => {
     setCurrentPage(page)
-    fetchEmployees(employeeData.filterType, page)
+    fetchEmployees(page)
   }
 
   const handlePerPageChange = newPerPage => {
     setPerPage(newPerPage)
     setCurrentPage(1)
-    fetchEmployees(employeeData.filterType, 1, newPerPage)
+    fetchEmployees(1, newPerPage)
   }
 
   const handleSortChange = field => {
@@ -92,22 +95,7 @@ export default function AllAttendance() {
       sortOn === field && sortDirection === "asc" ? "desc" : "asc"
     setSortOn(field)
     setSortDirection(newSortDirection)
-    fetchEmployees(
-      employeeData.filterType,
-      currentPage,
-      perPage,
-      newSortDirection,
-      field
-    )
-  }
-
-  const handleFilterTypeChange = e => {
-    const newFilterType = e.target.value
-    if (newFilterType !== employeeData.filterType) {
-      setEmployeeData({ ...employeeData, filterType: newFilterType })
-      setCurrentPage(1)
-      fetchEmployees(newFilterType, 1)
-    }
+    fetchEmployees(currentPage, perPage, newSortDirection, field)
   }
 
   if (loading) {
@@ -123,14 +111,27 @@ export default function AllAttendance() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">All Attendance</h1>
-        <select
-          value={employeeData.filterType}
-          onChange={handleFilterTypeChange}
-          className="border border-gray-300 rounded-md px-4 py-2 outline-none"
-        >
-          <option value={AttendanceFilterType.WEEKLY}>Weekly</option>
-          <option value={AttendanceFilterType.MONTHLY}>Monthly</option>
-        </select>
+        <div className="flex gap-4">
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search employees..."
+            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
+          />
+          <input
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
+          />
+        </div>
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
