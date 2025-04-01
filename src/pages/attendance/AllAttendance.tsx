@@ -11,6 +11,8 @@ import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { formatDate, formatTime } from "@/components/utils/dateHelper"
+// import DatePicker from "react-datepicker"
+// import "react-datepicker/dist/react-datepicker.css"
 
 export default function AllAttendance() {
   const [employees, setEmployees] = useState([])
@@ -26,8 +28,10 @@ export default function AllAttendance() {
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortOn, setSortOn] = useState("name")
   const [query, setQuery] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+
+  const today = new Date().toISOString().split("T")[0]
+  const [startDate, setStartDate] = useState(today)
+  const [endDate, setEndDate] = useState(today)
 
   const fetchEmployees = (
     page = currentPage,
@@ -119,6 +123,11 @@ export default function AllAttendance() {
             placeholder="Search employees..."
             className="border border-gray-300 rounded-md px-4 py-2 outline-none"
           />
+          {/* <DatePicker
+            selected={new Date(startDate)}
+            onChange={date => setStartDate(date.toISOString().split("T")[0])}
+            className="border border-gray-300 rounded-md px-4 py-2"
+          /> */}
           <input
             type="date"
             value={startDate}
@@ -139,7 +148,7 @@ export default function AllAttendance() {
           <>
             {employees.length === 0 ? (
               <p className="text-center text-gray-600">
-                No attendance data available.
+                No attendance data available for the selected date range.
               </p>
             ) : (
               <>
@@ -165,12 +174,18 @@ export default function AllAttendance() {
                           {employee.name}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {formatDate(employee.check_in_time)}{" "}
-                          {formatTime(employee.check_in_time)}
+                          {employee.check_in_time
+                            ? `${formatDate(
+                                employee.check_in_time
+                              )} ${formatTime(employee.check_in_time)}`
+                            : "--:--"}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {formatDate(employee.check_out_time)}{" "}
-                          {formatTime(employee.check_out_time)}
+                          {employee.check_out_time
+                            ? `${formatDate(
+                                employee.check_out_time
+                              )} ${formatTime(employee.check_out_time)}`
+                            : "--:--"}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
                           {employee.total_punch}
