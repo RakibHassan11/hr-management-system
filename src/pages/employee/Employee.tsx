@@ -12,6 +12,7 @@ import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { useNavigate } from "react-router-dom"
+import { Search } from "lucide-react"
 
 export default function Employee() {
   const [employees, setEmployees] = useState([])
@@ -114,23 +115,43 @@ export default function Employee() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Employee List</h1>
 
-      <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
-        <div className="w-full flex items-center space-x-4">
-          <Input
-            placeholder="Employee Name"
-            className="border border-gray-300 w-full p-4"
-            value={employeeData.name}
-            onChange={e =>
-              setEmployeeData({ ...employeeData, name: e.target.value })
-            }
-            onKeyDown={e => {
-              if (e.key === "Enter") {
-                handleSearch()
+      <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-6 transition-all hover:shadow-lg">
+        <label
+          htmlFor="employee-search"
+          className="text-sm font-medium text-gray-700 mb-2 block"
+        >
+          Search for employees
+        </label>
+        <div className="w-full flex items-center space-x-3">
+          <div className="relative flex-1">
+            <Input
+              id="employee-search"
+              placeholder="Enter employee name..."
+              className="border border-gray-300 w-full pl-4 pr-10 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              value={employeeData.name}
+              onChange={e =>
+                setEmployeeData({ ...employeeData, name: e.target.value })
               }
-            }}
-          />
-          <Button onClick={handleSearch}>Search</Button>
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  handleSearch()
+                }
+              }}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search size={18} />
+            </div>
+          </div>
+          <Button
+            onClick={handleSearch}
+            className="bg-[#F97316] hover:bg-[#e06615] text-white font-medium px-6 py-2 rounded-lg transition-colors"
+          >
+            Search
+          </Button>
         </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Enter a full or partial name to find matching employees
+        </p>
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
