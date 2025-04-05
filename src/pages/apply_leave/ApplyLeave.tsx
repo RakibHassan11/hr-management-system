@@ -25,6 +25,13 @@ export default function ApplyLeave() {
   const API_URL = import.meta.env.VITE_API_URL
   const navigate = useNavigate()
 
+  const resetForm = () => {
+    setLeaveType("")
+    setStartDate("")
+    setEndDate("")
+    setDescription("")
+  }
+
   const handleApplyLeave = async () => {
     if (!leaveType || !startDate || !endDate || !description) {
       toast.error("All fields are required")
@@ -61,10 +68,7 @@ export default function ApplyLeave() {
       const data = await response.json()
       toast.success(data.message, { id: toastId })
 
-      setLeaveType("")
-      setStartDate("")
-      setEndDate("")
-      setDescription("")
+      resetForm()
     } catch (error) {
       toast.error("Error updating leave", { id: toastId })
       setErrorUpdating(error)
@@ -97,15 +101,16 @@ export default function ApplyLeave() {
               <label className="block text-sm font-medium mb-2">
                 Leave Type:
               </label>
-              <Select onValueChange={value => setLeaveType(value)}>
+              <Select
+                value={leaveType}
+                onValueChange={value => setLeaveType(value)}
+              >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
                   <SelectValue placeholder="-- Select Type --" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
                   <SelectItem value="ANNUAL">ANNUAL</SelectItem>
                   <SelectItem value="SICK">SICK</SelectItem>
-                  {/* <SelectItem value="CASUAL">CASUAL</SelectItem>
-                  <SelectItem value="OTHER">OTHER</SelectItem> */}
                 </SelectContent>
               </Select>
             </div>

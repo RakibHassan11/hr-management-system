@@ -1,215 +1,272 @@
-import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import { FaCheck, FaTimes } from 'react-icons/fa';
-import toast from 'react-hot-toast';
-import Swal from 'sweetalert2';
-import axios from 'axios';
-import moment from 'moment';
-import 'moment-timezone';
+import { useState, useEffect } from "react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
+import { useSelector } from "react-redux"
+import { RootState } from "@/store"
+import { FaCheck, FaTimes } from "react-icons/fa"
+import toast from "react-hot-toast"
+import Swal from "sweetalert2"
+import axios from "axios"
+import "moment-timezone"
+import { formatDate, formatTime } from "@/components/utils/dateHelper"
 
 interface AttendanceRecord {
-  id: number;
-  employee_id: number;
-  employee_name?: string;
-  date: string;
-  time: string;
-  type: string;
-  status: 'PENDING' | 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER' | 'APPROVED_BY_HR' | 'REJECTED_BY_HR' | string;
-  description: string;
-  created_at: string;
-  updated_at?: string;
-  cancelled_at?: string | null;
-  active?: boolean;
+  id: number
+  employee_id: number
+  employee_name?: string
+  date: string
+  time: string
+  type: string
+  status:
+    | "PENDING"
+    | "APPROVED_BY_LINE_MANAGER"
+    | "REJECTED_BY_LINE_MANAGER"
+    | "APPROVED_BY_HR"
+    | "REJECTED_BY_HR"
+    | string
+  description: string
+  created_at: string
+  updated_at?: string
+  cancelled_at?: string | null
+  active?: boolean
 }
 
 const TeamAttendanceRecord = () => {
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const recordsPerPage = 10;
-  const { userToken: authToken } = useSelector((state: RootState) => state.auth);
-  const { id: lineManagerDbId } = useSelector((state: RootState) => state.auth.user || { id: null });
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const [attendanceRecords, setAttendanceRecords] = useState<
+    AttendanceRecord[]
+  >([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const recordsPerPage = 10
+  const { userToken: authToken } = useSelector((state: RootState) => state.auth)
+  const { id: lineManagerDbId } = useSelector(
+    (state: RootState) => state.auth.user || { id: null }
+  )
+  const API_BASE_URL = import.meta.env.VITE_API_URL
 
   useEffect(() => {
     const fetchAttendanceRecords = async () => {
-      const storedToken = localStorage.getItem('token_user') || authToken;
-      const managerId = lineManagerDbId || localStorage.getItem('lineManagerDbId');
+      const storedToken = localStorage.getItem("token_user") || authToken
+      const managerId =
+        lineManagerDbId || localStorage.getItem("lineManagerDbId")
 
       if (!storedToken || !managerId) {
-        setError('Authentication token or manager ID missing. Please log in.');
-        setIsLoading(false);
-        return;
+        setError("Authentication token or manager ID missing. Please log in.")
+        setIsLoading(false)
+        return
       }
 
-      const url = `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}`;
+      const url = `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}`
 
       try {
         const response = await axios.get(url, {
           headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+            Authorization: `Bearer ${storedToken}`,
+            "Content-Type": "application/json"
+          }
+        })
 
-        const result = response.data;
-        if (response.status === 200 && result.message === 'ATTENDANCE_REQUESTS_FETCHED') {
-          setAttendanceRecords(result.data);
+        const result = response.data
+        if (
+          response.status === 200 &&
+          result.message === "ATTENDANCE_REQUESTS_FETCHED"
+        ) {
+          setAttendanceRecords(result.data)
         } else {
-          setError(result.message || 'Failed to fetch attendance records.');
+          setError(result.message || "Failed to fetch attendance records.")
         }
       } catch (error) {
-        console.error('Fetch error:', error);
-        setError('Network error: Failed to fetch attendance records.');
+        console.error("Fetch error:", error)
+        setError("Network error: Failed to fetch attendance records.")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-
-    fetchAttendanceRecords();
-  }, [authToken, lineManagerDbId, API_BASE_URL]);
-
-  const formatDateTime = (dateString: string, timeString: string) => {
-    const datePart = dateString.split('T')[0]; // Extract date portion
-    const combined = `${datePart}T${timeString}Z`; // Combine with time as UTC
-    const dhakaMoment = moment.utc(combined).tz('Asia/Dhaka');
-
-    if (!dhakaMoment.isValid()) {
-      return { date: 'Invalid Date', time: 'Invalid Time' };
     }
 
-    const formattedDate = dhakaMoment.format('MMMM D, YYYY');
-    const formattedTime = dhakaMoment.format('hh:mm A');
-    return {
-      date: formattedDate,
-      time: formattedTime,
-    };
-  };
+    fetchAttendanceRecords()
+  }, [authToken, lineManagerDbId, API_BASE_URL])
 
-  const handleAction = async (recordId: number, newStatus: 'APPROVED_BY_LINE_MANAGER' | 'REJECTED_BY_LINE_MANAGER') => {
-    const storedToken = localStorage.getItem('token_user') || authToken;
+  const handleAction = async (
+    recordId: number,
+    newStatus: "APPROVED_BY_LINE_MANAGER" | "REJECTED_BY_LINE_MANAGER"
+  ) => {
+    const storedToken = localStorage.getItem("token_user") || authToken
     if (!storedToken) {
-      toast.error('No authentication token found.');
-      return;
+      toast.error("No authentication token found.")
+      return
     }
 
-    const actionText = newStatus === 'APPROVED_BY_LINE_MANAGER' ? 'approve' : 'reject';
+    const actionText =
+      newStatus === "APPROVED_BY_LINE_MANAGER" ? "approve" : "reject"
     const result = await Swal.fire({
       title: `Are you sure you want to ${actionText} this attendance record?`,
-      text: 'This action will update the attendance status.',
-      icon: 'question',
+      text: "This action will update the attendance status.",
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes',
-      cancelButtonText: 'No',
-    });
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes",
+      cancelButtonText: "No"
+    })
 
-    if (!result.isConfirmed) return;
+    if (!result.isConfirmed) return
 
     try {
-      const payload = { id: recordId, status: newStatus };
-      const response = await axios.put(`${API_BASE_URL}/employee/update-time-status`, payload, {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const payload = { id: recordId, status: newStatus }
+      const response = await axios.put(
+        `${API_BASE_URL}/employee/update-time-status`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
 
-      const result = response.data;
+      const result = response.data
       if (response.status === 200 && result.success) {
-        setAttendanceRecords((prev) =>
-          prev.map((record) => (record.id === recordId ? { ...record, ...result.data } : record))
-        );
-        toast.success('Attendance status updated successfully');
+        setAttendanceRecords(prev =>
+          prev.map(record =>
+            record.id === recordId ? { ...record, ...result.data } : record
+          )
+        )
+        toast.success("Attendance status updated successfully")
       } else {
-        toast.error(result.message || 'Failed to update attendance record.');
+        toast.error(result.message || "Failed to update attendance record.")
       }
     } catch (error) {
-      toast.error('Network error: Failed to update attendance record.');
+      toast.error("Network error: Failed to update attendance record.")
     }
-  };
+  }
 
   const getReadableStatus = (status: string) => {
     const statusMap: { [key: string]: string } = {
-      PENDING: 'Pending',
-      APPROVED_BY_LINE_MANAGER: 'Approved by Line Manager',
-      REJECTED_BY_LINE_MANAGER: 'Rejected by Line Manager',
-      APPROVED_BY_HR: 'Approved by HR',
-      REJECTED_BY_HR: 'Rejected by HR',
-    };
-    return statusMap[status] || status;
-  };
+      PENDING: "Pending",
+      APPROVED_BY_LINE_MANAGER: "Approved by Line Manager",
+      REJECTED_BY_LINE_MANAGER: "Rejected by Line Manager",
+      APPROVED_BY_HR: "Approved by HR",
+      REJECTED_BY_HR: "Rejected by HR"
+    }
+    return statusMap[status] || status
+  }
 
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = attendanceRecords.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(attendanceRecords.length / recordsPerPage);
+  const indexOfLastRecord = currentPage * recordsPerPage
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentRecords = attendanceRecords.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  )
+  const totalPages = Math.ceil(attendanceRecords.length / recordsPerPage)
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+    if (page >= 1 && page <= totalPages) setCurrentPage(page)
+  }
 
-  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>
 
   return (
     <div className="animate-fadeIn p-6">
-      <h1 className="text-3xl font-bold text-[#1F2328] mb-6">Team Attendance Records</h1>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1F2328]/30">
+      <h1 className="text-2xl font-bold text-[#1F2328] mb-6">
+        Team Attendance Records
+      </h1>
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6 border border-gray-300">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#E0E0E0]">
-              <TableHead className="text-[#1F2328] font-semibold">Employee Name</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Date</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Time</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Type</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Description</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Status</TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">Actions</TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Employee Name
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Date
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Time
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Type
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Description
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Status
+              </TableHead>
+              <TableHead className="text-[#1F2328] font-semibold">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">
+                  Loading...
+                </TableCell>
               </TableRow>
             ) : currentRecords.length > 0 ? (
-              currentRecords.map((record) => {
-                const { date, time } = formatDateTime(record.date, record.time);
+              currentRecords.map(record => {
                 return (
                   <TableRow key={record.id}>
-                    <TableCell className="text-[#1F2328] font-medium">{record.employee_name || 'Unknown'}</TableCell>
-                    <TableCell className="text-[#1F2328] font-medium">{date}</TableCell>
-                    <TableCell className="text-[#1F2328] font-medium">{time}</TableCell>
-                    <TableCell className="text-[#1F2328] font-medium">{record.type}</TableCell>
-                    <TableCell className="text-[#1F2328] font-medium truncate max-w-xs">{record.description}</TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      {record.employee_name || "Unknown"}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      {formatDate(record.date)}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      {formatTime(record.time)}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      {record.type}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium truncate max-w-xs">
+                      {record.description}
+                    </TableCell>
                     <TableCell className="text-[#1F2328] font-medium">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          record.status.includes('APPROVED') ? 'bg-green-100 text-green-800' :
-                          record.status.includes('REJECTED') ? 'bg-red-100 text-red-800' :
-                          record.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
+                          record.status.includes("APPROVED")
+                            ? "bg-green-100 text-green-800"
+                            : record.status.includes("REJECTED")
+                            ? "bg-red-100 text-red-800"
+                            : record.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {getReadableStatus(record.status)}
                       </span>
                     </TableCell>
                     <TableCell className="text-[#1F2328] font-medium space-x-2">
-                      {record.status === 'PENDING' && (
+                      {record.status === "PENDING" && (
                         <>
                           <button
                             className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                            onClick={() => handleAction(record.id, 'APPROVED_BY_LINE_MANAGER')}
+                            onClick={() =>
+                              handleAction(
+                                record.id,
+                                "APPROVED_BY_LINE_MANAGER"
+                              )
+                            }
                           >
                             <FaCheck />
                           </button>
                           <button
                             className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                            onClick={() => handleAction(record.id, 'REJECTED_BY_LINE_MANAGER')}
+                            onClick={() =>
+                              handleAction(
+                                record.id,
+                                "REJECTED_BY_LINE_MANAGER"
+                              )
+                            }
                           >
                             <FaTimes />
                           </button>
@@ -217,11 +274,13 @@ const TeamAttendanceRecord = () => {
                       )}
                     </TableCell>
                   </TableRow>
-                );
+                )
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">No attendance records available</TableCell>
+                <TableCell colSpan={7} className="text-center text-[#1F2328]">
+                  No attendance records available
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -234,7 +293,9 @@ const TeamAttendanceRecord = () => {
           >
             Previous
           </button>
-          <span className="text-[#1F2328]">Page {currentPage} of {totalPages}</span>
+          <span className="text-[#1F2328]">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
             className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
             onClick={() => handlePageChange(currentPage + 1)}
@@ -245,7 +306,7 @@ const TeamAttendanceRecord = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TeamAttendanceRecord;
+export default TeamAttendanceRecord
