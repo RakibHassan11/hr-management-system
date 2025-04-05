@@ -19,7 +19,6 @@ export default function TimeUpdate() {
   const [date, setDate] = useState("")
   const [timeHour, setTimeHour] = useState("")
   const [timeMinute, setTimeMinute] = useState("")
-  const [timePeriod, setTimePeriod] = useState("")
   const [description, setDescription] = useState("")
   const [updating, setUpdating] = useState(false)
   const [errorUpdating, setErrorUpdating] = useState(null)
@@ -28,34 +27,30 @@ export default function TimeUpdate() {
   const token = useSelector((state: RootState) => state.auth.userToken)
   const API_URL = import.meta.env.VITE_API_URL
 
+  const resetForm = () => {
+    setType("")
+    setDate("")
+    setTimeHour("")
+    setTimeMinute("")
+    setDescription("")
+  }
+
   const handleTimeUpdate = async () => {
-    if (
-      !type ||
-      !date ||
-      !timeHour ||
-      !timeMinute ||
-      !timePeriod ||
-      !description
-    ) {
+    if (!type || !date || !timeHour || !timeMinute || !description) {
       toast.error("All fields are required")
       return
     }
-    const hourNum = parseInt(timeHour, 10)
-    let convertedHour = hourNum
-    if (timePeriod === "PM" && hourNum < 12) {
-      convertedHour = hourNum + 12
-    } else if (timePeriod === "AM" && hourNum === 12) {
-      convertedHour = 0
-    }
-    const timeValue = `${convertedHour
-      .toString()
-      .padStart(2, "0")}:${timeMinute.padStart(2, "0")}:00`
+
+    const timeValue = `${timeHour.padStart(2, "0")}:${timeMinute.padStart(
+      2,
+      "0"
+    )}:00`
 
     const payload = {
-      type: type,
+      type,
       date: new Date(date).toISOString(),
       time: timeValue,
-      description: description
+      description
     }
 
     let toastId
@@ -75,12 +70,7 @@ export default function TimeUpdate() {
       const data = await response.json()
       if (data.success) {
         toast.success(data.message, { id: toastId })
-        setType("")
-        setDate("")
-        setTimeHour("")
-        setTimeMinute("")
-        setTimePeriod("")
-        setDescription("")
+        resetForm()
       } else {
         toast.error(data.message || "Error updating time", { id: toastId })
       }
@@ -100,9 +90,7 @@ export default function TimeUpdate() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">New Time Update Request</h1>
         <Button
-          onClick={e => {
-            navigate(`/user/time-update/time-update-list`)
-          }}
+          onClick={() => navigate("/user/time-update/time-update-list")}
           style={{ cursor: "pointer" }}
         >
           View Time Update Records
@@ -116,7 +104,7 @@ export default function TimeUpdate() {
               <label className="block text-sm font-medium mb-2">
                 Update Type:
               </label>
-              <Select onValueChange={value => setType(value)}>
+              <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
                   <SelectValue placeholder="-- Select --" />
                 </SelectTrigger>
@@ -139,23 +127,23 @@ export default function TimeUpdate() {
 
           <div>
             <label className="block text-sm font-medium mb-2">Time:</label>
-            <div className="grid grid-cols-3 gap-2">
-              <Select onValueChange={value => setTimeHour(value)}>
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={timeHour} onValueChange={setTimeHour}>
                 <SelectTrigger className="border border-gray-300 bg-white">
                   <SelectValue placeholder="HH" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
-                  {[...Array(12).keys()].map(i => {
-                    const displayHour = i === 0 ? 12 : i
+                  {[...Array(23).keys()].map(i => {
+                    const hour = i + 1 // Starts from 1 to 23
                     return (
-                      <SelectItem key={i} value={displayHour.toString()}>
-                        {displayHour.toString().padStart(2, "0")}
+                      <SelectItem key={hour} value={hour.toString()}>
+                        {hour.toString().padStart(2, "0")}
                       </SelectItem>
                     )
                   })}
                 </SelectContent>
               </Select>
-              <Select onValueChange={value => setTimeMinute(value)}>
+              <Select value={timeMinute} onValueChange={setTimeMinute}>
                 <SelectTrigger className="border border-gray-300 bg-white">
                   <SelectValue placeholder="MM" />
                 </SelectTrigger>
@@ -165,15 +153,6 @@ export default function TimeUpdate() {
                       {minute.toString().padStart(2, "0")}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-              <Select onValueChange={value => setTimePeriod(value)}>
-                <SelectTrigger className="border border-gray-300 bg-white">
-                  <SelectValue placeholder="AM/PM" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-300 shadow-md">
-                  <SelectItem value="AM">AM</SelectItem>
-                  <SelectItem value="PM">PM</SelectItem>
                 </SelectContent>
               </Select>
             </div>
