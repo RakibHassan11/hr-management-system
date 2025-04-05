@@ -6,13 +6,13 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Search, Calendar } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { formatDate, formatTime } from "@/components/utils/dateHelper"
-// import DatePicker from "react-datepicker"
-// import "react-datepicker/dist/react-datepicker.css"
 
 export default function AllAttendance() {
   const [employees, setEmployees] = useState([])
@@ -42,7 +42,7 @@ export default function AllAttendance() {
     start = startDate,
     end = endDate
   ) => {
-    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?needPagination=true`
+    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
 
     if (searchQuery) url += `&query=${encodeURIComponent(searchQuery)}`
     if (start && end) url += `&startdate=${start}&enddate=${end}`
@@ -113,33 +113,48 @@ export default function AllAttendance() {
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">All Attendance</h1>
-        <div className="flex gap-4">
-          <input
-            type="text"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search employees..."
-            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
-          />
-          {/* <DatePicker
-            selected={new Date(startDate)}
-            onChange={date => setStartDate(date.toISOString().split("T")[0])}
-            className="border border-gray-300 rounded-md px-4 py-2"
-          /> */}
-          <input
-            type="date"
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={e => setEndDate(e.target.value)}
-            className="border border-gray-300 rounded-md px-4 py-2 outline-none"
-          />
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">All Attendance</h1>
+
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="relative">
+            <Input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search employees..."
+              className="pl-9 pr-4 py-2 w-full md:w-auto border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search size={16} />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="relative flex-1 md:flex-none">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Calendar size={16} />
+              </div>
+            </div>
+
+            <div className="relative flex-1 md:flex-none">
+              <Input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Calendar size={16} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

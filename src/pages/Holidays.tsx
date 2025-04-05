@@ -1,143 +1,177 @@
-import { useState, useEffect } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import toast from 'react-hot-toast';
-import axios from 'axios';
-import { API_BASE_URL } from '@/config/api';
+import { useState, useEffect } from "react"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
+import { useSelector } from "react-redux"
+import { RootState } from "../store"
+import toast from "react-hot-toast"
+import axios from "axios"
+import { API_BASE_URL } from "@/config/api"
 
 interface Holiday {
-  id: number;
-  title: string;
-  start_date: string;
-  end_date: string;
-  active: boolean;
-  total_days?: number;
+  id: number
+  title: string
+  start_date: string
+  end_date: string
+  active: boolean
+  total_days?: number
 }
 
 export default function Holidays() {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
-  const { userToken } = useSelector((state: RootState) => state.auth);
-  const {permission_value} = useSelector((state: RootState) => state.auth.user);
+  const [holidays, setHolidays] = useState<Holiday[]>([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [title, setTitle] = useState("")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const recordsPerPage = 10
+  const { userToken } = useSelector((state: RootState) => state.auth)
+  const { permission_value } = useSelector(
+    (state: RootState) => state.auth.user
+  )
+  console.log(permission_value)
 
-  
   useEffect(() => {
     const fetchHolidays = async () => {
-      const storedToken = localStorage.getItem('token_user') || userToken;
+      const storedToken = localStorage.getItem("token_user") || userToken
       if (!storedToken) {
-        toast.error('No authentication token found. Please log in.');
-        setIsLoading(false);
-        return;
+        toast.error("No authentication token found. Please log in.")
+        setIsLoading(false)
+        return
       }
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/Holiday/holiday-list`, {
-          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
-        });
-
+        const response = await axios.get(
+          `${API_BASE_URL}/Holiday/holiday-list`,
+          {
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+              "Content-Type": "application/json"
+            }
+          }
+        )
 
         if (response.status === 200 && response.data.success) {
-          const formattedHolidays: Holiday[] = response.data.data.map((holiday: any) => ({
-            id: holiday.id,
-            title: holiday.title,
-            start_date: holiday.start_date.split('T')[0],
-            end_date: holiday.end_date.split('T')[0],
-            active: holiday.status === 'ACTIVE',
-            total_days: holiday.total_days,
-          }));
-          setHolidays(formattedHolidays);
+          const formattedHolidays: Holiday[] = response.data.data.map(
+            (holiday: any) => ({
+              id: holiday.id,
+              title: holiday.title,
+              start_date: holiday.start_date.split("T")[0],
+              end_date: holiday.end_date.split("T")[0],
+              active: holiday.status === "ACTIVE",
+              total_days: holiday.total_days
+            })
+          )
+          setHolidays(formattedHolidays)
         } else {
-          toast.error(response.data.message || 'Failed to fetch holidays');
+          toast.error(response.data.message || "Failed to fetch holidays")
         }
       } catch (error) {
-        console.error('GET error:', error);
-        toast.error('Network error: Could not fetch holidays');
+        console.error("GET error:", error)
+        toast.error("Network error: Could not fetch holidays")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchHolidays();
-  }, [userToken]);
+    fetchHolidays()
+  }, [userToken])
 
   const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
+    setIsModalOpen(!isModalOpen)
     if (isModalOpen) {
-      setTitle('');
-      setStartDate('');
-      setEndDate('');
+      setTitle("")
+      setStartDate("")
+      setEndDate("")
     }
-  };
+  }
 
   const handleCreateHoliday = async () => {
-    const storedToken = localStorage.getItem('token_user') || userToken;
+    const storedToken = localStorage.getItem("token_user") || userToken
     if (!storedToken) {
-      toast.error('No authentication token found. Please log in.');
-      return;
+      toast.error("No authentication token found. Please log in.")
+      return
     }
 
     if (!title || !startDate || !endDate) {
-      toast.error('Please fill in all fields');
-      return;
+      toast.error("Please fill in all fields")
+      return
     }
 
-    setIsSaving(true);
-    const holidayData = { title, startday: startDate, endday: endDate };
+    setIsSaving(true)
+    const holidayData = { title, startday: startDate, endday: endDate }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/Holiday/create-holiday`, holidayData, {
-        headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
-      });
-      console.log('POST response:', response.data);
+      const response = await axios.post(
+        `${API_BASE_URL}/Holiday/create-holiday`,
+        holidayData,
+        {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+      console.log("POST response:", response.data)
 
       if (response.status === 201 && response.data.success) {
-        toast.success('Holiday created successfully');
-        setIsSaving(false);
-        toggleModal();
+        toast.success("Holiday created successfully")
+        setIsSaving(false)
+        toggleModal()
 
-        setIsLoading(true);
-        const fetchResponse = await axios.get(`${API_BASE_URL}/Holiday/holiday-list`, {
-          headers: { 'Authorization': `Bearer ${storedToken}`, 'Content-Type': 'application/json' },
-        });
+        setIsLoading(true)
+        const fetchResponse = await axios.get(
+          `${API_BASE_URL}/Holiday/holiday-list`,
+          {
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+              "Content-Type": "application/json"
+            }
+          }
+        )
         if (fetchResponse.status === 200 && fetchResponse.data.success) {
-          const formattedHolidays: Holiday[] = fetchResponse.data.data.map((holiday: any) => ({
-            id: holiday.id,
-            title: holiday.title,
-            start_date: holiday.start_date.split('T')[0],
-            end_date: holiday.end_date.split('T')[0],
-            active: holiday.status === 'ACTIVE',
-            total_days: holiday.total_days,
-          }));
-          setHolidays(formattedHolidays);
-          setCurrentPage(1);
+          const formattedHolidays: Holiday[] = fetchResponse.data.data.map(
+            (holiday: any) => ({
+              id: holiday.id,
+              title: holiday.title,
+              start_date: holiday.start_date.split("T")[0],
+              end_date: holiday.end_date.split("T")[0],
+              active: holiday.status === "ACTIVE",
+              total_days: holiday.total_days
+            })
+          )
+          setHolidays(formattedHolidays)
+          setCurrentPage(1)
         }
-        setIsLoading(false);
+        setIsLoading(false)
       } else {
-        toast.error(response.data.message || `Failed to create holiday (Status: ${response.status})`);
-        setIsSaving(false);
+        toast.error(
+          response.data.message ||
+            `Failed to create holiday (Status: ${response.status})`
+        )
+        setIsSaving(false)
       }
     } catch (error) {
-      toast.error('Network error: Could not create holiday');
-      setIsSaving(false);
+      toast.error("Network error: Could not create holiday")
+      setIsSaving(false)
     }
-  };
+  }
 
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentHolidays = holidays.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(holidays.length / recordsPerPage);
+  const indexOfLastRecord = currentPage * recordsPerPage
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentHolidays = holidays.slice(indexOfFirstRecord, indexOfLastRecord)
+  const totalPages = Math.ceil(holidays.length / recordsPerPage)
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+    if (page >= 1 && page <= totalPages) setCurrentPage(page)
+  }
 
   return (
     <>
@@ -145,15 +179,14 @@ export default function Holidays() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold">Holidays</h1>
 
-          {permission_value === 1 && (
-          <button
-            className="bg-[#F97316] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#EA580C]"
-            onClick={toggleModal}
-          >
-            Add Holidays
-          </button>
-        )}
-
+          {permission_value == 1 && (
+            <button
+              className="bg-[#F97316] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#EA580C]"
+              onClick={toggleModal}
+            >
+              Add Holidays
+            </button>
+          )}
         </div>
 
         <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
@@ -176,8 +209,11 @@ export default function Holidays() {
             </TableHeader>
             <TableBody>
               {holidays.length > 0 ? (
-                currentHolidays.map((holiday) => (
-                  <TableRow key={holiday.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                currentHolidays.map(holiday => (
+                  <TableRow
+                    key={holiday.id}
+                    className="hover:bg-gray-50 transition-colors border-b border-gray-100"
+                  >
                     <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] font-medium truncate">
                       {holiday.title}
                     </TableCell>
@@ -188,19 +224,25 @@ export default function Holidays() {
                       {holiday.end_date}
                     </TableCell>
                     <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
-                      {holiday.total_days ?? 'N/A'}
+                      {holiday.total_days ?? "N/A"}
                     </TableCell>
                   </TableRow>
                 ))
               ) : isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-6 px-6 text-center text-[#1F2328] font-medium">
+                  <TableCell
+                    colSpan={4}
+                    className="py-6 px-6 text-center text-[#1F2328] font-medium"
+                  >
                     Loading...
                   </TableCell>
                 </TableRow>
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-6 px-6 text-center text-[#1F2328] font-medium">
+                  <TableCell
+                    colSpan={4}
+                    className="py-6 px-6 text-center text-[#1F2328] font-medium"
+                  >
                     No holidays available
                   </TableCell>
                 </TableRow>
@@ -236,32 +278,38 @@ export default function Holidays() {
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-semibold mb-4">Add Holiday</h2>
             <div className="mb-4">
-              <label className="block font-medium text-[#1F2328]">Holiday Title</label>
+              <label className="block font-medium text-[#1F2328]">
+                Holiday Title
+              </label>
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={e => setTitle(e.target.value)}
                 className="mt-2 p-2 w-full border border-gray-300 rounded-md"
                 placeholder="Enter holiday title"
                 disabled={isSaving}
               />
             </div>
             <div className="mb-4">
-              <label className="block font-medium text-[#1F2328]">Start Date</label>
+              <label className="block font-medium text-[#1F2328]">
+                Start Date
+              </label>
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={e => setStartDate(e.target.value)}
                 className="mt-2 p-2 w-full border border-gray-300 rounded-md"
                 disabled={isSaving}
               />
             </div>
             <div className="mb-4">
-              <label className="block font-medium text-[#1F2328]">End Date</label>
+              <label className="block font-medium text-[#1F2328]">
+                End Date
+              </label>
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={e => setEndDate(e.target.value)}
                 className="mt-2 p-2 w-full border border-gray-300 rounded-md"
                 disabled={isSaving}
               />
@@ -276,16 +324,18 @@ export default function Holidays() {
                 </button>
               )}
               <button
-                className={`bg-green-600 text-white px-4 py-2 rounded-md ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`bg-green-600 text-white px-4 py-2 rounded-md ${
+                  isSaving ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={handleCreateHoliday}
                 disabled={isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save Holiday'}
+                {isSaving ? "Saving..." : "Save Holiday"}
               </button>
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }

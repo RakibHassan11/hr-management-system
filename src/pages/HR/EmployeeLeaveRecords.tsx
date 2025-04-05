@@ -159,22 +159,24 @@ const EmployeeLeaveRecords = () => {
       </div>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 p-6">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-100">
-              <TableHead className="text-[#1F2328]">Employee Name</TableHead>
-              <TableHead className="text-[#1F2328]">Type</TableHead>
-              <TableHead className="text-[#1F2328]">Start Date</TableHead>
-              <TableHead className="text-[#1F2328]">End Date</TableHead>
-              <TableHead className="text-[#1F2328]">Days</TableHead>
-              <TableHead className="text-[#1F2328]">Status</TableHead>
-              <TableHead className="text-[#1F2328]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+          {!isLoading && currentRecords?.length > 0 && (
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                <TableHead className="text-[#1F2328]">Employee Name</TableHead>
+                <TableHead className="text-[#1F2328]">Type</TableHead>
+                <TableHead className="text-[#1F2328]">Start Date</TableHead>
+                <TableHead className="text-[#1F2328]">End Date</TableHead>
+                <TableHead className="text-[#1F2328]">Days</TableHead>
+                <TableHead className="text-[#1F2328]">Status</TableHead>
+                <TableHead className="text-[#1F2328]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+          )}
           <TableBody>
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-[#1F2328]">
-                  Loading...
+                  Loading leave records...
                 </TableCell>
               </TableRow>
             ) : currentRecords?.length > 0 ? (
@@ -245,25 +247,27 @@ const EmployeeLeaveRecords = () => {
             )}
           </TableBody>
         </Table>
-        <div className="flex justify-between items-center p-4">
-          <button
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span className="text-[#1F2328]">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
+        {leaveRecords?.length >= recordsPerPage && (
+          <div className="flex justify-between items-center p-4">
+            <button
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span className="text-[#1F2328]">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

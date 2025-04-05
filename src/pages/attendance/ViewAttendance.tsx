@@ -6,7 +6,9 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Calendar } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -26,23 +28,21 @@ export default function ViewAttendance() {
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortOn, setSortOn] = useState("name")
 
-  const AttendanceFilterType = {
-    WEEKLY: "WEEKLY",
-    MONTHLY: "MONTHLY"
-  }
-
-  const [employeeData, setEmployeeData] = useState({
-    filterType: AttendanceFilterType.WEEKLY
-  })
+  const today = new Date().toISOString().split("T")[0]
+  const [startDate, setStartDate] = useState(today)
+  const [endDate, setEndDate] = useState(today)
 
   const fetchEmployees = (
-    filterType = employeeData.filterType,
     page = currentPage,
     itemsPerPage = perPage,
     sortDir = sortDirection,
-    sortField = sortOn
+    sortField = sortOn,
+    start = startDate,
+    end = endDate
   ) => {
-    let url = `${API_URL}/employee-attendance/attendance-list?filterType=${filterType}`
+    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
+
+    if (start && end) url += `&startdate=${start}&enddate=${end}`
 
     fetch(url, {
       method: "GET",
@@ -73,18 +73,22 @@ export default function ViewAttendance() {
 
   useEffect(() => {
     setLoading(true)
-    fetchEmployees(employeeData.filterType)
+    fetchEmployees()
   }, [token, API_URL])
+
+  useEffect(() => {
+    fetchEmployees()
+  }, [token, API_URL, startDate, endDate])
 
   const handlePageChange = page => {
     setCurrentPage(page)
-    fetchEmployees(employeeData.filterType, page)
+    fetchEmployees(page)
   }
 
   const handlePerPageChange = newPerPage => {
     setPerPage(newPerPage)
     setCurrentPage(1)
-    fetchEmployees(employeeData.filterType, 1, newPerPage)
+    fetchEmployees(1, newPerPage)
   }
 
   const handleSortChange = field => {
@@ -92,22 +96,7 @@ export default function ViewAttendance() {
       sortOn === field && sortDirection === "asc" ? "desc" : "asc"
     setSortOn(field)
     setSortDirection(newSortDirection)
-    fetchEmployees(
-      employeeData.filterType,
-      currentPage,
-      perPage,
-      newSortDirection,
-      field
-    )
-  }
-
-  const handleFilterTypeChange = e => {
-    const newFilterType = e.target.value
-    if (newFilterType !== employeeData.filterType) {
-      setEmployeeData({ ...employeeData, filterType: newFilterType })
-      setCurrentPage(1)
-      fetchEmployees(newFilterType, 1)
-    }
+    fetchEmployees(currentPage, perPage, newSortDirection, field)
   }
 
   if (loading) {
@@ -119,16 +108,36 @@ export default function ViewAttendance() {
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Attendance</h1>
-        <select
-          value={employeeData.filterType}
-          onChange={handleFilterTypeChange}
-          className="border border-gray-300 rounded-md px-4 py-2 outline-none"
-        >
-          <option value={AttendanceFilterType.WEEKLY}>Weekly</option>
-          <option value={AttendanceFilterType.MONTHLY}>Monthly</option>
-        </select>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">View Attendance</h1>
+
+        <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex gap-3">
+            <div className="relative flex-1 md:flex-none">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Calendar size={16} />
+              </div>
+            </div>
+
+            <div className="relative flex-1 md:flex-none">
+              <Input
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Calendar size={16} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
@@ -162,12 +171,18 @@ export default function ViewAttendance() {
                           {employee.name}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {formatDate(employee.check_in_time)}{" "}
-                          {formatTime(employee.check_in_time)}
+                          {employee.check_in_time
+                            ? `${formatDate(
+                                employee.check_in_time
+                              )} ${formatTime(employee.check_in_time)}`
+                            : "--:--"}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {formatDate(employee.check_out_time)}{" "}
-                          {formatTime(employee.check_out_time)}
+                          {employee.check_out_time
+                            ? `${formatDate(
+                                employee.check_out_time
+                              )} ${formatTime(employee.check_out_time)}`
+                            : "--:--"}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
                           {employee.total_punch}
