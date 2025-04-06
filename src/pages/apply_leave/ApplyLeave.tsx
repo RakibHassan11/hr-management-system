@@ -18,6 +18,7 @@ export default function ApplyLeave() {
   const [leaveType, setLeaveType] = useState("")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [days, setDays] = useState("")
   const [description, setDescription] = useState("")
   const [updating, setUpdating] = useState(false)
   const [errorUpdating, setErrorUpdating] = useState(null)
@@ -29,24 +30,21 @@ export default function ApplyLeave() {
     setLeaveType("")
     setStartDate("")
     setEndDate("")
+    setDays("")
     setDescription("")
   }
 
   const handleApplyLeave = async () => {
-    if (!leaveType || !startDate || !endDate || !description) {
+    if (!leaveType || !startDate || !endDate || !days || !description) {
       toast.error("All fields are required")
       return
     }
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    const diffTime = Math.abs(end - start)
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
     const payload = {
       type: leaveType,
       start_date: new Date(startDate).toISOString(),
       end_date: new Date(endDate).toISOString(),
-      days: diffDays,
+      days: Number(days),
       description: description,
       without_pay: true
     }
@@ -136,6 +134,17 @@ export default function ApplyLeave() {
                 onChange={e => setEndDate(e.target.value)}
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Days:</label>
+            <Input
+              type="text"
+              placeholder="How many days..."
+              className="w-full border border-gray-300"
+              value={days}
+              onChange={e => setDays(e.target.value)}
+            />
           </div>
 
           <div>
