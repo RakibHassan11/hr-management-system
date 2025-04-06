@@ -247,27 +247,27 @@ const EmployeeLeaveRecords = () => {
             )}
           </TableBody>
         </Table>
-        {leaveRecords?.length >= recordsPerPage && (
-          <div className="flex justify-between items-center p-4">
-            <button
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <span className="text-[#1F2328]">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </button>
-          </div>
-        )}
+        {/* {leaveRecords?.length >= recordsPerPage && ( */}
+        <div className="flex justify-between items-center p-4">
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="text-[#1F2328]">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+        {/* )} */}
       </div>
     </div>
   )
