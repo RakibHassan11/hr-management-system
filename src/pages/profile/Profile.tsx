@@ -331,11 +331,11 @@ function Profile() {
                         Confirmed
                       </label>
                       <Input
-                        value={formData?.confirmed || ""}
+                        value={formData?.confirmed === 1 ? "Yes" : "No"}
                         onChange={e =>
                           setFormData({
                             ...formData,
-                            confirmed: e.target.value
+                            confirmed: e.target.value === "Yes" ? 1 : 0
                           })
                         }
                         readOnly
@@ -503,7 +503,7 @@ function Profile() {
                         readOnly
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Default Shift
                       </label>
@@ -529,7 +529,7 @@ function Profile() {
                         }
                         readOnly
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </TabsContent>

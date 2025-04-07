@@ -40,9 +40,10 @@ function EmployeeProfile() {
 
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
-  // const { permission_value } = useSelector(
-  //   (state: RootState) => state.auth.user
-  // )
+  const { permission_value } = useSelector(
+    (state: RootState) => state.auth.user
+  )
+  console.log(permission_value)
   // const permission =
   //   permission_value === 1
   //     ? "HR"
@@ -471,7 +472,9 @@ function EmployeeProfile() {
                             line_manager_id: value
                           }))
                         }}
-                        disabled
+                        disabled={
+                          permission_value == 2 || permission_value == 3
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select manager --" />
@@ -509,11 +512,11 @@ function EmployeeProfile() {
                         Confirmed
                       </label>
                       <Input
-                        value={formData?.confirmed || ""}
+                        value={formData?.confirmed === 1 ? "Yes" : "No"}
                         onChange={e =>
                           setFormData({
                             ...formData,
-                            confirmed: e.target.value
+                            confirmed: e.target.value === "Yes" ? 1 : 0
                           })
                         }
                       />
@@ -537,7 +540,7 @@ function EmployeeProfile() {
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Default Shift
                       </label>
@@ -561,7 +564,7 @@ function EmployeeProfile() {
                           setFormData({ ...formData, emp_type: e.target.value })
                         }
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </TabsContent>

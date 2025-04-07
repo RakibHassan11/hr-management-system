@@ -8,11 +8,11 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Search, Plus } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { useNavigate } from "react-router-dom"
-import { Search } from "lucide-react"
 
 export default function Employee() {
   const [employees, setEmployees] = useState([])
@@ -115,13 +115,69 @@ export default function Employee() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Employee List</h1>
 
-      <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-6 transition-all hover:shadow-lg">
+      {/* <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-6 transition-all hover:shadow-lg">
         <label
           htmlFor="employee-search"
           className="text-sm font-medium text-gray-700 mb-2 block"
         >
           Search for employees
         </label>
+        <div className="w-full flex items-center space-x-3">
+          <div className="relative flex-1">
+            <Input
+              id="employee-search"
+              placeholder="Enter employee name..."
+              className="border border-gray-300 w-full pl-4 pr-10 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              value={employeeData.name}
+              onChange={e =>
+                setEmployeeData({ ...employeeData, name: e.target.value })
+              }
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  handleSearch()
+                }
+              }}
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <Search size={18} />
+            </div>
+          </div>
+          <Button
+            onClick={handleSearch}
+            className="bg-[#F97316] hover:bg-[#e06615] text-white font-medium px-6 py-2 rounded-lg transition-colors"
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => console.log("Create employee clicked")} // Replace with your create handler
+            className="bg-[#10B981] hover:bg-[#0ea271] text-white font-medium px-6 py-2 rounded-lg transition-colors"
+          >
+            Create Employee
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Enter a full or partial name to find matching employees or create a
+          new one
+        </p>
+      </div> */}
+
+      <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-6 transition-all hover:shadow-lg">
+        <div className="flex justify-between items-center mb-4">
+          <label
+            htmlFor="employee-search"
+            className="text-sm font-medium text-gray-700"
+          >
+            Search for employees
+          </label>
+          <Button
+            onClick={() => navigate("/user/employee/create")}
+            className="bg-[#6366F1] hover:bg-[#5253cc] text-white font-medium rounded-lg flex items-center gap-2 transition-colors"
+            size="sm"
+          >
+            <Plus size={16} />
+            Create Employee
+          </Button>
+        </div>
         <div className="w-full flex items-center space-x-3">
           <div className="relative flex-1">
             <Input
