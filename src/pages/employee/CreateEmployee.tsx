@@ -45,7 +45,7 @@ export default function CreateEmployee() {
 
     const payload = {
       employee_id: employeeId,
-      full_name: fullName,
+      name: fullName,
       email: email,
       password: password
     }
