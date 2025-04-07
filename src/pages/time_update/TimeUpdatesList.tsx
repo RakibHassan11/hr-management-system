@@ -102,8 +102,10 @@ export default function TimeUpdatesList() {
               <TableCell className="text-[#1F2328]">
                 {formatTime(record.time)}
               </TableCell>
-              <TableCell className="text-[#1F2328]">
-                {formatText(record.type)}
+              <TableCell className="text-[#1F2328] font-semibold text-xs">
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold text-xs">
+                  {formatText(record.type)}
+                </span>
               </TableCell>
               <TableCell className="text-[#1F2328]">
                 <span

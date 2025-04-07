@@ -330,7 +330,25 @@ function Profile() {
                       <label className="text-sm font-medium text-[#1F2328]">
                         Confirmed
                       </label>
-                      <Input
+                      <Select
+                        value={formData?.confirmed === 1 ? "Yes" : "No"}
+                        onValueChange={value =>
+                          setFormData({
+                            ...formData,
+                            confirmed: value === "Yes" ? 1 : 0
+                          })
+                        }
+                        disabled
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {/* <Input
                         value={formData?.confirmed === 1 ? "Yes" : "No"}
                         onChange={e =>
                           setFormData({
@@ -339,7 +357,7 @@ function Profile() {
                           })
                         }
                         readOnly
-                      />
+                      /> */}
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
