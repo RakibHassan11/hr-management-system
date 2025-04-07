@@ -313,7 +313,7 @@ export default function Home() {
   const today = new Date().toISOString().split("T")[0]
 
   const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 4)
   const startDateDefault = sevenDaysAgo.toISOString().split("T")[0]
 
   useEffect(() => {
@@ -379,7 +379,6 @@ export default function Home() {
           url += `?startdate=${startDateDefault}&enddate=${today}`
         }
 
-        console.log(url)
         const response = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
@@ -389,16 +388,12 @@ export default function Home() {
         })
 
         const result = response.data
-        if (
-          result.success &&
-          result.message ===
-            "Employee attendance records retrieved successfully" &&
-          Array.isArray(result.data)
-        ) {
+        console.log(result)
+        if (result.success && Array.isArray(result.data)) {
           const apiData: ApiAttendanceRecord[] = result.data
           const processedRecords: AttendanceRecord[] = apiData.map(record => {
             const inMoment = moment
-              .tz(record.check_in_time, "UTC")
+              .tz(record.created_at, "UTC")
               .tz("Asia/Dhaka")
             const outMoment = moment
               .tz(record.check_out_time, "UTC")
@@ -449,6 +444,8 @@ export default function Home() {
     const minutes = duration.minutes().toString().padStart(2, "0")
     return `${hours}:${minutes}`
   }
+
+  console.log(attendanceRecords)
 
   // return (
   //   <div className="animate-fadeIn p-6 flex flex-col gap-6">
