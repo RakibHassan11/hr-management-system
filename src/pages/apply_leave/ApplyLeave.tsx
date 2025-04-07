@@ -64,9 +64,15 @@ export default function ApplyLeave() {
       })
 
       const data = await response.json()
-      toast.success(data.message, { id: toastId })
 
-      resetForm()
+      if (response.ok) {
+        toast.success(data.message, { id: toastId })
+        resetForm()
+      } else {
+        toast.error(data.message || "Failed to update leave.", {
+          id: toastId
+        })
+      }
     } catch (error) {
       toast.error("Error updating leave", { id: toastId })
       setErrorUpdating(error)

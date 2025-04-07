@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: #F3F4F6; /* Light gray background */
-    --foreground: #1F2937; /* Dark gray foreground */
-    --card: #FFFFFF; /* White for card backgrounds */
-    --card-foreground: #1F2937; /* Dark gray text on card */
-    --popover: #FFFFFF; /* White popover background */
-    --popover-foreground: #1F2937; /* Dark gray popover text */
-    --primary: #F97316; /* Orange primary color */
-    --primary-foreground: #FFFFFF; /* White text on primary color */
-    --secondary: #FB923C; /* Lighter orange for secondary actions */
-    --secondary-foreground: #FFFFFF; /* White text for secondary actions */
-    --muted: #FEE2E2; /* Soft light red muted elements */
-    --muted-foreground: #9CA3AF; /* Muted gray text */
-    --accent: #FBBF24; /* Accent orange color */
-    --accent-foreground: #FFFFFF; /* White text on accent */
-    --destructive: #DC2626; /* Red for destructive actions */
-    --destructive-foreground: #FFFFFF; /* White text on destructive actions */
-    --border: #FBBF24; /* Accent orange border */
-    --input: #FFFFFF; /* White input backgrounds */
-    --ring: #F97316; /* Orange focus rings */
+    --background: #f3f4f6; /* Light gray background */
+    --foreground: #1f2937; /* Dark gray foreground */
+    --card: #ffffff; /* White for card backgrounds */
+    --card-foreground: #1f2937; /* Dark gray text on card */
+    --popover: #ffffff; /* White popover background */
+    --popover-foreground: #1f2937; /* Dark gray popover text */
+    --primary: #f97316; /* Orange primary color */
+    --primary-foreground: #ffffff; /* White text on primary color */
+    --secondary: #fb923c; /* Lighter orange for secondary actions */
+    --secondary-foreground: #ffffff; /* White text for secondary actions */
+    --muted: #fee2e2; /* Soft light red muted elements */
+    --muted-foreground: #9ca3af; /* Muted gray text */
+    --accent: #fbbf24; /* Accent orange color */
+    --accent-foreground: #ffffff; /* White text on accent */
+    --destructive: #dc2626; /* Red for destructive actions */
+    --destructive-foreground: #ffffff; /* White text on destructive actions */
+    --border: #fbbf24; /* Accent orange border */
+    --input: #ffffff; /* White input backgrounds */
+    --ring: #f97316; /* Orange focus rings */
     --radius: 0.5rem; /* Rounded corners */
   }
 }
@@ -44,16 +44,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #FEE2E2; 
+  background: #fee2e2;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #F97316; 
+  background: #f97316;
   border-radius: 4px;
-  border: 2px solid #F97316; 
+  border: 2px solid #f97316;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #EA580C; 
+  background: #ea580c;
 }
