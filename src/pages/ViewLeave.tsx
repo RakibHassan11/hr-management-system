@@ -109,7 +109,9 @@ export default function ViewLeave() {
                 {formatDate(leave.end_date)}
               </TableCell>
               <TableCell className="text-[#1F2328] capitalize">
-                {formatText(leave.type)}
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold text-xs">
+                  {formatText(leave.type)}
+                </span>
               </TableCell>
               <TableCell className="text-[#1F2328] font-medium">
                 <span

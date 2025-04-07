@@ -237,8 +237,8 @@ export default function Employee() {
                       (sortDirection === "asc" ? "↑" : "↓")}
                   </TableHead>
                   <TableHead className="text-[#1F2328]">Phone</TableHead>
-                  <TableHead className="text-[#1F2328]">Designation</TableHead>
-                  <TableHead className="text-[#1F2328]">Department</TableHead>
+                  <TableHead className="text-[#1F2328]">AL Balance</TableHead>
+                  <TableHead className="text-[#1F2328]">SL Balance</TableHead>
                   <TableHead className="text-[#1F2328]">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -255,10 +255,10 @@ export default function Employee() {
                       {employee.phone || "N/A"}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {employee.designation || "N/A"}
+                      {employee.annual_leave_balance || 0}
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
-                      {employee.department || "Development"}
+                      {employee.sick_leave_balance || 0}
                     </TableCell>
                     <TableCell>
                       <Button

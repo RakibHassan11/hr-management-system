@@ -223,8 +223,10 @@ export default function Holidays() {
                     <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.end_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
-                      {holiday.total_days ?? "N/A"}
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate text-xs font-semibold">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {holiday.total_days ?? "N/A"}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))

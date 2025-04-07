@@ -14,7 +14,7 @@ import toast from "react-hot-toast"
 import moment from "moment-timezone"
 import Swal from "sweetalert2"
 import axios from "axios"
-import { formatDate } from "@/components/utils/dateHelper"
+import { formatDate, formatText } from "@/components/utils/dateHelper"
 
 interface LeaveRecord {
   id: number
@@ -219,8 +219,10 @@ const TeamLeaveRecords = () => {
                   <TableCell className="text-[#1F2328] font-medium">
                     {record.name}
                   </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {record.type}
+                  <TableCell className="text-[#1F2328] text-xs font-semibold">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      {formatText(record.type)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
                     {formatDate(record.start_date)}

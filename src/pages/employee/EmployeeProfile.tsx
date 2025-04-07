@@ -43,7 +43,6 @@ function EmployeeProfile() {
   const { permission_value } = useSelector(
     (state: RootState) => state.auth.user
   )
-  console.log(permission_value)
   // const permission =
   //   permission_value === 1
   //     ? "HR"
@@ -181,6 +180,7 @@ function EmployeeProfile() {
       beef: formData.beef === 1,
       fish: formData.fish === 1
     }
+
     console.log(req_body)
 
     try {
@@ -511,7 +511,24 @@ function EmployeeProfile() {
                       <label className="text-sm font-medium text-[#1F2328]">
                         Confirmed
                       </label>
-                      <Input
+                      <Select
+                        value={formData?.confirmed === 1 ? "Yes" : "No"}
+                        onValueChange={value =>
+                          setFormData({
+                            ...formData,
+                            confirmed: value === "Yes" ? 1 : 0
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {/* <Input
                         value={formData?.confirmed === 1 ? "Yes" : "No"}
                         onChange={e =>
                           setFormData({
@@ -519,7 +536,7 @@ function EmployeeProfile() {
                             confirmed: e.target.value === "Yes" ? 1 : 0
                           })
                         }
-                      />
+                      /> */}
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
