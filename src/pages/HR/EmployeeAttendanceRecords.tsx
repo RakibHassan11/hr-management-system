@@ -197,8 +197,10 @@ const EmployeeAttendanceRecords = () => {
                   <TableCell className="text-[#1F2328]">
                     {formatTime(record.time)}
                   </TableCell>
-                  <TableCell className="text-[#1F2328]">
-                    {formatText(record.type)}
+                  <TableCell className="text-[#1F2328] text-xs font-semibold">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      {formatText(record.type)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] truncate max-w-xs">
                     {record.description}

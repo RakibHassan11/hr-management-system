@@ -98,7 +98,11 @@ export default function ViewLeave() {
           {leaveData.map(leave => (
             <TableRow key={leave.id}>
               <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
-              <TableCell className="text-[#1F2328]">{leave.days}</TableCell>
+              <TableCell className="text-[#1F2328] font-semibold text-sm">
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                  {leave.days}
+                </span>
+              </TableCell>
               <TableCell className="text-[#1F2328]">
                 {leave.description}
               </TableCell>
@@ -108,8 +112,8 @@ export default function ViewLeave() {
               <TableCell className="text-[#1F2328]">
                 {formatDate(leave.end_date)}
               </TableCell>
-              <TableCell className="text-[#1F2328] capitalize">
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold text-xs">
+              <TableCell className="text-[#1F2328] capitalize font-semibold text-sm">
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
                   {formatText(leave.type)}
                 </span>
               </TableCell>

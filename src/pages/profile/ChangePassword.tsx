@@ -67,7 +67,7 @@ const ChangePassword = () => {
       confirmPassword === ""
     ) {
       toast.error("Please fill in all fields", {
-        position: "top-right",
+        position: "top-center",
         duration: 3000
       })
       return
@@ -75,7 +75,7 @@ const ChangePassword = () => {
 
     if (newPassword !== confirmPassword) {
       toast.error("Passwords don't match", {
-        position: "top-right",
+        position: "top-center",
         duration: 3000
       })
       return
@@ -83,7 +83,7 @@ const ChangePassword = () => {
 
     if (newPassword.length < 8) {
       toast.error("Password must be at least 8 characters long", {
-        position: "top-right",
+        position: "top-center",
         duration: 3000
       })
       return
@@ -114,7 +114,7 @@ const ChangePassword = () => {
       setNewPassword("")
       setConfirmPassword("")
       toast.success("Password has been changed successfully", {
-        position: "top-right",
+        position: "top-center",
         duration: 3000
       })
       // navigate("/user/home");
@@ -122,7 +122,7 @@ const ChangePassword = () => {
       toast.error(
         error.message || "An error occurred while changing the password",
         {
-          position: "top-right",
+          position: "top-center",
           duration: 3000
         }
       )

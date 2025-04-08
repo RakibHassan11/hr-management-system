@@ -31,12 +31,11 @@ export default function Holidays() {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const recordsPerPage = 10
+  const recordsPerPage = 50
   const { userToken } = useSelector((state: RootState) => state.auth)
   const { permission_value } = useSelector(
     (state: RootState) => state.auth.user
   )
-  console.log(permission_value)
 
   useEffect(() => {
     const fetchHolidays = async () => {
@@ -119,7 +118,6 @@ export default function Holidays() {
           }
         }
       )
-      console.log("POST response:", response.data)
 
       if (response.status === 201 && response.data.success) {
         toast.success("Holiday created successfully")
@@ -223,7 +221,7 @@ export default function Holidays() {
                     <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.end_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate text-xs font-semibold">
+                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate text-sm font-semibold">
                       <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
                         {holiday.total_days ?? "N/A"}
                       </span>

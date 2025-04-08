@@ -254,11 +254,15 @@ export default function Employee() {
                     <TableCell className="text-[#1F2328]">
                       {employee.phone || "N/A"}
                     </TableCell>
-                    <TableCell className="text-[#1F2328]">
-                      {employee.annual_leave_balance || 0}
+                    <TableCell className="text-[#1F2328] font-semibold text-sm">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {employee.annual_leave_balance || 0}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-[#1F2328]">
-                      {employee.sick_leave_balance || 0}
+                    <TableCell className="text-[#1F2328] font-semibold text-sm">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {employee.sick_leave_balance || 0}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Button
