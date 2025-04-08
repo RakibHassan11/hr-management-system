@@ -185,8 +185,10 @@ const EmployeeLeaveRecords = () => {
                   <TableCell className="text-[#1F2328] font-medium">
                     {record.employee_name || record.name}
                   </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {formatText(record.type)}
+                  <TableCell className="text-[#1F2328] font-semibold text-xs">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      {formatText(record.type)}
+                    </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
                     {formatDate(record.start_date)}
@@ -194,8 +196,10 @@ const EmployeeLeaveRecords = () => {
                   <TableCell className="text-[#1F2328] font-medium">
                     {formatDate(record.end_date)}
                   </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {record.days}
+                  <TableCell className="text-[#1F2328] font-semibold text-xs">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                      {record.days}
+                    </span>
                   </TableCell>
                   <TableCell className="text-[#1F2328] font-medium">
                     <span

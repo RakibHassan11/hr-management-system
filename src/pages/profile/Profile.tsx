@@ -38,6 +38,7 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
   const user = useSelector((state: RootState) => state.auth.user)
+  console.log(user)
   const list_type = "TEAM LEAD"
 
   let toastId
@@ -390,7 +391,7 @@ function Profile() {
                         Employee ID
                       </label>
                       <Input
-                        value={formData?.id || ""}
+                        value={formData?.employee_id || ""}
                         onChange={e =>
                           setFormData({
                             ...formData,

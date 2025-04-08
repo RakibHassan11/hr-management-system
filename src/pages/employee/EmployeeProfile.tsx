@@ -181,8 +181,6 @@ function EmployeeProfile() {
       fish: formData.fish === 1
     }
 
-    console.log(req_body)
-
     try {
       setUpdating(true)
       toastId = toast.loading("Saving profile...")
@@ -281,7 +279,7 @@ function EmployeeProfile() {
                         Employee ID
                       </label>
                       <Input
-                        value={id || ""}
+                        value={formData?.employee_id || ""}
                         onChange={e =>
                           setFormData({
                             ...formData,
