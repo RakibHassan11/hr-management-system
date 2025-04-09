@@ -67,6 +67,7 @@ export default function Home() {
           result.data.length > 0
         ) {
           const apiData = result.data[0]
+          console.log(apiData)
           const leaveBalances: LeaveBalance[] = [
             {
               type: apiData.annual_leave_balance ? "Annual" : "Not Specified",

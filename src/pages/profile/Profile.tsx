@@ -24,6 +24,10 @@ function Profile() {
     unit_id: null,
     line_manager_id: null
   })
+  const [leaveFormData, setLeaveFormData] = useState({
+    annual_leave_balance: null,
+    sick_leave_balance: null
+  })
 
   const [categoryOptions, setCategoryOptions] = useState({
     divisions: [],
@@ -38,8 +42,11 @@ function Profile() {
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
   const user = useSelector((state: RootState) => state.auth.user)
-  console.log(user)
+  const [activeTab, setActiveTab] = useState("basic")
   const list_type = "TEAM LEAD"
+  const { permission_value } = useSelector(
+    (state: RootState) => state.auth.user
+  )
 
   let toastId
   useEffect(() => {
@@ -119,7 +126,37 @@ function Profile() {
       }
     }
 
+    const fetchLeaveBalances = async () => {
+      try {
+        const url = `${API_URL}/employee/leave-balance`
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        })
+
+        const result = response.data
+        if (
+          result.success &&
+          Array.isArray(result.data) &&
+          result.data.length > 0
+        ) {
+          const apiData = result.data[0]
+          setLeaveFormData({
+            annual_leave_balance: apiData.annual_leave_balance,
+            sick_leave_balance: apiData.sick_leave_balance
+          })
+        } else {
+          setLeaveFormData(null)
+        }
+      } catch (error) {
+        console.error("Leave balance fetch error:", error)
+      }
+    }
+
     fetchData()
+    fetchLeaveBalances()
   }, [API_URL, token])
 
   const getDiff = (original, updated) => {
@@ -175,6 +212,43 @@ function Profile() {
     }
   }
 
+  const handleLeaveData = async () => {
+    try {
+      setUpdating(true)
+      toastId = toast.loading("Updating leave balances...")
+      const leaveData = {
+        id: formData.id,
+        previous_leave_balance: 0,
+        sick_leave_balance: +leaveFormData.sick_leave_balance,
+        casual_leave_balance: 0,
+        beginning_of_year_balance: 0,
+        annual_leave_balance: +leaveFormData.annual_leave_balance
+      }
+      const response = await fetch(
+        `${API_URL}/employee/update-employee-leave-balance`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(leaveData)
+        }
+      )
+      if (!response.ok) {
+        throw new Error("Failed to update leave balances")
+      }
+      const data = await response.json()
+      toast.success("Leave balances updated successfully", { id: toastId })
+    } catch (err) {
+      toast.error("Error updating leave balances: " + err.message, {
+        id: toastId
+      })
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   return (
     <Fragment>
       {employee !== null ? (
@@ -184,7 +258,11 @@ function Profile() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <Tabs defaultValue="basic" className="w-full">
+            <Tabs
+              defaultValue="basic"
+              className="w-full"
+              onValueChange={setActiveTab}
+            >
               <TabsList className="w-full mb-6 bg-gray-100 p-2 flex justify-evenly">
                 <TabsTrigger
                   value="basic"
@@ -192,12 +270,6 @@ function Profile() {
                 >
                   Basic
                 </TabsTrigger>
-                {/* <TabsTrigger
-                  value="device"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
-                  Device
-                </TabsTrigger> */}
                 <TabsTrigger
                   value="personal"
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
@@ -222,12 +294,12 @@ function Profile() {
                 >
                   Meal
                 </TabsTrigger>
-                {/* <TabsTrigger
+                <TabsTrigger
                   value="leave"
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
                 >
                   Leave
-                </TabsTrigger> */}
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-6">
@@ -244,17 +316,6 @@ function Profile() {
                         }
                       />
                     </div>
-                    {/* <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Username
-                      </label>
-                      <Input
-                        value={formData?.username || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, username: e.target.value })
-                        }
-                      />
-                    </div> */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Designation
@@ -349,16 +410,6 @@ function Profile() {
                           <SelectItem value="No">No</SelectItem>
                         </SelectContent>
                       </Select>
-                      {/* <Input
-                        value={formData?.confirmed === 1 ? "Yes" : "No"}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            confirmed: e.target.value === "Yes" ? 1 : 0
-                          })
-                        }
-                        readOnly
-                      /> */}
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
@@ -522,53 +573,54 @@ function Profile() {
                         readOnly
                       />
                     </div>
-                    {/* <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Default Shift
-                      </label>
-                      <Input
-                        value={formData?.default_shift || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            confirmation_date: e.target.value
-                          })
-                        }
-                        readOnly
-                      />
-                    </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
                         Employment Type
                       </label>
-                      <Input
-                        value={formData?.emp_type || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, emp_type: e.target.value })
+                      <Select
+                        value={
+                          formData?.permission_value == 1
+                            ? "HR"
+                            : formData?.permission_value == 2
+                            ? "TEAM LEAD"
+                            : formData?.permission_value == 3
+                            ? "GENERAL"
+                            : ""
                         }
-                        readOnly
-                      />
-                    </div> */}
+                        onValueChange={value =>
+                          setFormData({
+                            ...formData,
+                            permission_value:
+                              value === "HR"
+                                ? 1
+                                : value === "TEAM LEAD"
+                                ? 2
+                                : value === "GENERAL"
+                                ? 3
+                                : null
+                          })
+                        }
+                        disabled
+                      >
+                        <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
+                          <SelectValue placeholder="-- Select Type --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {[
+                            { label: "HR", value: 1 },
+                            { label: "TEAM LEAD", value: 2 },
+                            { label: "GENERAL", value: 3 }
+                          ].map(type => (
+                            <SelectItem key={type.value} value={type.label}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
-
-              {/* <TabsContent value="device" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-black">
-                      Official Laptop's Mac
-                    </label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-black">
-                      Personal Device's Mac
-                    </label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
-                  </div>
-                </div>
-              </TabsContent> */}
 
               <TabsContent value="personal" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -939,84 +991,47 @@ function Profile() {
                 </div>
               </TabsContent>
 
-              {/* <TabsContent value="leave" className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Leave Type
-                        </th>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Available
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { label: "Annual Leave Balance", value: "0.00 (0.00)" },
-                        { label: "Sick Leave Balance", value: "0.00 (0.00)" },
-                        { label: "Casual Leave Balance", value: "0.00 (0.00)" }
-                      ].map(leave => (
-                        <tr key={leave.label}>
-                          <td className="py-2 px-4 border border-gray-300 font-semibold">
-                            {leave.label}
-                          </td>
-                          <td className="py-2 px-4 border border-gray-300">
-                            {leave.value}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <TabsContent value="leave" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">
+                      Annual Leave Balance
+                    </label>
+                    <Input
+                      value={leaveFormData?.annual_leave_balance || ""}
+                      onChange={e =>
+                        setLeaveFormData({
+                          ...leaveFormData,
+                          annual_leave_balance: e.target.value
+                        })
+                      }
+                      placeholder="Annual Leave Balance..."
+                      disabled={
+                        permission_value == "2" || permission_value == "3"
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#1F2328]">
+                      Sick Leave Balance
+                    </label>
+                    <Input
+                      value={leaveFormData?.sick_leave_balance || ""}
+                      onChange={e =>
+                        setLeaveFormData({
+                          ...leaveFormData,
+                          sick_leave_balance: e.target.value
+                        })
+                      }
+                      placeholder="Sick Leave Balance..."
+                      disabled={
+                        permission_value == "2" || permission_value == "3"
+                      }
+                    />
+                  </div>
                 </div>
-              </TabsContent> */}
+              </TabsContent>
 
-              {/* <TabsContent value="meal" className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Meal Type
-                        </th>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Subscribed
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        {
-                          label: "Breakfast",
-                          value: formData?.breakfast === 1 ? "Yes" : "No"
-                        },
-                        {
-                          label: "Lunch",
-                          value: formData?.lunch === 1 ? "Yes" : "No"
-                        },
-                        {
-                          label: "Beef",
-                          value: formData?.beef === 1 ? "Yes" : "No"
-                        },
-                        {
-                          label: "Fish",
-                          value: formData?.fish === 1 ? "Yes" : "No"
-                        }
-                      ].map(meal => (
-                        <tr key={meal.label}>
-                          <td className="py-2 px-4 border border-gray-300 font-semibold">
-                            {meal.label}
-                          </td>
-                          <td className="py-2 px-4 border border-gray-300">
-                            {meal.value}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent> */}
               <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <div className="grid grid-cols-2 gap-6">
@@ -1057,9 +1072,18 @@ function Profile() {
             </Tabs>
 
             <div className="mt-6 flex justify-end gap-4">
-              <Button disabled={updating} onClick={handleSaveProfile}>
-                {updating ? "Saving Profile.." : "Save Profile"}
-              </Button>
+              {activeTab === "leave" ? (
+                <Button
+                  disabled={permission_value == "2" || permission_value == "3"}
+                  onClick={handleLeaveData}
+                >
+                  {updating ? "Updating Leave..." : "Leave Update"}
+                </Button>
+              ) : (
+                <Button disabled={updating} onClick={handleSaveProfile}>
+                  {updating ? "Saving Profile..." : "Save Profile"}
+                </Button>
+              )}
             </div>
           </div>
         </div>
