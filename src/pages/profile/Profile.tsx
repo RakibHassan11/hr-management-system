@@ -12,24 +12,74 @@ import { Textarea } from "@/components/ui/textarea"
 import axios from "axios"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
 
+// Define the FormData interface to match all fields used in the component
+interface FormData {
+  division_id: string | null;
+  department_id: string | null;
+  sub_department_id: string | null;
+  unit_id: string | null;
+  line_manager_id: string | null;
+  name?: string;
+  designation?: string;
+  email?: string;
+  phone?: string;
+  confirmed?: number;
+  employee_id?: string;
+  joining_date?: string;
+  confirmation_date?: string;
+  permission_value?: number;
+  fathers_name?: string;
+  gender?: string;
+  birthday?: string;
+  present_address?: string;
+  relationship_status?: string;
+  mothers_name?: string;
+  religion?: string;
+  official_birthday?: string;
+  permanent_address?: string;
+  blood_group?: string;
+  nid?: string;
+  skype?: string;
+  github?: string;
+  bank_name?: string;
+  tin?: string;
+  official_gmail?: string;
+  bank_account_no?: string;
+  gitlab?: string;
+  website?: string;
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  instagram?: string;
+  breakfast?: number;
+  lunch?: number;
+  beef?: number;
+  fish?: number;
+}
+
+// Define the CategoryOptions interface for API response data
+interface CategoryOptions {
+  divisions: { id: string; title: string }[];
+  departments: { id: string; title: string }[];
+  subDepartments: { id: string; title: string }[];
+  units: { id: string; title: string }[];
+  lines: { id: string; name: string }[];
+}
+
 function Profile() {
-  const [employee, setEmployee] = useState(null)
-  const [formData, setFormData] = useState({
+  const [employee, setEmployee] = useState<FormData | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     division_id: null,
     department_id: null,
     sub_department_id: null,
     unit_id: null,
     line_manager_id: null
   })
-  const [leaveFormData, setLeaveFormData] = useState({
-    annual_leave_balance: null,
-    sick_leave_balance: null
-  })
 
-  const [categoryOptions, setCategoryOptions] = useState({
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOptions>({
     divisions: [],
     departments: [],
     subDepartments: [],
@@ -41,17 +91,16 @@ function Profile() {
 
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
-  const user = useSelector((state: RootState) => state.auth.user)
+  const user = useSelector((state: RootState) => state.auth.user) as FormData | null // Assuming user matches FormData
   const [activeTab, setActiveTab] = useState("basic")
   const list_type = "TEAM LEAD"
   const { permission_value } = useSelector(
-    (state: RootState) => state.auth.user
-  )
+    (state: RootState) => state.auth.user || {}
+  ) as { permission_value?: number }
 
-  let toastId
   useEffect(() => {
     if (!user) {
-      toastId = toast("No authorized user provided!")
+      const toastId = toast("No authorized user provided!")
       return
     }
 
@@ -80,23 +129,23 @@ function Profile() {
           )
         ])
 
-        const divisions = divisionsRes.data.data.map(division => ({
+        const divisions = divisionsRes.data.data.map((division: any) => ({
           id: division.id,
           title: division.title
         }))
-        const departments = departmentsRes.data.data.map(department => ({
+        const departments = departmentsRes.data.data.map((department: any) => ({
           id: department.id,
           title: department.title
         }))
-        const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+        const subDepartments = subDepartmentsRes.data.data.map((subDept: any) => ({
           id: subDept.id,
           title: subDept.title
         }))
-        const units = unitsRes.data.data.map(unit => ({
+        const units = unitsRes.data.data.map((unit: any) => ({
           id: unit.id,
           title: unit.title
         }))
-        const lines = lineRes.data.data.map(line => ({
+        const lines = lineRes.data.data.map((line: any) => ({
           id: line.id,
           name: line.name
         }))
@@ -121,49 +170,20 @@ function Profile() {
 
         setEmployee(user)
       } catch (err) {
-        setEmployee([])
-        toast.error("Error fetching profile: " + err.message), { id: toastId }
-      }
-    }
-
-    const fetchLeaveBalances = async () => {
-      try {
-        const url = `${API_URL}/employee/leave-balance`
-        const response = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        })
-
-        const result = response.data
-        if (
-          result.success &&
-          Array.isArray(result.data) &&
-          result.data.length > 0
-        ) {
-          const apiData = result.data[0]
-          setLeaveFormData({
-            annual_leave_balance: apiData.annual_leave_balance,
-            sick_leave_balance: apiData.sick_leave_balance
-          })
-        } else {
-          setLeaveFormData(null)
-        }
-      } catch (error) {
-        console.error("Leave balance fetch error:", error)
+        setEmployee(null) // Changed to null to match type
+        toast.error("Error fetching profile: " + (err as Error).message)
       }
     }
 
     fetchData()
-    fetchLeaveBalances()
-  }, [API_URL, token])
+  }, [API_URL, token, user]) // Added 'user' to dependencies to ensure re-fetch on user change
 
-  const getDiff = (original, updated) => {
-    const diff = {}
+  const getDiff = (original: FormData | null, updated: FormData): Record<string, any> => {
+    const diff: Record<string, any> = {}
+    if (!original) return updated
     Object.keys(updated).forEach(key => {
-      if (updated[key] !== original[key]) {
-        diff[key] = updated[key]
+      if (updated[key as keyof FormData] !== original[key as keyof FormData]) {
+        diff[key] = updated[key as keyof FormData]
       }
     })
     return diff
@@ -172,12 +192,12 @@ function Profile() {
   const handleSaveProfile = async () => {
     const updatedFields = getDiff(employee, formData)
     if (Object.keys(updatedFields).length === 0) {
-      toastId = toast("No changes made!")
+      const toastId = toast("No changes made!")
       return
     }
     try {
       setUpdating(true)
-      toastId = toast.loading("Updating user profile...")
+      const toastId = toast.loading("Updating user profile...")
       const response = await fetch(`${API_URL}/employee/update-profile`, {
         method: "PUT",
         headers: {
@@ -192,7 +212,7 @@ function Profile() {
       const data = await response.json()
       toast.success(data.message, { id: toastId })
 
-      const updatedEmployee = { ...employee, ...updatedFields }
+      const updatedEmployee = { ...employee, ...updatedFields } as FormData
       setEmployee(updatedEmployee)
       setFormData(prevData => ({
         ...prevData,
@@ -205,45 +225,8 @@ function Profile() {
       const updatedUserInfo = { ...currentUserInfo, ...updatedFields }
       localStorage.setItem("userInfo", JSON.stringify(updatedUserInfo))
     } catch (err) {
-      setEmployee([])
-      toast.error("Error updating profile: " + err.message, { id: toastId })
-    } finally {
-      setUpdating(false)
-    }
-  }
-
-  const handleLeaveData = async () => {
-    try {
-      setUpdating(true)
-      toastId = toast.loading("Updating leave balances...")
-      const leaveData = {
-        id: formData.id,
-        previous_leave_balance: 0,
-        sick_leave_balance: +leaveFormData.sick_leave_balance,
-        casual_leave_balance: 0,
-        beginning_of_year_balance: 0,
-        annual_leave_balance: +leaveFormData.annual_leave_balance
-      }
-      const response = await fetch(
-        `${API_URL}/employee/update-employee-leave-balance`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(leaveData)
-        }
-      )
-      if (!response.ok) {
-        throw new Error("Failed to update leave balances")
-      }
-      const data = await response.json()
-      toast.success("Leave balances updated successfully", { id: toastId })
-    } catch (err) {
-      toast.error("Error updating leave balances: " + err.message, {
-        id: toastId
-      })
+      setEmployee(null) // Changed to null to match type
+      toast.error("Error updating profile: " + (err as Error).message)
     } finally {
       setUpdating(false)
     }
@@ -293,12 +276,6 @@ function Profile() {
                   className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
                 >
                   Meal
-                </TabsTrigger>
-                <TabsTrigger
-                  value="leave"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
-                  Leave
                 </TabsTrigger>
               </TabsList>
 
@@ -991,47 +968,6 @@ function Profile() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="leave" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Annual Leave Balance
-                    </label>
-                    <Input
-                      value={leaveFormData?.annual_leave_balance || ""}
-                      onChange={e =>
-                        setLeaveFormData({
-                          ...leaveFormData,
-                          annual_leave_balance: e.target.value
-                        })
-                      }
-                      placeholder="Annual Leave Balance..."
-                      disabled={
-                        permission_value == "2" || permission_value == "3"
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Sick Leave Balance
-                    </label>
-                    <Input
-                      value={leaveFormData?.sick_leave_balance || ""}
-                      onChange={e =>
-                        setLeaveFormData({
-                          ...leaveFormData,
-                          sick_leave_balance: e.target.value
-                        })
-                      }
-                      placeholder="Sick Leave Balance..."
-                      disabled={
-                        permission_value == "2" || permission_value == "3"
-                      }
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
               <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <div className="grid grid-cols-2 gap-6">
@@ -1072,18 +1008,9 @@ function Profile() {
             </Tabs>
 
             <div className="mt-6 flex justify-end gap-4">
-              {activeTab === "leave" ? (
-                <Button
-                  disabled={permission_value == "2" || permission_value == "3"}
-                  onClick={handleLeaveData}
-                >
-                  {updating ? "Updating Leave..." : "Leave Update"}
-                </Button>
-              ) : (
-                <Button disabled={updating} onClick={handleSaveProfile}>
-                  {updating ? "Saving Profile..." : "Save Profile"}
-                </Button>
-              )}
+              <Button onClick={handleSaveProfile}>
+                {updating ? "Saving Profile..." : "Save Profile"}
+              </Button>
             </div>
           </div>
         </div>

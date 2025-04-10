@@ -1,282 +1,395 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
-import { FaCheck, FaTimes } from "react-icons/fa"
-import toast from "react-hot-toast"
-import moment from "moment-timezone"
-import Swal from "sweetalert2"
-import axios from "axios"
-import { formatDate, formatText } from "@/components/utils/dateHelper"
+  TableRow,
+} from "@/components/ui/table";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { FaCheck, FaTimes } from "react-icons/fa";
+import toast from "react-hot-toast";
+import Swal from "sweetalert2";
+import axios from "axios";
+import moment from "moment-timezone";
 
 interface LeaveRecord {
-  id: number
-  employee_id: number
-  name: string
-  type: string
-  start_date: string
-  end_date: string
-  days: number
+  id: number;
+  employee_id: number;
+  name: string;
+  type: string;
+  start_date: string;
+  end_date: string;
+  days: number;
   status:
     | "PENDING"
     | "APPROVED_BY_LINE_MANAGER"
     | "REJECTED_BY_LINE_MANAGER"
     | "APPROVED_BY_HR"
     | "REJECTED_BY_HR"
-    | string
-  description: string
-  created_at: string
-  updated_at?: string
-  without_pay?: boolean
+    | string;
+  description: string;
+  created_at: string;
+  updated_at?: string;
+  without_pay?: boolean;
+  note_by_team_lead?: string | null;
+  note_by_hr?: string | null;
 }
 
+const formatDateRange = (start: string, end: string) => {
+  const startDate = moment(start);
+  const endDate = moment(end);
+  if (startDate.isSame(endDate, "month")) {
+    return `${startDate.format("D")}-${endDate.format("D MMM")}`;
+  }
+  return `${startDate.format("D MMM")}-${endDate.format("D MMM")}`;
+};
+
+const formatStatus = (status: string) => {
+  switch (status) {
+    case "PENDING": return "Pending";
+    case "APPROVED_BY_LINE_MANAGER": return "Team Lead";
+    case "REJECTED_BY_LINE_MANAGER": return "Team Lead";
+    case "APPROVED_BY_HR": return "HR";
+    case "REJECTED_BY_HR": return "HR";
+    case "SICK": return "Sick";
+    case "ANNUAL": return "Annual";
+    case "CASUAL": return "Casual";
+    default: return status;
+  }
+};
+
+const truncateText = (text: string, maxLength: number) =>
+  text.length <= maxLength ? text : text.substring(0, maxLength);
+
 const TeamLeaveRecords = () => {
-  const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const recordsPerPage = 10
-  const { userToken: authToken } = useSelector((state: RootState) => state.auth)
-  const { id: lineManagerDbId } = useSelector(
-    (state: RootState) => state.auth.user || {}
-  )
-  const API_BASE_URL = import.meta.env.VITE_API_URL
+  const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
+  const [expandedTeamLeadNotes, setExpandedTeamLeadNotes] = useState<Set<number>>(new Set());
+  const [expandedHrNotes, setExpandedHrNotes] = useState<Set<number>>(new Set());
+  const recordsPerPage = 10;
+  const { userToken: authToken } = useSelector((state: RootState) => state.auth);
+  const { id: lineManagerDbId, permissions = [] } = useSelector(
+    (state: RootState) => state.auth.user || { id: null, permissions: [] }
+  );
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
-      const storedToken = localStorage.getItem("token_user") || authToken
-      const managerId =
-        lineManagerDbId || localStorage.getItem("lineManagerDbId")
+      const storedToken = localStorage.getItem("token_user") || authToken;
+      const managerId = lineManagerDbId || localStorage.getItem("lineManagerDbId");
 
       if (!storedToken || !managerId) {
-        setError("Authentication token or manager ID missing. Please log in.")
-        setIsLoading(false)
-        return
+        setError("Authentication token or manager ID missing. Please log in.");
+        setIsLoading(false);
+        return;
       }
 
-      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${managerId}`
+      const url = `${API_BASE_URL}/team/leave-records?line_manager_id=${managerId}`;
       try {
         const response = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
-            "Content-Type": "application/json"
-          }
-        })
+            "Content-Type": "application/json",
+          },
+        });
 
-        const result = response.data
+        const result = response.data;
         if (
           response.status === 200 &&
           result.message === "LEAVE_RECORDS_FETCHED"
         ) {
           const mappedRecords = result.data.map((record: any) => ({
             ...record,
-            name: record.name || record.employee_name
-          }))
-          setLeaveRecords(mappedRecords)
+            name: record.name || record.employee_name,
+          }));
+          setTimeout(() => {
+            setLeaveRecords(mappedRecords);
+            setIsLoading(false);
+          }, 500);
         } else {
-          setError(result.message || "Failed to fetch leave records.")
+          setError(result.message || "Failed to fetch leave records.");
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Fetch error:", error)
-        setError("Network error: Failed to fetch leave records.")
-      } finally {
-        setIsLoading(false)
+        console.error("Fetch error:", error);
+        setError("Network error: Failed to fetch leave records.");
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchLeaveRecords()
-  }, [authToken, lineManagerDbId, API_BASE_URL])
-
-  const getReadableStatus = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      PENDING: "Pending",
-      APPROVED_BY_LINE_MANAGER: "Approved by Line Manager",
-      REJECTED_BY_LINE_MANAGER: "Rejected by Line Manager",
-      APPROVED_BY_HR: "Approved by HR",
-      REJECTED_BY_HR: "Rejected by HR"
-    }
-    return statusMap[status] || status
-  }
+    fetchLeaveRecords();
+  }, [authToken, lineManagerDbId, API_BASE_URL]);
 
   const handleAction = async (
     recordId: number,
-    newStatus: "APPROVED_BY_LINE_MANAGER" | "REJECTED_BY_LINE_MANAGER"
+    newStatus: "APPROVED_BY_LINE_MANAGER" | "REJECTED_BY_LINE_MANAGER" | "APPROVED_BY_HR" | "REJECTED_BY_HR"
   ) => {
-    const storedToken = localStorage.getItem("token_user") || authToken
+    const storedToken = localStorage.getItem("token_user") || authToken;
     if (!storedToken) {
-      toast.error("No authentication token found.")
-      return
+      toast.error("No authentication token found.");
+      return;
     }
 
-    const actionText =
-      newStatus === "APPROVED_BY_LINE_MANAGER" ? "approve" : "reject"
+    const isHR = Array.isArray(permissions) && permissions.includes("HR_PERMISSION");
+    const actionText = newStatus.includes("APPROVED") ? "approve" : "reject";
+    const noteFieldName = isHR ? "note_by_hr" : "note_by_team_lead";
+    const statusForRole = isHR 
+      ? (newStatus.includes("APPROVED") ? "APPROVED_BY_HR" : "REJECTED_BY_HR")
+      : newStatus;
+
     const result = await Swal.fire({
       title: `Are you sure you want to ${actionText} this leave request?`,
-      text: "This action will update the leave status.",
       icon: "question",
+      input: "text",
+      inputPlaceholder: "Enter your note here (optional)...",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes",
-      cancelButtonText: "No"
-    })
+    });
 
-    if (!result.isConfirmed) return
+    if (!result.isConfirmed) return;
+
+    const noteValue = result.value?.trim() || null;
+    const payload = { 
+      id: recordId, 
+      status: statusForRole,
+      [noteFieldName]: noteValue
+    };
 
     try {
-      const payload = { id: recordId, status: newStatus }
       const response = await axios.put(
         `${API_BASE_URL}/employee/update-leave-status`,
         payload,
         {
           headers: {
             Authorization: `Bearer ${storedToken}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
-      )
+      );
 
-      const result = response.data
-      if (response.status === 200 && result.success) {
+      const responseData = response.data;
+      if (response.status === 200 && responseData.success) {
         setLeaveRecords(prev =>
           prev.map(record =>
-            record.id === recordId ? { ...record, ...result.data } : record
+            record.id === recordId 
+              ? { 
+                  ...record, 
+                  ...responseData.data,
+                  [noteFieldName]: responseData.data[noteFieldName] ?? noteValue
+                } 
+              : record
           )
-        )
-        toast.success(`Leave request ${actionText}d successfully`)
+        );
+        toast.success(`Leave request ${actionText}d successfully`);
       } else {
-        toast.error(result.message || "Failed to update leave record.")
+        toast.error(responseData.message || "Failed to update leave record.");
       }
     } catch (error) {
-      console.error("Network error:", error)
-      toast.error("Network error: Failed to update leave record.")
+      console.error("Network error:", error);
+      toast.error("Network error: Failed to update leave record.");
     }
-  }
+  };
 
-  const indexOfLastRecord = currentPage * recordsPerPage
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = leaveRecords.slice(
-    indexOfFirstRecord,
-    indexOfLastRecord
-  )
-  const totalPages = Math.ceil(leaveRecords.length / recordsPerPage)
+  const toggleDescription = (recordId: number) => {
+    setExpandedDescriptions((prev) => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(recordId)) newExpanded.delete(recordId);
+      else newExpanded.add(recordId);
+      return newExpanded;
+    });
+  };
+
+  const toggleTeamLeadNote = (recordId: number) => {
+    setExpandedTeamLeadNotes((prev) => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(recordId)) newExpanded.delete(recordId);
+      else newExpanded.add(recordId);
+      return newExpanded;
+    });
+  };
+
+  const toggleHrNote = (recordId: number) => {
+    setExpandedHrNotes((prev) => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(recordId)) newExpanded.delete(recordId);
+      else newExpanded.add(recordId);
+      return newExpanded;
+    });
+  };
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = leaveRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(leaveRecords.length / recordsPerPage) || 1;
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page)
-  }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
 
-  if (error) return <div className="p-6 text-center text-red-600">{error}</div>
+  if (error) return <div className="p-6 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="animate-fadeIn p-6">
-      <h1 className="text-2xl font-bold text-[#1F2328] mb-6">
-        Team Leave Records
-      </h1>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6 border border-gray-300">
+    <div className="bg-white text-[#1F2328] p-3">
+      <h1 className="text-3xl font-bold text-[#1F2328] mb-3">Team Leave Records</h1>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 p-4">
         <Table>
-          <TableHeader>
-            <TableRow className="bg-[#E0E0E0]">
-              <TableHead className="text-[#1F2328] font-semibold">
-                Employee Name
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                Type
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                Start Date
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                End Date
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                Days
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                Status
-              </TableHead>
-              <TableHead className="text-[#1F2328] font-semibold">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+          {!isLoading && currentRecords.length > 0 && (
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                <TableHead className="text-[#1F2328]">Employee Name</TableHead>
+                <TableHead className="text-[#1F2328]">Date</TableHead>
+                <TableHead className="text-[#1F2328]">Description</TableHead>
+                <TableHead className="text-[#1F2328]">Days</TableHead>
+                <TableHead className="text-[#1F2328]">Status</TableHead>
+                <TableHead className="text-[#1F2328]">Team Lead Notes</TableHead>
+                <TableHead className="text-[#1F2328]">HR Notes</TableHead>
+                <TableHead className="text-[#1F2328]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+          )}
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">
-                  Loading...
-                </TableCell>
-              </TableRow>
+              <div className="divide-y rounded-md border border-gray-300">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center p-4 space-x-4 animate-pulse">
+                    <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-1/2 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
             ) : currentRecords.length > 0 ? (
-              currentRecords.map(record => (
-                <TableRow key={record.id}>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {record.name}
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] text-xs font-semibold">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                      {formatText(record.type)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {formatDate(record.start_date)}
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    {formatDate(record.end_date)}
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-semibold text-xs">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                      {record.days}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        record.status.includes("APPROVED")
-                          ? "bg-green-100 text-green-800"
-                          : record.status.includes("REJECTED")
-                          ? "bg-red-100 text-red-800"
-                          : record.status === "PENDING"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {getReadableStatus(record.status)}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-[#1F2328] font-medium space-x-2">
-                    {record.status === "PENDING" && (
-                      <>
+              currentRecords.map((record) => {
+                const isHR = Array.isArray(permissions) && permissions.includes("HR_PERMISSION");
+                const canAct = record.status === "PENDING" || 
+                              (record.status === "APPROVED_BY_LINE_MANAGER" && isHR);
+                const isDescriptionExpanded = expandedDescriptions.has(record.id);
+                const isTeamLeadNoteExpanded = expandedTeamLeadNotes.has(record.id);
+                const isHrNoteExpanded = expandedHrNotes.has(record.id);
+                const descriptionText = isDescriptionExpanded ? record.description : truncateText(record.description, 10);
+                const teamLeadNoteText = record.note_by_team_lead || "-";
+                const hrNoteText = record.note_by_hr || "-";
+                const truncatedTeamLeadNote = isTeamLeadNoteExpanded ? teamLeadNoteText : truncateText(teamLeadNoteText, 10);
+                const truncatedHrNote = isHrNoteExpanded ? hrNoteText : truncateText(hrNoteText, 10);
+
+                return (
+                  <TableRow key={record.id}>
+                    <TableCell className="text-[#1F2328]">
+                      {record.name}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328]">
+                      {formatDateRange(record.start_date, record.end_date)}
+                      <span className={`px-1 py-0.5 text-xs font-bold rounded-full ml-2 ${
+                        record.type === "SICK" 
+                          ? "bg-rose-100 text-rose-700" 
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}>
+                        {formatStatus(record.type)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
+                      <span >
+                        {descriptionText}
+                      </span>
+                      {record.description.length > 10 && (
                         <button
-                          className="p-2 rounded bg-gray-500 text-white hover:bg-green-600"
-                          onClick={() =>
-                            handleAction(record.id, "APPROVED_BY_LINE_MANAGER")
-                          }
+                          className="text-blue-600 hover:underline text-sm"
+                          onClick={() => toggleDescription(record.id)}
                         >
-                          <FaCheck />
+                          {isDescriptionExpanded ? "<" : "..."}
                         </button>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-semibold text-xs">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {record.days}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-[#1F2328]">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          record.status === "APPROVED_BY_LINE_MANAGER" || record.status === "APPROVED_BY_HR"
+                            ? "bg-green-100 text-green-800"
+                            : record.status === "REJECTED_BY_LINE_MANAGER" || record.status === "REJECTED_BY_HR"
+                            ? "bg-red-100 text-red-800"
+                            : record.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {formatStatus(record.status)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
+                      <span className={isTeamLeadNoteExpanded ? "inline" : "inline"}>
+                        {truncatedTeamLeadNote}
+                      </span>
+                      {teamLeadNoteText.length > 10 && (
                         <button
-                          className="p-2 rounded bg-gray-500 text-white hover:bg-red-600"
-                          onClick={() =>
-                            handleAction(record.id, "REJECTED_BY_LINE_MANAGER")
-                          }
+                          className="text-blue-600 hover:underline text-sm"
+                          onClick={() => toggleTeamLeadNote(record.id)}
                         >
-                          <FaTimes />
+                          {isTeamLeadNoteExpanded ? "<" : "..."}
                         </button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
+                      )}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
+                      <span className={isHrNoteExpanded ? "inline" : "inline"}>
+                        {truncatedHrNote}
+                      </span>
+                      {hrNoteText.length > 10 && (
+                        <button
+                          className="text-blue-600 hover:underline text-sm"
+                          onClick={() => toggleHrNote(record.id)}
+                        >
+                          {isHrNoteExpanded ? "<" : "..."}
+                        </button>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-[#1F2328] font-medium">
+                      {canAct && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            className="p-1.5 rounded-full bg-gray-200 text-green-600 hover:bg-green-100"
+                            title="Approve"
+                            onClick={() =>
+                              handleAction(
+                                record.id,
+                                isHR ? "APPROVED_BY_HR" : "APPROVED_BY_LINE_MANAGER"
+                              )
+                            }
+                          >
+                            <FaCheck size={14} />
+                          </button>
+                          <button
+                            className="p-1.5 rounded-full bg-gray-200 text-red-600 hover:bg-red-100"
+                            title="Reject"
+                            onClick={() =>
+                              handleAction(
+                                record.id,
+                                isHR ? "REJECTED_BY_HR" : "REJECTED_BY_LINE_MANAGER"
+                              )
+                            }
+                          >
+                            <FaTimes size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-[#1F2328]">
+                <TableCell colSpan={8} className="text-center text-[#1F2328]">
                   No leave records available
                 </TableCell>
               </TableRow>
@@ -291,9 +404,7 @@ const TeamLeaveRecords = () => {
           >
             Previous
           </button>
-          <span className="text-[#1F2328]">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-[#1F2328]">Page {currentPage} of {totalPages}</span>
           <button
             className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
             onClick={() => handlePageChange(currentPage + 1)}
@@ -304,7 +415,7 @@ const TeamLeaveRecords = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TeamLeaveRecords
+export default TeamLeaveRecords;

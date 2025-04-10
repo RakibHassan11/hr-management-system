@@ -31,7 +31,7 @@ export default function Holidays() {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const recordsPerPage = 50
+  const recordsPerPage = 8
   const { userToken } = useSelector((state: RootState) => state.auth)
   const { permission_value } = useSelector(
     (state: RootState) => state.auth.user
@@ -173,7 +173,7 @@ export default function Holidays() {
 
   return (
     <>
-      <div className="p-6 bg-white text-[#1F2328] min-h-screen">
+      <div className="p-2 bg-white text-[#1F2328] min-h-screen">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold">Holidays</h1>
 

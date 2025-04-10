@@ -49,7 +49,7 @@ export default function Home() {
       if (!storedToken) {
         return
       }
-
+    
       try {
         const url = `${API_BASE_URL}/employee/leave-balance`
         const response = await axios.get(url, {
@@ -58,7 +58,7 @@ export default function Home() {
             "Content-Type": "application/json"
           }
         })
-
+    
         const result = response.data
         if (
           result.success &&
@@ -70,26 +70,30 @@ export default function Home() {
           console.log(apiData)
           const leaveBalances: LeaveBalance[] = [
             {
-              type: apiData.annual_leave_balance ? "Annual" : "Not Specified",
+              type: "Annual",
               current: apiData.annual_leave_balance?.toString() || "0",
               startOfYear: apiData.beginning_of_year_balance?.toString() || "0"
             },
             {
-              type: apiData.sick_leave_balance ? "Sick" : "Not Specified",
+              type: "Sick",
               current: apiData.sick_leave_balance?.toString() || "0",
               startOfYear: "0" // No start-of-year data for sick leave in API
             }
           ]
           setLeaveBalances(leaveBalances)
         } else {
+          // Default to showing Annual and Sick with 0 balances if API data is invalid
           setLeaveBalances([
-            { type: "Not Specified", current: "0", startOfYear: "0" }
+            { type: "Annual", current: "0", startOfYear: "0" },
+            { type: "Sick", current: "0", startOfYear: "0" }
           ])
         }
       } catch (error) {
         console.error("Leave balance fetch error:", error)
+        // Default to showing Annual and Sick with 0 balances on error
         setLeaveBalances([
-          { type: "Not Specified", current: "0", startOfYear: "0" }
+          { type: "Annual", current: "0", startOfYear: "0" },
+          { type: "Sick", current: "0", startOfYear: "0" }
         ])
       }
     }
@@ -307,16 +311,16 @@ export default function Home() {
   // )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-blue-100 p-6 md:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-blue-100 p-2 md:p-2">
       <div className="max-w-7xl mx-auto space-y-8">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">
           Dashboard
         </h1>
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Profile Card */}
           <div className="overflow-hidden rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-24"></div>
+            <div className="bg-gradient-to-r from-violet-400 to-cyan-100 h-24"></div>
             <div className="p-6 pt-0 -mt-12">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div className="relative">
@@ -329,7 +333,7 @@ export default function Home() {
                   </div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
-                <div className="text-center sm:text-left mt-4 sm:mt-8">
+                <div className="text-center sm:text-left mt-3">
                   <h2 className="text-2xl font-bold text-slate-800">
                     {user?.name || "Unknown"}
                   </h2>
@@ -343,7 +347,7 @@ export default function Home() {
           </div>
 
           {/* Leave Balance Card */}
-          <div className="p-6 rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="p-3 rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
             <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -416,7 +420,7 @@ export default function Home() {
         </div>
 
         {/* Attendance Card */}
-        <div className="p-6 rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-3 rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
           <h2 className="text-xl font-semibold text-slate-800 flex items-center mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"

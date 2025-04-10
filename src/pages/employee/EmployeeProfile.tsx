@@ -16,9 +16,70 @@ import { RootState } from "@/store"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import toast from "react-hot-toast"
 
+// Define FormData interface for employee profile data
+interface FormData {
+  division_id: string | null;
+  department_id: string | null;
+  sub_department_id: string | null;
+  unit_id: string | null;
+  line_manager_id: string | null;
+  employee_id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  designation?: string;
+  joining_date?: string;
+  confirmed?: number;
+  confirmation_date?: string;
+  permission_value?: string | null;
+  gender?: string;
+  religion?: string;
+  birthday?: string;
+  official_birthday?: string;
+  blood_group?: string;
+  fathers_name?: string;
+  mothers_name?: string;
+  relationship_status?: string;
+  present_address?: string;
+  permanent_address?: string;
+  skype?: string;
+  official_gmail?: string;
+  gitlab?: string;
+  github?: string;
+  nid?: string;
+  tin?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  website?: string;
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  instagram?: string;
+  breakfast: number;
+  lunch: number;
+  beef: number;
+  fish: number;
+  id?: number;
+}
+
+// Define LeaveFormData interface for leave balance data
+interface LeaveFormData {
+  annual_leave_balance: string | null;
+  sick_leave_balance: string | null;
+}
+
+// Define CategoryOptions interface for API response data
+interface CategoryOptions {
+  divisions: { id: string; title: string }[];
+  departments: { id: string; title: string }[];
+  subDepartments: { id: string; title: string }[];
+  units: { id: string; title: string }[];
+  lines: { id: number; name: string }[];
+}
+
 function EmployeeProfile() {
-  const [employee, setEmployee] = useState(null)
-  const [formData, setFormData] = useState({
+  const [employee, setEmployee] = useState<FormData | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     division_id: null,
     department_id: null,
     sub_department_id: null,
@@ -30,12 +91,12 @@ function EmployeeProfile() {
     fish: 0
   })
 
-  const [leaveFormData, setLeaveFormData] = useState({
+  const [leaveFormData, setLeaveFormData] = useState<LeaveFormData>({
     annual_leave_balance: null,
     sick_leave_balance: null
   })
 
-  const [categoryOptions, setCategoryOptions] = useState({
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOptions>({
     divisions: [],
     departments: [],
     subDepartments: [],
@@ -47,32 +108,25 @@ function EmployeeProfile() {
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
   const { permission_value } = useSelector(
-    (state: RootState) => state.auth.user
-  )
+    (state: RootState) => state.auth.user || {}
+  ) as { permission_value?: number }
   const [activeTab, setActiveTab] = useState("basic")
-  // const permission =
-  //   permission_value === 1
-  //     ? "HR"
-  //     : permission_value === 2
-  //     ? "TEAM LEAD"
-  //     : "EMPLOYEE"
-
   const list_type = "TEAM LEAD"
 
   const { search } = useLocation()
   const queryParams = new URLSearchParams(search)
-  const id = queryParams.get("id")
+  const idFromUrl = queryParams.get("id")
 
-  let toastId
   useEffect(() => {
-    if (!token || !id) {
-      toastId = toast("No changes made!")
+    if (!token) {
+      toast.error("No authorized user provided!")
       return
     }
 
     const config = {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       }
     }
 
@@ -83,7 +137,8 @@ function EmployeeProfile() {
           departmentsRes,
           subDepartmentsRes,
           unitsRes,
-          lineRes
+          lineRes,
+          profileRes
         ] = await Promise.all([
           axios.get(`${API_URL}/divisions/list`, config),
           axios.get(`${API_URL}/departments/list`, config),
@@ -92,27 +147,27 @@ function EmployeeProfile() {
           axios.get(
             `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}`,
             config
-          )
+          ),
+          axios.get(`${API_URL}/employee/my-profile?id=${idFromUrl || ''}`, config)
         ])
 
-        const divisions = divisionsRes.data.data.map(division => ({
+        const divisions = divisionsRes.data.data.map((division: any) => ({
           id: division.id,
           title: division.title
         }))
-        const departments = departmentsRes.data.data.map(department => ({
+        const departments = departmentsRes.data.data.map((department: any) => ({
           id: department.id,
           title: department.title
         }))
-        const subDepartments = subDepartmentsRes.data.data.map(subDept => ({
+        const subDepartments = subDepartmentsRes.data.data.map((subDept: any) => ({
           id: subDept.id,
           title: subDept.title
         }))
-        const units = unitsRes.data.data.map(unit => ({
+        const units = unitsRes.data.data.map((unit: any) => ({
           id: unit.id,
           title: unit.title
         }))
-
-        const lines = lineRes.data.data.map(line => ({
+        const lines = lineRes.data.data.map((line: any) => ({
           id: Number(line.id),
           name: line.name
         }))
@@ -125,51 +180,27 @@ function EmployeeProfile() {
           lines
         })
 
-        const response = await fetch(
-          `${API_URL}/employee/my-profile?id=${id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch employee profile")
-        }
-
-        const data = await response.json()
-        const employeeData = data.data
-
+        const profileData = profileRes.data.data
         setFormData(prevData => ({
           ...prevData,
-          ...employeeData,
-          division_id: employeeData.division_id || null,
-          department_id: employeeData.department_id || null,
-          sub_department_id: employeeData.sub_department_id || null,
-          unit_id: employeeData.unit_id || null,
-          line_manager_id: employeeData.line_manager_id || null
+          ...profileData,
+          division_id: profileData.division_id || null,
+          department_id: profileData.department_id || null,
+          sub_department_id: profileData.sub_department_id || null,
+          unit_id: profileData.unit_id || null,
+          line_manager_id: profileData.line_manager_id || null,
+          id: profileData.id
         }))
-
-        setEmployee(employeeData)
+        setEmployee(profileData)
       } catch (err) {
-        setEmployee([])
-        toast.error("Error fetching data: " + err.message), { id: toastId }
+        setEmployee(null)
+        toast.error("Error fetching data: " + (err as Error).message)
       }
     }
 
     const fetchLeaveBalances = async () => {
       try {
-        const url = `${API_URL}/employee/leave-balance`
-        const response = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        })
-
+        const response = await axios.get(`${API_URL}/employee/leave-balance`, config)
         const result = response.data
         if (
           result.success &&
@@ -178,26 +209,34 @@ function EmployeeProfile() {
         ) {
           const apiData = result.data[0]
           setLeaveFormData({
-            annual_leave_balance: apiData.annual_leave_balance,
-            sick_leave_balance: apiData.sick_leave_balance
+            annual_leave_balance: apiData.annual_leave_balance?.toString() || null,
+            sick_leave_balance: apiData.sick_leave_balance?.toString() || null
           })
         } else {
-          setLeaveFormData(null)
+          setLeaveFormData({
+            annual_leave_balance: null,
+            sick_leave_balance: null
+          })
         }
       } catch (error) {
         console.error("Leave balance fetch error:", error)
+        setLeaveFormData({
+          annual_leave_balance: null,
+          sick_leave_balance: null
+        })
       }
     }
 
     fetchData()
     fetchLeaveBalances()
-  }, [API_URL, token, id])
+  }, [API_URL, token, idFromUrl])
 
-  const getDiff = (original, updated) => {
-    const diff = {}
+  const getDiff = (original: FormData | null, updated: FormData): Record<string, any> => {
+    const diff: Record<string, any> = {}
+    if (!original) return updated
     Object.keys(updated).forEach(key => {
-      if (updated[key] !== original[key]) {
-        diff[key] = updated[key]
+      if (updated[key as keyof FormData] !== original[key as keyof FormData]) {
+        diff[key] = updated[key as keyof FormData]
       }
     })
     return diff
@@ -206,12 +245,12 @@ function EmployeeProfile() {
   const handleSaveProfile = async () => {
     const updatedFields = getDiff(employee, formData)
     if (Object.keys(updatedFields).length === 0) {
-      toastId = toast("No changes made!")
+      toast("No changes made!")
       return
     }
     const req_body = {
       ...updatedFields,
-      id: Number(id),
+      id: employee?.id || Number(idFromUrl),
       breakfast: formData.breakfast === 1,
       lunch: formData.lunch === 1,
       beef: formData.beef === 1,
@@ -220,75 +259,96 @@ function EmployeeProfile() {
 
     try {
       setUpdating(true)
-      toastId = toast.loading("Saving profile...")
-      const response = await fetch(`${API_URL}/employee/update-profile-by-id`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(req_body)
-      })
+      const toastId = toast.loading("Saving profile...")
+      const response = await axios.put(
+        `${API_URL}/employee/update-profile-by-id`,
+        req_body,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error("Failed to update profile")
-      }
-      const data = await response.json()
+      const data = response.data
       toast.success(data.message, { id: toastId })
-      const updatedEmployee = { ...employee, ...updatedFields }
+      const updatedEmployee = { ...employee, ...updatedFields } as FormData
       setEmployee(updatedEmployee)
       setFormData(prevData => ({
         ...prevData,
         ...updatedEmployee
       }))
     } catch (err) {
-      setEmployee([])
-      toast.error("Error updating profile, Access denied: " + err.message, {
-        id: toastId
-      })
+      setEmployee(null)
+      toast.error("Error updating profile: " + (err as Error).message)
     } finally {
       setUpdating(false)
     }
   }
 
-  const handleLeaveData = async () => {
+  const handleSaveLeave = async () => {
+    const employeeId = employee?.id || Number(idFromUrl)
+    console.log("handleSaveLeave called with employeeId:", employeeId)
+    console.log("Current leaveFormData:", leaveFormData)
+
+    if (!employeeId || isNaN(employeeId)) {
+      toast.error("Invalid or missing employee ID!")
+      console.log("Invalid employeeId, exiting")
+      return
+    }
+
+    const annualLeave = leaveFormData.annual_leave_balance
+    const sickLeave = leaveFormData.sick_leave_balance
+
+    if (!annualLeave || !sickLeave || isNaN(+annualLeave) || isNaN(+sickLeave)) {
+      toast.error("Please provide valid leave balance values!")
+      console.log("Invalid leave values, exiting")
+      return
+    }
+
+    const req_body = {
+      id: +idFromUrl,
+      annual_leave_balance: Number(annualLeave),
+      sick_leave_balance: Number(sickLeave)
+    }
+    console.log("Request body to be sent:", req_body)
+
     try {
       setUpdating(true)
-      toastId = toast.loading("Updating leave balances...")
-      const leaveData = {
-        id: id,
-        previous_leave_balance: 0,
-        sick_leave_balance: +leaveFormData.sick_leave_balance,
-        casual_leave_balance: 0,
-        beginning_of_year_balance: 0,
-        annual_leave_balance: +leaveFormData.annual_leave_balance
-      }
-      const response = await fetch(
+      const toastId = toast.loading("Updating leave balances...")
+      console.log("Sending PUT request to:", `${API_URL}/employee/update-employee-leave-balance`)
+      const response = await axios.put(
         `${API_URL}/employee/update-employee-leave-balance`,
+        req_body,
         {
-          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify(leaveData)
+          }
         }
       )
-      if (!response.ok) {
-        throw new Error("Failed to update leave balances")
+
+      console.log("API response:", response.data)
+      const data = response.data
+      toast.success(data.message || "Leave balances updated successfully", { id: toastId })
+      const updatedLeaveData = {
+        annual_leave_balance: data.data?.annual_leave_balance?.toString() || annualLeave,
+        sick_leave_balance: data.data?.sick_leave_balance?.toString() || sickLeave
       }
-      const data = await response.json()
-      toast.success("Leave balances updated successfully", { id: toastId })
-    } catch (err) {
-      toast.error("Error updating leave balances: " + err.message, {
-        id: toastId
-      })
+      setLeaveFormData(updatedLeaveData)
+      console.log("Updated leaveFormData:", updatedLeaveData)
+    } catch (err: any) {
+      console.error("Error in handleSaveLeave:", err)
+      const errorMessage = err.response?.data?.message || "Failed to update leave balances"
+      toast.error(errorMessage, { id: toastId })
+      if (err.response?.status === 404) {
+        toast.error("No existing leave balance record found. Contact HR to create one.")
+      }
     } finally {
       setUpdating(false)
     }
   }
-
-  console.log(formData)
 
   return (
     <Fragment>
@@ -307,46 +367,22 @@ function EmployeeProfile() {
               onValueChange={setActiveTab}
             >
               <TabsList className="w-full mb-6 bg-gray-100 p-2 flex justify-evenly">
-                <TabsTrigger
-                  value="basic"
-                  className="flex-1 text-center font-bold text-md text-[#1F2328] data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="basic" className="flex-1 text-center font-bold text-md text-[#1F2328] data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Basic
                 </TabsTrigger>
-                {/* <TabsTrigger
-                  value="device"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
-                  Device
-                </TabsTrigger> */}
-                <TabsTrigger
-                  value="personal"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="personal" className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Personal
                 </TabsTrigger>
-                <TabsTrigger
-                  value="official"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="official" className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Official
                 </TabsTrigger>
-                <TabsTrigger
-                  value="social"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="social" className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Social
                 </TabsTrigger>
-                <TabsTrigger
-                  value="meal"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="meal" className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Meal
                 </TabsTrigger>
-                <TabsTrigger
-                  value="leave"
-                  className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]"
-                >
+                <TabsTrigger value="leave" className="flex-1 text-center text-[#1F2328] font-bold text-md data-[state=active]:text-white data-[state=active]:bg-[#EA580C]">
                   Leave
                 </TabsTrigger>
               </TabsList>
@@ -355,90 +391,46 @@ function EmployeeProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Employee ID
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Employee ID</label>
                       <Input
                         value={formData?.employee_id || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            employee_id: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, employee_id: e.target.value })}
                         className="bg-gray-50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Name
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Name</label>
                       <Input
                         value={formData?.name || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
-                    {/* <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Username
-                      </label>
-                      <Input
-                        value={formData?.username || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, username: e.target.value })
-                        }
-                      />
-                    </div> */}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Email
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Email</label>
                       <Input
                         value={formData?.email || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Phone
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Phone</label>
                       <Input
                         value={formData?.phone || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Designation
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Designation</label>
                       <Input
                         value={formData?.designation || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            designation: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, designation: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Division
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Division</label>
                       <Select
                         value={formData.division_id || ""}
-                        onValueChange={value => {
-                          setFormData(prevData => ({
-                            ...prevData,
-                            division_id: value
-                          }))
-                        }}
+                        onValueChange={value => setFormData(prevData => ({ ...prevData, division_id: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select division" />
@@ -452,29 +444,18 @@ function EmployeeProfile() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Department
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Department</label>
                       <Select
                         value={formData.department_id || ""}
-                        onValueChange={value => {
-                          setFormData(prevData => ({
-                            ...prevData,
-                            department_id: value
-                          }))
-                        }}
+                        onValueChange={value => setFormData(prevData => ({ ...prevData, department_id: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select department" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.departments.map(department => (
-                            <SelectItem
-                              key={department.id}
-                              value={department.id}
-                            >
+                            <SelectItem key={department.id} value={department.id}>
                               {department.title}
                             </SelectItem>
                           ))}
@@ -485,46 +466,28 @@ function EmployeeProfile() {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Sub Department
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Sub Department</label>
                       <Select
                         value={formData.sub_department_id || ""}
-                        onValueChange={value => {
-                          setFormData(prevData => ({
-                            ...prevData,
-                            sub_department_id: value
-                          }))
-                        }}
+                        onValueChange={value => setFormData(prevData => ({ ...prevData, sub_department_id: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select sub department" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.subDepartments.map(subDepartment => (
-                            <SelectItem
-                              key={subDepartment.id}
-                              value={subDepartment.id}
-                            >
+                            <SelectItem key={subDepartment.id} value={subDepartment.id}>
                               {subDepartment.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Unit
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Unit</label>
                       <Select
                         value={formData.unit_id || ""}
-                        onValueChange={value => {
-                          setFormData(prevData => ({
-                            ...prevData,
-                            unit_id: value
-                          }))
-                        }}
+                        onValueChange={value => setFormData(prevData => ({ ...prevData, unit_id: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select unit" />
@@ -539,27 +502,18 @@ function EmployeeProfile() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Line Manager
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Line Manager</label>
                       <Select
                         value={formData.line_manager_id || ""}
-                        onValueChange={value => {
-                          setFormData(prevData => ({
-                            ...prevData,
-                            line_manager_id: value
-                          }))
-                        }}
-                        disabled={
-                          permission_value == 2 || permission_value == 3
-                        }
+                        onValueChange={value => setFormData(prevData => ({ ...prevData, line_manager_id: value }))}
+                        disabled={permission_value === 2 || permission_value === 3}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="-- Select manager --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {categoryOptions.lines?.map(manager => (
-                            <SelectItem key={manager.id} value={manager.id}>
+                            <SelectItem key={manager.id} value={manager.id.toString()}>
                               {manager.name}
                             </SelectItem>
                           ))}
@@ -567,36 +521,18 @@ function EmployeeProfile() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Joining Date
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Joining Date</label>
                       <Input
                         type="date"
-                        value={
-                          formData?.joining_date
-                            ? formData.joining_date.split("T")[0]
-                            : ""
-                        }
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            joining_date: e.target.value
-                          })
-                        }
+                        value={formData?.joining_date ? formData.joining_date.split("T")[0] : ""}
+                        onChange={e => setFormData({ ...formData, joining_date: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Confirmed
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Confirmed</label>
                       <Select
                         value={formData?.confirmed === 1 ? "Yes" : "No"}
-                        onValueChange={value =>
-                          setFormData({
-                            ...formData,
-                            confirmed: value === "Yes" ? 1 : 0
-                          })
-                        }
+                        onValueChange={value => setFormData({ ...formData, confirmed: value === "Yes" ? 1 : 0 })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -606,88 +542,39 @@ function EmployeeProfile() {
                           <SelectItem value="No">No</SelectItem>
                         </SelectContent>
                       </Select>
-                      {/* <Input
-                        value={formData?.confirmed === 1 ? "Yes" : "No"}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            confirmed: e.target.value === "Yes" ? 1 : 0
-                          })
-                        }
-                      /> */}
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Confirmation Date
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Confirmation Date</label>
                       <Input
                         type="date"
-                        value={
-                          formData?.confirmation_date
-                            ? formData.confirmation_date.split("T")[0]
-                            : ""
-                        }
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            confirmation_date: e.target.value
-                          })
-                        }
+                        value={formData?.confirmation_date ? formData.confirmation_date.split("T")[0] : ""}
+                        onChange={e => setFormData({ ...formData, confirmation_date: e.target.value })}
                       />
                     </div>
-                    {/* <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Default Shift
-                      </label>
-                      <Input
-                        value={formData?.default_shift || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            default_shift: e.target.value
-                          })
-                        }
-                      />
-                    </div>*/}
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Employment Type
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Employment Type</label>
                       <Select
                         value={
-                          formData?.permission_value == 1
-                            ? "HR"
-                            : formData?.permission_value == 2
-                            ? "TEAM LEAD"
-                            : formData?.permission_value == 3
-                            ? "GENERAL"
-                            : ""
+                          formData?.permission_value === "1" ? "HR" :
+                          formData?.permission_value === "2" ? "TEAM LEAD" :
+                          formData?.permission_value === "3" ? "GENERAL" : ""
                         }
                         onValueChange={value =>
                           setFormData({
                             ...formData,
-                            permission_value:
-                              value === "HR"
-                                ? "1"
-                                : value === "TEAM LEAD"
-                                ? "2"
-                                : value === "GENERAL"
-                                ? "3"
-                                : null
+                            permission_value: value === "HR" ? "1" : value === "TEAM LEAD" ? "2" : value === "GENERAL" ? "3" : null
                           })
                         }
-                        disabled={
-                          permission_value == "2" || permission_value == "3"
-                        }
+                        disabled={permission_value === 2 || permission_value === 3}
                       >
                         <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
                           <SelectValue placeholder="-- Select Type --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {[
-                            { label: "HR", value: 1 },
-                            { label: "TEAM LEAD", value: 2 },
-                            { label: "GENERAL", value: 3 }
+                            { label: "HR", value: "1" },
+                            { label: "TEAM LEAD", value: "2" },
+                            { label: "GENERAL", value: "3" }
                           ].map(type => (
                             <SelectItem key={type.value} value={type.label}>
                               {type.label}
@@ -700,35 +587,14 @@ function EmployeeProfile() {
                 </div>
               </TabsContent>
 
-              {/* <TabsContent value="device" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-black">
-                      Official Laptop's Mac
-                    </label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-black">
-                      Personal Device's Mac
-                    </label>
-                    <Input defaultValue="40:1C:83:83:40:C8(N/A)" />
-                  </div>
-                </div>
-              </TabsContent> */}
-
               <TabsContent value="personal" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Gender
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Gender</label>
                       <Select
                         value={formData?.gender || ""}
-                        onValueChange={value =>
-                          setFormData({ ...formData, gender: value })
-                        }
+                        onValueChange={value => setFormData({ ...formData, gender: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -741,14 +607,10 @@ function EmployeeProfile() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Religion
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Religion</label>
                       <Select
                         value={formData?.religion || ""}
-                        onValueChange={value =>
-                          setFormData({ ...formData, religion: value })
-                        }
+                        onValueChange={value => setFormData({ ...formData, religion: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -756,57 +618,32 @@ function EmployeeProfile() {
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           <SelectItem value="islam">Islam</SelectItem>
                           <SelectItem value="hinduism">Hinduism</SelectItem>
-                          <SelectItem value="christianity">
-                            Christianity
-                          </SelectItem>
+                          <SelectItem value="christianity">Christianity</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Birthday
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Birthday</label>
                       <Input
                         type="date"
-                        value={
-                          formData?.birthday
-                            ? formData.birthday.split("T")[0]
-                            : ""
-                        }
-                        onChange={e =>
-                          setFormData({ ...formData, birthday: e.target.value })
-                        }
+                        value={formData?.birthday ? formData.birthday.split("T")[0] : ""}
+                        onChange={e => setFormData({ ...formData, birthday: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Official Birthday
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Official Birthday</label>
                       <Input
                         type="date"
-                        value={
-                          formData?.official_birthday
-                            ? formData.official_birthday.split("T")[0]
-                            : ""
-                        }
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            official_birthday: e.target.value
-                          })
-                        }
+                        value={formData?.official_birthday ? formData.official_birthday.split("T")[0] : ""}
+                        onChange={e => setFormData({ ...formData, official_birthday: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Blood Group
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Blood Group</label>
                       <Select
                         value={formData?.blood_group || ""}
-                        onValueChange={value =>
-                          setFormData({ ...formData, blood_group: value })
-                        }
+                        onValueChange={value => setFormData({ ...formData, blood_group: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -826,45 +663,24 @@ function EmployeeProfile() {
                   </div>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Father’s Name
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Father’s Name</label>
                       <Input
                         value={formData?.fathers_name || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            fathers_name: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, fathers_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Mother’s Name
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Mother’s Name</label>
                       <Input
                         value={formData?.mothers_name || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            mothers_name: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, mothers_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Relationship Status
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Relationship Status</label>
                       <Select
                         value={formData?.relationship_status || ""}
-                        onValueChange={value =>
-                          setFormData({
-                            ...formData,
-                            relationship_status: value
-                          })
-                        }
+                        onValueChange={value => setFormData({ ...formData, relationship_status: value })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -878,31 +694,17 @@ function EmployeeProfile() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Present Address
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Present Address</label>
                       <Textarea
                         value={formData?.present_address || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            present_address: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, present_address: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Permanent Address
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Permanent Address</label>
                       <Textarea
                         value={formData?.permanent_address || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            permanent_address: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, permanent_address: e.target.value })}
                       />
                     </div>
                   </div>
@@ -913,246 +715,114 @@ function EmployeeProfile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Skype [Official]
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Skype [Official]</label>
                       <Input
                         value={formData?.skype || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, skype: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, skype: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Gmail [Official]
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Gmail [Official]</label>
                       <Input
                         value={formData?.official_gmail || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            official_gmail: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, official_gmail: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        GitLab [Official]
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">GitLab [Official]</label>
                       <Input
                         value={formData?.gitlab || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, gitlab: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, gitlab: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        GitHub [Official]
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">GitHub [Official]</label>
                       <Input
                         value={formData?.github || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, github: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, github: e.target.value })}
                       />
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        NID
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">NID</label>
                       <Input
                         value={formData?.nid || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, nid: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, nid: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        TIN
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">TIN</label>
                       <Input
                         value={formData?.tin || ""}
-                        onChange={e =>
-                          setFormData({ ...formData, tin: e.target.value })
-                        }
+                        onChange={e => setFormData({ ...formData, tin: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Bank Name
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Bank Name</label>
                       <Input
                         value={formData?.bank_name || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            bank_name: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, bank_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-[#1F2328]">
-                        Bank Account No
-                      </label>
+                      <label className="text-sm font-medium text-[#1F2328]">Bank Account No</label>
                       <Input
                         value={formData?.bank_account_no || ""}
-                        onChange={e =>
-                          setFormData({
-                            ...formData,
-                            bank_account_no: e.target.value
-                          })
-                        }
+                        onChange={e => setFormData({ ...formData, bank_account_no: e.target.value })}
                       />
                     </div>
                   </div>
                 </div>
               </TabsContent>
+
               <TabsContent value="social" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Website
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Website</label>
                     <Input
                       value={formData?.website || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, website: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, website: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Facebook
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Facebook</label>
                     <Input
                       value={formData?.facebook || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, facebook: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, facebook: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Twitter
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Twitter</label>
                     <Input
                       value={formData?.twitter || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, twitter: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, twitter: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      LinkedIn
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">LinkedIn</label>
                     <Input
                       value={formData?.linkedin || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, linkedin: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, linkedin: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Instagram
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Instagram</label>
                     <Input
                       value={formData?.instagram || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, instagram: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, instagram: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Github
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Github</label>
                     <Input
                       value={formData?.github || ""}
-                      onChange={e =>
-                        setFormData({ ...formData, github: e.target.value })
-                      }
+                      onChange={e => setFormData({ ...formData, github: e.target.value })}
                     />
                   </div>
                 </div>
               </TabsContent>
-              {/* <TabsContent value="leave" className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Leave Type
-                        </th>
-                        <th className="py-2 px-4 border border-gray-300">
-                          Available
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        { label: "Annual Leave Balance", value: "0.00 (0.00)" },
-                        { label: "Sick Leave Balance", value: "0.00 (0.00)" },
-                        { label: "Casual Leave Balance", value: "0.00 (0.00)" }
-                      ].map(leave => (
-                        <tr key={leave.label}>
-                          <td className="py-2 px-4 border border-gray-300 font-semibold">
-                            {leave.label}
-                          </td>
-                          <td className="py-2 px-4 border border-gray-300">
-                            {leave.value}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent> */}
-              {/* <TabsContent value="meal" className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
-                  <div className="grid grid-cols-2 gap-6">
-                    {[
-                      { label: "Breakfast", key: "breakfast" },
-                      { label: "Lunch", key: "lunch" },
-                      { label: "Beef", key: "beef" },
-                      { label: "Fish", key: "fish" }
-                    ].map(meal => (
-                      <div key={meal.key} className="space-y-2">
-                        <label className="text-sm font-medium text-[#1F2328] block">
-                          {meal.label}
-                        </label>
-                        <Select
-                          value={formData?.[meal.key] === 1 ? "Yes" : "No"}
-                          onValueChange={value =>
-                            setFormData({
-                              ...formData,
-                              [meal.key]: value === "Yes" ? 1 : 0
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
-                            <SelectValue
-                              placeholder={`-- Select ${meal.label} --`}
-                            />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border-gray-300 shadow-md">
-                            <SelectItem value="Yes">Yes</SelectItem>
-                            <SelectItem value="No">No</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent> */}
+
               <TabsContent value="meal" className="space-y-6">
                 <div className="bg-white rounded-2xl shadow-lg p-6 text-[#1F2328]">
                   <div className="grid grid-cols-2 gap-6">
@@ -1163,22 +833,13 @@ function EmployeeProfile() {
                       { label: "Fish", key: "fish" }
                     ].map(meal => (
                       <div key={meal.key} className="space-y-2">
-                        <label className="text-sm font-medium text-[#1F2328] block">
-                          {meal.label}
-                        </label>
+                        <label className="text-sm font-medium text-[#1F2328] block">{meal.label}</label>
                         <Select
-                          value={formData?.[meal.key] === 1 ? "Yes" : "No"}
-                          onValueChange={value =>
-                            setFormData({
-                              ...formData,
-                              [meal.key]: value === "Yes" ? 1 : 0
-                            })
-                          }
+                          value={formData[meal.key as keyof FormData] === 1 ? "Yes" : "No"}
+                          onValueChange={value => setFormData({ ...formData, [meal.key]: value === "Yes" ? 1 : 0 })}
                         >
                           <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
-                            <SelectValue
-                              placeholder={`-- Select ${meal.label} --`}
-                            />
+                            <SelectValue placeholder={`-- Select ${meal.label} --`} />
                           </SelectTrigger>
                           <SelectContent className="bg-white border-gray-300 shadow-md">
                             <SelectItem value="Yes">Yes</SelectItem>
@@ -1190,54 +851,49 @@ function EmployeeProfile() {
                   </div>
                 </div>
               </TabsContent>
+
               <TabsContent value="leave" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Annual Leave Balance
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Annual Leave Balance</label>
                     <Input
+                      type="number"
                       value={leaveFormData?.annual_leave_balance || ""}
-                      onChange={e =>
-                        setLeaveFormData({
-                          ...leaveFormData,
-                          annual_leave_balance: e.target.value
-                        })
-                      }
+                      onChange={e => {
+                        console.log("Annual leave input changed to:", e.target.value)
+                        setLeaveFormData({ ...leaveFormData, annual_leave_balance: e.target.value })
+                      }}
                       placeholder="Annual Leave Balance..."
-                      disabled={
-                        permission_value == "2" || permission_value == "3"
-                      }
+                      disabled={permission_value === 2 || permission_value === 3}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-[#1F2328]">
-                      Sick Leave Balance
-                    </label>
+                    <label className="text-sm font-medium text-[#1F2328]">Sick Leave Balance</label>
                     <Input
+                      type="number"
                       value={leaveFormData?.sick_leave_balance || ""}
-                      onChange={e =>
-                        setLeaveFormData({
-                          ...leaveFormData,
-                          sick_leave_balance: e.target.value
-                        })
-                      }
+                      onChange={e => {
+                        console.log("Sick leave input changed to:", e.target.value)
+                        setLeaveFormData({ ...leaveFormData, sick_leave_balance: e.target.value })
+                      }}
                       placeholder="Sick Leave Balance..."
-                      disabled={
-                        permission_value == "2" || permission_value == "3"
-                      }
+                      disabled={permission_value === 2 || permission_value === 3}
                     />
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
+
             <div className="mt-6 flex justify-end gap-4">
               {activeTab === "leave" ? (
                 <Button
-                  disabled={permission_value == "2" || permission_value == "3"}
-                  onClick={handleLeaveData}
+                  disabled={updating || permission_value === 2 || permission_value === 3}
+                  onClick={() => {
+                    console.log("Save Leave button clicked")
+                    handleSaveLeave()
+                  }}
                 >
-                  {updating ? "Updating Leave..." : "Leave Update"}
+                  {updating ? "Saving Leave..." : "Save Leave"}
                 </Button>
               ) : (
                 <Button disabled={updating} onClick={handleSaveProfile}>
