@@ -46,7 +46,7 @@ const formatDateTime = (date: string, time: string) => {
   }
 };
 
- const formatStatus = (status: string) => {
+const formatStatus = (status: string) => {
   switch (status) {
     case "PENDING": return "Pending";
     case "APPROVED_BY_LINE_MANAGER": return "Team Lead";
@@ -67,6 +67,7 @@ const EmployeeAttendanceRecords = () => {
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
   const [expandedTeamLeadNotes, setExpandedTeamLeadNotes] = useState<Set<number>>(new Set());
   const [expandedHrNotes, setExpandedHrNotes] = useState<Set<number>>(new Set());
+  const [selectedStatus, setSelectedStatus] = useState<string>(""); // New state for filter
   const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
   const { id } = useSelector((state: RootState) => state.auth.user);
@@ -81,7 +82,10 @@ const EmployeeAttendanceRecords = () => {
 
   useEffect(() => {
     const fetchAttendanceRecords = async () => {
-      const url = `${API_BASE_URL}/employee/all-time-record-list`;
+      setIsLoading(true);
+      const url = selectedStatus
+        ? `${API_BASE_URL}/employee/all-time-record-list?status=${selectedStatus}` // Demo filter API
+        : `${API_BASE_URL}/employee/all-time-record-list`;
       try {
         const response = await fetch(url, {
           headers: {
@@ -108,7 +112,7 @@ const EmployeeAttendanceRecords = () => {
     };
 
     fetchAttendanceRecords();
-  }, [storedToken, id, API_BASE_URL]);
+  }, [storedToken, id, API_BASE_URL, selectedStatus]); // Add selectedStatus as dependency
 
   const handleAction = async (
     recordId: number,
@@ -203,7 +207,29 @@ const EmployeeAttendanceRecords = () => {
 
   return (
     <div className="bg-white text-[#1F2328] p-3">
-      <h1 className="text-3xl font-bold text-[#1F2328] mb-3">Employee Attendance Records</h1>
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-3xl font-bold text-[#1F2328]">Employee Attendance Records</h1>
+
+        {/* Filter by Status */}
+        <div className="flex items-center space-x-2">
+          <label htmlFor="statusFilter" className="text-[#1F2328] font-medium">
+            Filter by Status:
+          </label>
+          <select
+            id="statusFilter"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED_BY_LINE_MANAGER">Approved by Team Lead</option>
+            <option value="REJECTED_BY_LINE_MANAGER">Rejected by Team Lead</option>
+            <option value="APPROVED_BY_HR">Approved by HR</option>
+            <option value="REJECTED_BY_HR">Rejected by HR</option>
+          </select>
+        </div>
+      </div>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 p-4">
         <Table>
           {!isLoading && currentRecords.length > 0 && (
@@ -245,8 +271,8 @@ const EmployeeAttendanceRecords = () => {
                   <TableRow key={record.id}>
                     <TableCell className="text-[#1F2328]">{record.employee_name || record.employee_id}</TableCell>
                     <TableCell className="text-[#1F2328]">
-                    {formatDateTime(record.date, record.time)}
-                    <span className="px-1 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full"> {formatStatus(record.type)}</span>
+                      {formatDateTime(record.date, record.time)}
+                      <span className="px-1 py-0.5 text-xs font-bold bg-blue-100 text-blue-800 rounded-full"> {formatStatus(record.type)}</span>
                     </TableCell>
                     <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
                       <span>{descriptionText}</span>

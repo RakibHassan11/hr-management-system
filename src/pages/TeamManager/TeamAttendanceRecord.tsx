@@ -77,6 +77,7 @@ const TeamAttendanceRecord = () => {
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
   const [expandedTeamLeadNotes, setExpandedTeamLeadNotes] = useState<Set<number>>(new Set());
   const [expandedHrNotes, setExpandedHrNotes] = useState<Set<number>>(new Set());
+  const [selectedStatus, setSelectedStatus] = useState<string>(""); // Added filter state
   const recordsPerPage = 10;
   const { userToken: authToken } = useSelector((state: RootState) => state.auth);
   const { id: lineManagerDbId, permissions = [] } = useSelector(
@@ -84,18 +85,25 @@ const TeamAttendanceRecord = () => {
   );
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+  const storedToken = localStorage.getItem("token_user") || authToken;
+  if (!storedToken) {
+    return <div className="p-6 text-center text-red-600">No authentication token found. Please log in.</div>;
+  }
+
   useEffect(() => {
     const fetchAttendanceRecords = async () => {
-      const storedToken = localStorage.getItem("token_user") || authToken;
+      setIsLoading(true);
       const managerId = lineManagerDbId || localStorage.getItem("lineManagerDbId");
 
-      if (!storedToken || !managerId) {
-        setError("Authentication token or manager ID missing. Please log in.");
+      if (!managerId) {
+        setError("Manager ID missing. Please ensure proper login.");
         setIsLoading(false);
         return;
       }
 
-      const url = `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}`;
+      const url = selectedStatus
+        ? `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}&status=${selectedStatus}`
+        : `${API_BASE_URL}/team/attendance-record?line_manager_id=${managerId}`;
 
       try {
         const response = await axios.get(url, {
@@ -126,13 +134,12 @@ const TeamAttendanceRecord = () => {
     };
 
     fetchAttendanceRecords();
-  }, [authToken, lineManagerDbId, API_BASE_URL]);
+  }, [authToken, lineManagerDbId, API_BASE_URL, selectedStatus]); // Added selectedStatus as dependency
 
   const handleAction = async (
     recordId: number,
     newStatus: "APPROVED_BY_LINE_MANAGER" | "REJECTED_BY_LINE_MANAGER" | "APPROVED_BY_HR" | "REJECTED_BY_HR"
   ) => {
-    const storedToken = localStorage.getItem("token_user") || authToken;
     if (!storedToken) {
       toast.error("No authentication token found.");
       return;
@@ -141,7 +148,7 @@ const TeamAttendanceRecord = () => {
     const isHR = Array.isArray(permissions) && permissions.includes("HR_PERMISSION");
     const actionText = newStatus.includes("APPROVED") ? "approve" : "reject";
     const noteFieldName = isHR ? "note_by_hr" : "note_by_team_lead";
-    const statusForRole = isHR 
+    const statusForRole = isHR
       ? (newStatus.includes("APPROVED") ? "APPROVED_BY_HR" : "REJECTED_BY_HR")
       : newStatus;
 
@@ -159,10 +166,10 @@ const TeamAttendanceRecord = () => {
     if (!result.isConfirmed) return;
 
     const noteValue = result.value?.trim() || null;
-    const payload = { 
-      id: recordId, 
+    const payload = {
+      id: recordId,
       status: statusForRole,
-      [noteFieldName]: noteValue
+      [noteFieldName]: noteValue,
     };
 
     try {
@@ -179,14 +186,14 @@ const TeamAttendanceRecord = () => {
 
       const responseData = response.data;
       if (response.status === 200 && responseData.success) {
-        setAttendanceRecords(prev =>
-          prev.map(record =>
-            record.id === recordId 
-              ? { 
-                  ...record, 
+        setAttendanceRecords((prev) =>
+          prev.map((record) =>
+            record.id === recordId
+              ? {
+                  ...record,
                   ...responseData.data,
-                  [noteFieldName]: responseData.data[noteFieldName] ?? noteValue
-                } 
+                  [noteFieldName]: responseData.data[noteFieldName] ?? noteValue,
+                }
               : record
           )
         );
@@ -197,7 +204,7 @@ const TeamAttendanceRecord = () => {
     } catch (error: any) {
       console.error("Update error:", error.response?.data || error.message);
       toast.error(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         "Network error: Failed to update attendance record."
       );
     }
@@ -243,7 +250,27 @@ const TeamAttendanceRecord = () => {
 
   return (
     <div className="bg-white text-[#1F2328] p-3">
-      <h1 className="text-3xl font-bold text-[#1F2328] mb-3">Team Attendance Records</h1>
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-3xl font-bold text-[#1F2328]">Team Attendance Records</h1>
+        <div className="flex items-center space-x-2">
+          <label htmlFor="statusFilter" className="text-[#1F2328] font-medium">
+            Filter by Status:
+          </label>
+          <select
+            id="statusFilter"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED_BY_LINE_MANAGER">Approved by Team Lead</option>
+            <option value="REJECTED_BY_LINE_MANAGER">Rejected by Team Lead</option>
+            <option value="APPROVED_BY_HR">Approved by HR</option>
+            <option value="REJECTED_BY_HR">Rejected by HR</option>
+          </select>
+        </div>
+      </div>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 p-4">
         <Table>
           {!isLoading && currentRecords.length > 0 && (
@@ -273,8 +300,9 @@ const TeamAttendanceRecord = () => {
             ) : currentRecords.length > 0 ? (
               currentRecords.map((record) => {
                 const isHR = Array.isArray(permissions) && permissions.includes("HR_PERMISSION");
-                const canAct = record.status === "PENDING" || 
-                              (record.status === "APPROVED_BY_LINE_MANAGER" && isHR);
+                const canAct =
+                  record.status === "PENDING" ||
+                  (record.status === "APPROVED_BY_LINE_MANAGER" && isHR);
                 const isDescriptionExpanded = expandedDescriptions.has(record.id);
                 const isTeamLeadNoteExpanded = expandedTeamLeadNotes.has(record.id);
                 const isHrNoteExpanded = expandedHrNotes.has(record.id);
@@ -296,9 +324,7 @@ const TeamAttendanceRecord = () => {
                       </span>
                     </TableCell>
                     <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
-                      <span>
-                        {descriptionText}
-                      </span>
+                      <span>{descriptionText}</span>
                       {record.description.length > 10 && (
                         <button
                           className="text-blue-600 hover:underline text-sm"

@@ -66,27 +66,30 @@ const truncateText = (text: string, maxLength: number) =>
 
 const EmployeeLeaveRecords = () => {
   const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<number>>(new Set());
   const [expandedTeamLeadNotes, setExpandedTeamLeadNotes] = useState<Set<number>>(new Set());
   const [expandedHrNotes, setExpandedHrNotes] = useState<Set<number>>(new Set());
+  const [selectedStatus, setSelectedStatus] = useState<string>(""); // Added filter state
   const recordsPerPage = 10;
   const { userToken } = useSelector((state: RootState) => state.auth);
   const { id } = useSelector((state: RootState) => state.auth.user);
   const API_BASE_URL = import.meta.env.VITE_API_URL;
   const storedToken = localStorage.getItem("token_user") || userToken;
 
+  // Early return for no token, matching attendance component
   if (!storedToken) {
-    setError("No authentication token found. Please log in.");
-    setIsLoading(false);
-    return <div className="p-6 text-center text-red-600">{error}</div>;
+    return <div className="p-6 text-center text-red-600">No authentication token found. Please log in.</div>;
   }
 
   useEffect(() => {
     const fetchLeaveRecords = async () => {
-      const url = `${API_BASE_URL}/employee/all-leave-record-list`;
+      setIsLoading(true);
+      const url = selectedStatus
+        ? `${API_BASE_URL}/employee/all-leave-record-list?status=${selectedStatus}`
+        : `${API_BASE_URL}/employee/all-leave-record-list`;
       try {
         const response = await fetch(url, {
           method: "GET",
@@ -108,13 +111,14 @@ const EmployeeLeaveRecords = () => {
           setIsLoading(false);
         }
       } catch (error) {
-        setError("Network error: " + error.message);
+        console.error("Fetch error:", error);
+        setError("Network error: Failed to fetch leave records.");
         setIsLoading(false);
       }
     };
 
     fetchLeaveRecords();
-  }, [storedToken, id, API_BASE_URL]);
+  }, [storedToken, id, API_BASE_URL, selectedStatus]); // Added selectedStatus as dependency
 
   const handleAction = async (
     recordId: number,
@@ -140,17 +144,14 @@ const EmployeeLeaveRecords = () => {
     const payload = { id: recordId, status: newStatus, note_by_hr: noteValue };
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/employee/update-leave-status`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/employee/update-leave-status`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${storedToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const result = await response.json();
       if (response.ok && result.success) {
@@ -200,8 +201,8 @@ const EmployeeLeaveRecords = () => {
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = leaveRecords?.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(leaveRecords?.length / recordsPerPage) || 1;
+  const currentRecords = leaveRecords.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(leaveRecords.length / recordsPerPage) || 1;
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -215,10 +216,30 @@ const EmployeeLeaveRecords = () => {
 
   return (
     <div className="bg-white text-[#1F2328] p-3">
-      <h1 className="text-3xl font-bold text-[#1F2328] mb-3">Employee Leave Records</h1>
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-3xl font-bold text-[#1F2328]">Employee Leave Records</h1>
+        <div className="flex items-center space-x-2">
+          <label htmlFor="statusFilter" className="text-[#1F2328] font-medium">
+            Filter by Status:
+          </label>
+          <select
+            id="statusFilter"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED_BY_LINE_MANAGER">Approved by Team Lead</option>
+            <option value="REJECTED_BY_LINE_MANAGER">Rejected by Team Lead</option>
+            <option value="APPROVED_BY_HR">Approved by HR</option>
+            <option value="REJECTED_BY_HR">Rejected by HR</option>
+          </select>
+        </div>
+      </div>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-300 p-4">
         <Table>
-          {!isLoading && currentRecords?.length > 0 && (
+          {!isLoading && currentRecords.length > 0 && (
             <TableHeader>
               <TableRow className="bg-gray-100">
                 <TableHead className="text-[#1F2328]">Employee Name</TableHead>
@@ -243,7 +264,7 @@ const EmployeeLeaveRecords = () => {
                   </div>
                 ))}
               </div>
-            ) : currentRecords?.length > 0 ? (
+            ) : currentRecords.length > 0 ? (
               currentRecords.map((record) => {
                 const isDescriptionExpanded = expandedDescriptions.has(record.id);
                 const isTeamLeadNoteExpanded = expandedTeamLeadNotes.has(record.id);
@@ -261,15 +282,16 @@ const EmployeeLeaveRecords = () => {
                     </TableCell>
                     <TableCell className="text-[#1F2328]">
                       {formatDateRange(record.start_date, record.end_date)}
-                      <span className={`px-1 py-0.5 text-xs font-bold rounded-full ml-2${
-                        record.type == "SICK" ? "px-2 py-0.5 bg-rose-100 text-rose-700" : "px-2 py-0.5 bg-emerald-100 text-emerald-700"}`}>
+                      <span
+                        className={`px-1 py-0.5 text-xs font-bold rounded-full ml-2 ${
+                          record.type === "SICK" ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
                         {formatStatus(record.type)}
                       </span>
                     </TableCell>
                     <TableCell className="text-[#1F2328] transition-all duration-200 ease-in-out">
-                      <span>
-                        {descriptionText}
-                      </span>
+                      <span>{descriptionText}</span>
                       {record.description.length > 10 && (
                         <button
                           className="text-blue-600 hover:underline text-sm"
@@ -287,11 +309,9 @@ const EmployeeLeaveRecords = () => {
                     <TableCell className="text-[#1F2328]">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          record.status === "APPROVED_BY_LINE_MANAGER" ||
-                          record.status === "APPROVED_BY_HR"
+                          record.status === "APPROVED_BY_LINE_MANAGER" || record.status === "APPROVED_BY_HR"
                             ? "bg-green-100 text-green-800"
-                            : record.status === "REJECTED_BY_LINE_MANAGER" ||
-                              record.status === "REJECTED_BY_HR"
+                            : record.status === "REJECTED_BY_LINE_MANAGER" || record.status === "REJECTED_BY_HR"
                             ? "bg-red-100 text-red-800"
                             : record.status === "PENDING"
                             ? "bg-yellow-100 text-yellow-800"
