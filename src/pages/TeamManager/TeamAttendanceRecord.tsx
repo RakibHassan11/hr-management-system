@@ -266,8 +266,6 @@ const TeamAttendanceRecord = () => {
             <option value="PENDING">Pending</option>
             <option value="APPROVED_BY_LINE_MANAGER">Approved by Team Lead</option>
             <option value="REJECTED_BY_LINE_MANAGER">Rejected by Team Lead</option>
-            <option value="APPROVED_BY_HR">Approved by HR</option>
-            <option value="REJECTED_BY_HR">Rejected by HR</option>
           </select>
         </div>
       </div>
