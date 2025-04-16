@@ -4,59 +4,51 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { RootState } from "@/store"
-import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
-import { formatDate, formatText } from "@/components/utils/dateHelper"
-import { FaArrowRotateRight } from "react-icons/fa6"
+  TableRow,
+} from "@/components/ui/table";
+import { RootState } from "@/store";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { formatDate, formatText } from "@/components/utils/dateHelper";
+import { FaArrowRotateRight } from "react-icons/fa6";
 
 export default function ViewLeave() {
-  const [leaveData, setLeaveData] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const API_URL = import.meta.env.VITE_API_URL
-  const token = useSelector((state: RootState) => state.auth.userToken)
+  const [leaveData, setLeaveData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const API_URL = import.meta.env.VITE_API_URL;
+  const token = useSelector((state: RootState) => state.auth.userToken);
 
   const fetchLeaveData = async (query = "") => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(`${API_URL}/employee/leave-record-list`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
-      })
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch leave records")
+        throw new Error("Failed to fetch leave records");
       }
 
-      const data = await response.json()
-      setLeaveData(data.data || [])
+      const data = await response.json();
+      setLeaveData(data.data || []);
     } catch (err) {
-      setError(err.message)
-      setLeaveData([])
+      setError(err.message);
+      setLeaveData([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchLeaveData()
-  }, [API_URL, token])
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-gray-600">Loading leave records...</p>
-      </div>
-    )
-  }
+    fetchLeaveData();
+  }, [API_URL, token]);
 
   const renderContent = () => {
     if (error) {
@@ -70,7 +62,52 @@ export default function ViewLeave() {
             />
           </div>
         </div>
-      )
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-100">
+              <TableHead className="text-[#1F2328]">Name</TableHead>
+              <TableHead className="text-[#1F2328]">Days</TableHead>
+              <TableHead className="text-[#1F2328]">Description</TableHead>
+              <TableHead className="text-[#1F2328]">Start Date</TableHead>
+              <TableHead className="text-[#1F2328]">End Date</TableHead>
+              <TableHead className="text-[#1F2328]">Type</TableHead>
+              <TableHead className="text-[#1F2328]">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <div className="h-3 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-1/4 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-full bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+                <TableCell>
+                  <div className="h-3 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
     }
 
     if (leaveData.length === 0) {
@@ -78,7 +115,7 @@ export default function ViewLeave() {
         <div className="text-center py-4">
           <p className="text-gray-600">No leave record available</p>
         </div>
-      )
+      );
     }
 
     return (
@@ -95,7 +132,7 @@ export default function ViewLeave() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {leaveData.map(leave => (
+          {leaveData.map((leave) => (
             <TableRow key={leave.id}>
               <TableCell className="text-[#1F2328]">{leave.name}</TableCell>
               <TableCell className="text-[#1F2328] font-semibold text-sm">
@@ -138,8 +175,8 @@ export default function ViewLeave() {
           ))}
         </TableBody>
       </Table>
-    )
-  }
+    );
+  };
 
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
@@ -151,5 +188,5 @@ export default function ViewLeave() {
         {renderContent()}
       </div>
     </div>
-  )
+  );
 }
