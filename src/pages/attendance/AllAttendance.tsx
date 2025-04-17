@@ -8,10 +8,11 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Calendar } from "lucide-react"
+import { Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
+import { Download, RefreshCcw } from 'lucide-react';
 import {
   formatDate,
   formatDateTime,
@@ -36,6 +37,9 @@ export default function AllAttendance() {
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
+  
+  // State for export file type (CSV or EXCEL)
+  const [exportType, setExportType] = useState("CSV")
 
   const fetchEmployees = (
     page = currentPage,
@@ -65,6 +69,7 @@ export default function AllAttendance() {
         return response.json()
       })
       .then(data => {
+        console.log("Fetched employees:", data.data); // Debug: Check if comment is present
         setEmployees(data.data || [])
         setTotalPages(data?.extraData?.totalPages || 1)
         setCurrentPage(data?.extraData?.currentPage || 1)
@@ -77,6 +82,42 @@ export default function AllAttendance() {
         setLoading(false)
       })
   }
+
+  // Function to handle the export API call
+  const handleExport = () => {
+    let exportUrl = `https://hrm-api.orangetoolz.com/api/otz-hrm/employee-attendance/attendance-export?needPagination=false&sortDirection=${sortDirection}&sortOn=${sortOn}&status=active`;
+  
+    if (query) exportUrl += `&query=${encodeURIComponent(query)}`;
+    if (startDate && endDate) exportUrl += `&startdate=${startDate}&enddate=${endDate}`;
+    exportUrl += `&type=${exportType}`;
+  
+    fetch(exportUrl, { // Fixed: Use exportUrl instead of url
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Failed to export attendance data");
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `attendance_${startDate}_to_${endDate}.${exportType.toLowerCase()}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(error => {
+        setError(error.message);
+      });
+  };
 
   useEffect(() => {
     setLoading(true)
@@ -127,7 +168,7 @@ export default function AllAttendance() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search employees..."
-              className="pl-9 pr-4 py-2 w-full md:w-auto border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="pl-9 pr-4 py-2 w-full md:w-auto border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               <Search size={16} />
@@ -140,11 +181,8 @@ export default function AllAttendance() {
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Calendar size={16} />
-              </div>
             </div>
 
             <div className="relative flex-1 md:flex-none">
@@ -152,12 +190,38 @@ export default function AllAttendance() {
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Calendar size={16} />
-              </div>
             </div>
+          </div>
+
+          {/* Export Section */}
+          <div className="flex gap-3">
+            <select
+              value={exportType}
+              onChange={e => setExportType(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316]"
+            >
+              <option value="CSV">CSV</option>
+              <option value="EXCEL">Excel</option>
+            </select>
+            <Button
+              onClick={handleExport}
+              className="bg-[#F97316] text-white hover:bg-[#e06615]"
+            >
+              <Download size={18} className="text-white hover:text-gray-200" />
+            </Button>
+            <Button
+              onClick={() => {
+                setQuery("")
+                setStartDate(today)
+                setEndDate(today)
+                setExportType("CSV")
+              }}
+              className="bg-[#F97316] text-white hover:bg-[#e06615]"
+            >
+              <RefreshCcw size={18} className="text-white hover:text-gray-200" />
+            </Button>
           </div>
         </div>
       </div>
@@ -184,6 +248,9 @@ export default function AllAttendance() {
                       <TableHead className="text-[#1F2328]">
                         Total Punch
                       </TableHead>
+                      <TableHead className="text-[#1F2328]">
+                        Comment
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -193,30 +260,22 @@ export default function AllAttendance() {
                           {employee.name}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {/* {employee.check_in_time
-                            ? `${formatDate(
-                                employee.check_in_time
-                              )} ${formatTime(employee.check_in_time)}`
-                            : "--:--"} */}
                           {formatDateTime(employee.check_in_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
-                          {/* {employee.check_out_time
-                            ? `${formatDate(
-                                employee.check_out_time
-                              )} ${formatTime(employee.check_out_time)}`
-                            : "--:--"} */}
                           {formatDateTime(employee.check_out_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328]">
                           {employee.total_punch}
+                        </TableCell>
+                        <TableCell className="text-[#1F2328]">
+                          {employee.comment || "N/A"} {/* Fallback for comment */}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
 
-                {/* {employees?.length >= perPage && ( */}
                 <div className="mt-6 flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <span>Show</span>
@@ -225,11 +284,11 @@ export default function AllAttendance() {
                       onChange={e =>
                         handlePerPageChange(Number(e.target.value))
                       }
-                      className="border border-gray-300 rounded-md p-1"
+                      className="border border-[#F97316] rounded-md p-1 text-[#1F2328] focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316]"
                     >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
+                      <option value={10} className="text-[#1F2328]">10</option>
+                      <option value={20} className="text-[#1F2328]">20</option>
+                      <option value={50} className="text-[#1F2328]">50</option>
                     </select>
                     <span>per page</span>
                   </div>
@@ -256,7 +315,6 @@ export default function AllAttendance() {
 
                   <span>Total: {totalItems} attendances</span>
                 </div>
-                {/* )} */}
               </>
             )}
           </>
