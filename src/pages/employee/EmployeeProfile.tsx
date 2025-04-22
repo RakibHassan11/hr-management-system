@@ -187,21 +187,21 @@ function EmployeeProfile() {
         ]);
 
         const divisions = divisionsRes.data.data.map((division: any) => ({
-          id: division.id,
+          id: division.id.toString(),
           title: division.title,
         }));
         const departments = departmentsRes.data.data.map((department: any) => ({
-          id: department.id,
+          id: department.id.toString(),
           title: department.title,
         }));
         const subDepartments = subDepartmentsRes.data.data.map(
           (subDept: any) => ({
-            id: subDept.id,
+            id: subDept.id.toString(),
             title: subDept.title,
           })
         );
         const units = unitsRes.data.data.map((unit: any) => ({
-          id: unit.id,
+          id: unit.id.toString(),
           title: unit.title,
         }));
         const lines = lineRes.data.data.map((line: any) => ({
@@ -221,11 +221,11 @@ function EmployeeProfile() {
         setFormData((prevData) => ({
           ...prevData,
           ...profileData,
-          division_id: profileData.division_id || null,
-          department_id: profileData.department_id || null,
-          sub_department_id: profileData.sub_department_id || null,
-          unit_id: profileData.unit_id || null,
-          line_manager_id: profileData.line_manager_id || null,
+          division_id: profileData.division_id?.toString() || null,
+          department_id: profileData.department_id?.toString() || null,
+          sub_department_id: profileData.sub_department_id?.toString() || null,
+          unit_id: profileData.unit_id?.toString() || null,
+          line_manager_id: profileData.line_manager_id?.toString() || null,
           id: profileData.id,
         }));
         setEmployee(profileData);
@@ -294,14 +294,28 @@ function EmployeeProfile() {
       toast("No changes made!");
       return;
     }
+
+    // Convert string IDs to numbers for API request
     const req_body = {
       ...updatedFields,
       id: employee?.id || Number(idFromUrl),
+      division_id: updatedFields.division_id ? Number(updatedFields.division_id) : undefined,
+      department_id: updatedFields.department_id ? Number(updatedFields.department_id) : undefined,
+      sub_department_id: updatedFields.sub_department_id ? Number(updatedFields.sub_department_id) : undefined,
+      unit_id: updatedFields.unit_id ? Number(updatedFields.unit_id) : undefined,
+      line_manager_id: updatedFields.line_manager_id ? Number(updatedFields.line_manager_id) : undefined,
       breakfast: formData.breakfast === 1,
       lunch: formData.lunch === 1,
       beef: formData.beef === 1,
       fish: formData.fish === 1,
     };
+
+    // Remove undefined fields to avoid sending them in the request
+    Object.keys(req_body).forEach((key) => {
+      if (req_body[key] === undefined) {
+        delete req_body[key];
+      }
+    });
 
     try {
       setUpdating(true);
@@ -325,9 +339,13 @@ function EmployeeProfile() {
         ...prevData,
         ...updatedEmployee,
       }));
-    } catch (err) {
+    } catch (err: any) {
       setEmployee(null);
-      toast.error("Error updating profile: " + (err as Error).message);
+      const errorMessage =
+        Array.isArray(err.response?.data?.message)
+          ? err.response.data.message.join(", ")
+          : err.response?.data?.message || "Error updating profile";
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setUpdating(false);
     }
@@ -597,7 +615,7 @@ function EmployeeProfile() {
                         onValueChange={(value) =>
                           setFormData((prevData) => ({
                             ...prevData,
-                            division_id: value,
+                            division_id: value || null,
                           }))
                         }
                       >
@@ -622,7 +640,7 @@ function EmployeeProfile() {
                         onValueChange={(value) =>
                           setFormData((prevData) => ({
                             ...prevData,
-                            department_id: value,
+                            department_id: value || null,
                           }))
                         }
                       >
@@ -653,7 +671,7 @@ function EmployeeProfile() {
                         onValueChange={(value) =>
                           setFormData((prevData) => ({
                             ...prevData,
-                            sub_department_id: value,
+                            sub_department_id: value || null,
                           }))
                         }
                       >
@@ -683,7 +701,7 @@ function EmployeeProfile() {
                         onValueChange={(value) =>
                           setFormData((prevData) => ({
                             ...prevData,
-                            unit_id: value,
+                            unit_id: value || null,
                           }))
                         }
                       >
@@ -708,23 +726,29 @@ function EmployeeProfile() {
                         onValueChange={(value) =>
                           setFormData((prevData) => ({
                             ...prevData,
-                            line_manager_id: value,
+                            line_manager_id: value || null,
                           }))
                         }
                         disabled={permission_value === 2 || permission_value === 3}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="-- Select manager --" />
+                          <SelectValue placeholder="Select a Line Manager" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
-                          {categoryOptions.lines?.map((manager) => (
-                            <SelectItem
-                              key={manager.id}
-                              value={manager.id.toString()}
-                            >
-                              {manager.name}
+                          {categoryOptions.lines.length > 0 ? (
+                            categoryOptions.lines.map((manager) => (
+                              <SelectItem
+                                key={manager.id}
+                                value={manager.id.toString()}
+                              >
+                                {manager.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>
+                              No Managers Available
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -851,7 +875,7 @@ function EmployeeProfile() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           <SelectItem value="MALE">Male</SelectItem>
@@ -871,7 +895,7 @@ function EmployeeProfile() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select religion" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           <SelectItem value="islam">Islam</SelectItem>
@@ -929,7 +953,7 @@ function EmployeeProfile() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select blood group" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           <SelectItem value="O+">O+</SelectItem>
@@ -987,7 +1011,7 @@ function EmployeeProfile() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select relationship status" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           <SelectItem value="single">Single</SelectItem>

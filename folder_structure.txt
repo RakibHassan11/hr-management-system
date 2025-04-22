@@ -1,23 +1,38 @@
 .
-├── bun.lockb
 ├── components.json
+├── dist
+│   ├── assets
+│   │   ├── index-eG4AWIe-.css
+│   │   ├── index-itPBnHif.js
+│   │   ├── orangetoolz-logo-orange-HwMZdfM1.png
+│   │   └── pet-BR97XxFs.jpg
+│   ├── index.html
+│   ├── orangetoolz-logo-orange.png
+│   └── placeholder.svg
 ├── eslint.config.js
 ├── folder_structure.txt
 ├── index.html
 ├── package.json
 ├── package-lock.json
 ├── postcss.config.js
+├── public
+│   ├── orangetoolz-logo-orange.png
+│   └── placeholder.svg
 ├── README.md
 ├── src
 │   ├── App.css
 │   ├── App.tsx
 │   ├── components
 │   │   ├── Admin
+│   │   │   ├── AdminEmployee.tsx
 │   │   │   ├── AdminLayout.tsx
 │   │   │   ├── AdminSidebar.tsx
 │   │   │   ├── AdminUserNav.tsx
-│   │   │   ├── Employee.tsx
-│   │   │   └── Home.tsx
+│   │   │   ├── EmployeeEditForm.tsx
+│   │   │   ├── EmployeeList.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── PermissionModal.tsx
+│   │   │   └── types.ts
 │   │   ├── Layout.tsx
 │   │   ├── PrivateRoute.tsx
 │   │   ├── Sidebar.tsx
@@ -46,6 +61,7 @@
 │   │   │   ├── input-otp.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── label.tsx
+│   │   │   ├── loading.tsx
 │   │   │   ├── menubar.tsx
 │   │   │   ├── navigation-menu.tsx
 │   │   │   ├── pagination.tsx
@@ -71,8 +87,13 @@
 │   │   │   ├── toggle.tsx
 │   │   │   ├── tooltip.tsx
 │   │   │   └── use-toast.ts
-│   │   └── UserNav.tsx
+│   │   ├── UserNav.tsx
+│   │   └── utils
+│   │       └── dateHelper.ts
+│   ├── config
+│   │   └── api.ts
 │   ├── hooks
+│   │   ├── use-api.tsx
 │   │   ├── use-mobile.tsx
 │   │   └── use-toast.ts
 │   ├── index.css
@@ -83,25 +104,44 @@
 │   │   └── pet.jpg
 │   ├── main.tsx
 │   ├── pages
-│   │   ├── ApplyLeave.tsx
-│   │   ├── Employee.tsx
+│   │   ├── apply_leave
+│   │   │   ├── ApplyLeave.tsx
+│   │   │   └── LeaveRecords.tsx
+│   │   ├── attendance
+│   │   │   ├── AllAttendance.tsx
+│   │   │   └── ViewAttendance.tsx
+│   │   ├── employee
+│   │   │   ├── CreateEmployee.tsx
+│   │   │   ├── EmployeeProfile.tsx
+│   │   │   └── Employee.tsx
 │   │   ├── Holidays.tsx
 │   │   ├── Home.tsx
+│   │   ├── HR
+│   │   │   ├── EmployeeAttendanceRecords.tsx
+│   │   │   └── EmployeeLeaveRecords.tsx
 │   │   ├── ImportantLinks.tsx
 │   │   ├── Index.tsx
 │   │   ├── Login.tsx
 │   │   ├── MacAddress.tsx
 │   │   ├── NotFound.tsx
-│   │   ├── Profile.tsx
+│   │   ├── profile
+│   │   │   ├── ChangePassword.tsx
+│   │   │   └── Profile.tsx
 │   │   ├── SuperAdminLogin.tsx
+│   │   ├── TeamManager
+│   │   │   ├── TeamAttendanceRecord.tsx
+│   │   │   └── TeamLeaveRecords.tsx
 │   │   ├── Team.tsx
-│   │   ├── TimeUpdate.tsx
-│   │   ├── ViewAttendance.tsx
+│   │   ├── time_update
+│   │   │   ├── TimeUpdatesList.tsx
+│   │   │   └── TimeUpdate.tsx
 │   │   └── ViewLeave.tsx
 │   ├── store
 │   │   ├── authSlice.ts
 │   │   ├── index.ts
 │   │   └── store.ts
+│   ├── utils
+│   │   └── useSessionTimeout.ts
 │   └── vite-env.d.ts
 ├── tailwind.config.ts
 ├── tsconfig.app.json
@@ -109,4 +149,4 @@
 ├── tsconfig.node.json
 └── vite.config.ts
 
-10 directories, 100 files
+23 directories, 127 files
