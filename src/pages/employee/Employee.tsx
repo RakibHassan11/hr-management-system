@@ -24,7 +24,7 @@ export default function Employee() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(10)
+  const [perPage, setPerPage] = useState(100)
   const [totalItems, setTotalItems] = useState(0)
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortOn, setSortOn] = useState("name")
@@ -241,9 +241,8 @@ export default function Employee() {
                   onChange={e => handlePerPageChange(Number(e.target.value))}
                   className="border border-gray-300 rounded-md p-1"
                 >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
                 </select>
                 <span>per page</span>
               </div>
