@@ -357,7 +357,7 @@ function EmployeeProfile() {
 
   const handleInputChange = (field: keyof LeaveFormData, value: string) => {
     // Allow only numeric values
-    if (value !== "" && !/^\d*$/.test(value)) {
+    if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
       return;
     }
 
