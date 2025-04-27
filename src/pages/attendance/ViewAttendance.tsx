@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
@@ -23,6 +22,8 @@ interface Employee {
   check_in_time: string | null
   check_out_time: string | null
   total_punch: string
+  created_at: string
+  comment: string
 }
 
 export default function ViewAttendance() {
@@ -34,20 +35,27 @@ export default function ViewAttendance() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(10)
+  const [perPage, setPerPage] = useState(30)
   const [totalItems, setTotalItems] = useState(0)
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [sortOn, setSortOn] = useState<string>("name")
 
-  const today = new Date().toISOString().split("T")[0]
-  const [startDate, setStartDate] = useState(today)
-  const [endDate, setEndDate] = useState(today)
+  // Set default startDate and endDate to current month
+  const currentMonthStart = moment().startOf("month").format("YYYY-MM-DD")
+  const currentMonthEnd = moment().endOf("month").format("YYYY-MM-DD")
+  const [startDate, setStartDate] = useState(currentMonthStart)
+  const [endDate, setEndDate] = useState(currentMonthEnd)
 
   // Function to format UTC time to Asia/Dhaka (GMT+6) in HH:mm format
   const formatDateTime = (time: string | null) => {
     if (!time) return "--:--"
     const momentTime = moment.tz(time, "UTC").tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
+  }
+
+  // Function to format created_at to YYYY-MM-DD
+  const formatDate = (createdAt: string) => {
+    if (!createdAt) return "--"
+    const momentDate = moment.tz(createdAt, "UTC")
+    return momentDate.isValid() ? momentDate.format("YYYY-MM-DD") : "--"
   }
 
   // Function to calculate duration between check-in and check-out
@@ -71,8 +79,6 @@ export default function ViewAttendance() {
   const fetchEmployees = async (
     page = currentPage,
     itemsPerPage = perPage,
-    sortDir = sortDirection,
-    sortField = sortOn,
     start = startDate,
     end = endDate
   ) => {
@@ -82,13 +88,15 @@ export default function ViewAttendance() {
       return
     }
 
-    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
+    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}`
 
     if (start && end) url += `&startdate=${start}&enddate=${end}`
 
     try {
       setLoading(true)
-      const response = await axios.get(url, {
+      const response = await axios({
+        method: 'GET',
+        url: url,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -100,7 +108,7 @@ export default function ViewAttendance() {
         setEmployees(result.data)
         setTotalPages(result?.extraData?.totalPages || 1)
         setCurrentPage(result?.extraData?.currentPage || 1)
-        setPerPage(result?.extraData?.perPage || 10)
+        setPerPage(result?.extraData?.perPage || 30)
         setTotalItems(result?.extraData?.total || 0)
         setError(null)
       } else {
@@ -118,7 +126,7 @@ export default function ViewAttendance() {
   // Consolidated useEffect to prevent double API calls
   useEffect(() => {
     fetchEmployees()
-  }, [token, API_URL, startDate, endDate, currentPage, perPage, sortDirection, sortOn])
+  }, [token, API_URL, startDate, endDate, currentPage, perPage])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -129,15 +137,91 @@ export default function ViewAttendance() {
     setCurrentPage(1)
   }
 
-  const handleSortChange = (field: string) => {
-    const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc"
-    setSortOn(field)
-    setSortDirection(newSortDirection)
+  // Skeleton Loader Component
+  const SkeletonLoader = () => {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-gray-100">
+            <TableHead className="text-[#1F2328]">Employee Name</TableHead>
+            <TableHead className="text-[#1F2328]">Date</TableHead>
+            <TableHead className="text-[#1F2328]">Check In</TableHead>
+            <TableHead className="text-[#1F2328]">Check Out</TableHead>
+            <TableHead className="text-[#1F2328]">Duration</TableHead>
+            <TableHead className="text-[#1F2328]">Total Punch</TableHead>
+            <TableHead className="text-[#1F2328]">Comment</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[...Array(5)].map((_, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+              </TableCell>
+              <TableCell>
+                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
   }
 
   if (loading) {
-    return <p className="text-center text-gray-600">Loading attendances...</p>
+    return (
+      <div className="p-6 bg-white text-[#1F2328] min-h-screen">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+          <h1 className="text-2xl font-bold text-gray-800">View Attendance</h1>
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex gap-3">
+              <div className="relative flex-1 md:flex-none">
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  disabled
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                </div>
+              </div>
+              <div className="relative flex-1 md:flex-none">
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  disabled
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+          <SkeletonLoader />
+        </div>
+      </div>
+    )
   }
+
   if (error) {
     return <p className="text-center text-red-500">{error}</p>
   }
@@ -157,7 +241,6 @@ export default function ViewAttendance() {
                 className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Calendar size={16} />
               </div>
             </div>
 
@@ -169,7 +252,6 @@ export default function ViewAttendance() {
                 className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Calendar size={16} />
               </div>
             </div>
           </div>
@@ -188,16 +270,13 @@ export default function ViewAttendance() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-100">
-                      <TableHead
-                        className="text-[#1F2328] cursor-pointer"
-                        onClick={() => handleSortChange("name")}
-                      >
-                        Employee Name {sortOn === "name" && (sortDirection === "asc" ? "↑" : "↓")}
-                      </TableHead>
+                      <TableHead className="text-[#1F2328]">Employee Name</TableHead>
+                      <TableHead className="text-[#1F2328]">Date</TableHead>
                       <TableHead className="text-[#1F2328]">Check In</TableHead>
                       <TableHead className="text-[#1F2328]">Check Out</TableHead>
                       <TableHead className="text-[#1F2328]">Duration</TableHead>
                       <TableHead className="text-[#1F2328]">Total Punch</TableHead>
+                      <TableHead className="text-[#1F2328]">Comment</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -210,6 +289,9 @@ export default function ViewAttendance() {
                             {employee.name}
                           </TableCell>
                           <TableCell className="text-[#1F2328]">
+                            {formatDate(employee.created_at)}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
                             {checkIn}
                           </TableCell>
                           <TableCell className="text-[#1F2328]">
@@ -220,6 +302,9 @@ export default function ViewAttendance() {
                           </TableCell>
                           <TableCell className="text-[#1F2328]">
                             {employee.total_punch}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
+                            {employee.comment}
                           </TableCell>
                         </TableRow>
                       )
@@ -235,9 +320,9 @@ export default function ViewAttendance() {
                       onChange={e => handlePerPageChange(Number(e.target.value))}
                       className="border border-gray-300 rounded-md p-1"
                     >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
+                      <option value={30}>30</option>
+                      <option value={60}>60</option>
+                      <option value={120}>120</option>
                     </select>
                     <span>per page</span>
                   </div>
