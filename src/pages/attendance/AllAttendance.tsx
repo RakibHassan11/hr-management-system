@@ -54,11 +54,12 @@ export default function AllAttendance() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [sortOn, setSortOn] = useState<string>("name")
   const [query, setQuery] = useState("")
-  const debouncedQuery = useDebounce(query, 500) // 500ms debounce delay
+  const debouncedQuery = useDebounce(query, 500) 
 
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
+
 
   // State for export file type (CSV or EXCEL)
   const [exportType, setExportType] = useState("CSV")
