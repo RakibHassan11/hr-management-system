@@ -44,21 +44,22 @@ export default function ViewAttendance() {
   const [startDate, setStartDate] = useState(currentMonthStart)
   const [endDate, setEndDate] = useState(currentMonthEnd)
 
-  // Function to format UTC time to Asia/Dhaka (GMT+6) in HH:mm format
+  // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
   const formatDateTime = (time: string | null) => {
     if (!time) return "--:--"
+    // Parse time as UTC and convert to Dhaka time (UTC+6)
     const momentTime = moment.tz(time, "UTC").tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
   }
 
-  // Function to format created_at to YYYY-MM-DD
+  // Function to format created_at to YYYY-MM-DD (no time zone conversion)
   const formatDate = (createdAt: string) => {
     if (!createdAt) return "--"
     const momentDate = moment.tz(createdAt, "UTC")
     return momentDate.isValid() ? momentDate.format("YYYY-MM-DD") : "--"
   }
 
-  // Function to calculate duration between check-in and check-out
+  // Function to calculate duration between check-in and check-out in Dhaka time
   const calculateDuration = (inTime: string, outTime: string) => {
     if (inTime === "--:--" || outTime === "--:--") return "--:--"
     const inMoment = moment(inTime, "HH:mm")
@@ -143,38 +144,38 @@ export default function ViewAttendance() {
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-100">
-            <TableHead className="text-[#1F2328]">Employee Name</TableHead>
-            <TableHead className="text-[#1F2328]">Date</TableHead>
-            <TableHead className="text-[#1F2328]">Check In</TableHead>
-            <TableHead className="text-[#1F2328]">Check Out</TableHead>
-            <TableHead className="text-[#1F2328]">Duration</TableHead>
-            <TableHead className="text-[#1F2328]">Total Punch</TableHead>
-            <TableHead className="text-[#1F2328]">Comment</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Date</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {[...Array(5)].map((_, index) => (
             <TableRow key={index}>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mx-auto animate-pulse"></div>
               </TableCell>
-              <TableCell>
-                <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
               </TableCell>
             </TableRow>
           ))}
@@ -195,22 +196,18 @@ export default function ViewAttendance() {
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   disabled
                 />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                </div>
               </div>
               <div className="relative flex-1 md:flex-none">
                 <Input
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
-                  className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   disabled
                 />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                </div>
               </div>
             </div>
           </div>
@@ -238,10 +235,8 @@ export default function ViewAttendance() {
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              </div>
             </div>
 
             <div className="relative flex-1 md:flex-none">
@@ -249,10 +244,8 @@ export default function ViewAttendance() {
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="pl-9 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              </div>
             </div>
           </div>
         </div>
@@ -270,13 +263,13 @@ export default function ViewAttendance() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-100">
-                      <TableHead className="text-[#1F2328]">Employee Name</TableHead>
-                      <TableHead className="text-[#1F2328]">Date</TableHead>
-                      <TableHead className="text-[#1F2328]">Check In</TableHead>
-                      <TableHead className="text-[#1F2328]">Check Out</TableHead>
-                      <TableHead className="text-[#1F2328]">Duration</TableHead>
-                      <TableHead className="text-[#1F2328]">Total Punch</TableHead>
-                      <TableHead className="text-[#1F2328]">Comment</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Date</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
+                      <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -285,26 +278,26 @@ export default function ViewAttendance() {
                       const checkOut = formatDateTime(employee.check_out_time)
                       return (
                         <TableRow key={index}>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {employee.name}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {formatDate(employee.created_at)}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {checkIn}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {checkOut}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {calculateDuration(checkIn, checkOut)}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
+                          <TableCell className="text-[#1F2328] text-center">
                             {employee.total_punch}
                           </TableCell>
-                          <TableCell className="text-[#1F2328]">
-                            {employee.comment}
+                          <TableCell className="text-[#1F2328] text-center">
+                            {employee.comment || "N/A"}
                           </TableCell>
                         </TableRow>
                       )

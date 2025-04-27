@@ -63,10 +63,11 @@ export default function AllAttendance() {
   // State for export file type (CSV or EXCEL)
   const [exportType, setExportType] = useState("CSV")
 
-  // Function to format UTC time to GMT (UTC) in HH:mm format
-  const formatGMTime = (time: string | null) => {
+  // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
+  const formatDhakaTime = (time: string | null) => {
     if (!time) return "--:--"
-    const momentTime = moment.utc(time) // Parse as UTC
+    // Parse time as UTC and convert to Dhaka time (UTC+6) using moment-timezone
+    const momentTime = moment.utc(time).tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
   }
 
@@ -433,10 +434,10 @@ export default function AllAttendance() {
                           {formatDate(employee.created_at)}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center">
-                          {formatGMTime(employee.check_in_time)}
+                          {formatDhakaTime(employee.check_in_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center">
-                          {formatGMTime(employee.check_out_time)}
+                          {formatDhakaTime(employee.check_out_time)}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center">
                           {employee.total_punch}
