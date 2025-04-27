@@ -12,16 +12,23 @@ import { Calendar } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import {
-  formatDate,
-  formatDateTime,
-  formatTimeStr
-} from "@/components/utils/dateHelper"
+import axios from "axios"
+import moment from "moment-timezone"
+
+// Define interface for employee data
+interface Employee {
+  id: number
+  employee_id: number
+  name: string
+  check_in_time: string | null
+  check_out_time: string | null
+  total_punch: string
+}
 
 export default function ViewAttendance() {
-  const [employees, setEmployees] = useState([])
+  const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
 
@@ -29,14 +36,39 @@ export default function ViewAttendance() {
   const [totalPages, setTotalPages] = useState(1)
   const [perPage, setPerPage] = useState(10)
   const [totalItems, setTotalItems] = useState(0)
-  const [sortDirection, setSortDirection] = useState("asc")
-  const [sortOn, setSortOn] = useState("name")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  const [sortOn, setSortOn] = useState<string>("name")
 
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
 
-  const fetchEmployees = (
+  // Function to format UTC time to Asia/Dhaka (GMT+6) in HH:mm format
+  const formatDateTime = (time: string | null) => {
+    if (!time) return "--:--"
+    const momentTime = moment.tz(time, "UTC").tz("Asia/Dhaka")
+    return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
+  }
+
+  // Function to calculate duration between check-in and check-out
+  const calculateDuration = (inTime: string, outTime: string) => {
+    if (inTime === "--:--" || outTime === "--:--") return "--:--"
+    const inMoment = moment(inTime, "HH:mm")
+    const outMoment = moment(outTime, "HH:mm")
+    if (
+      !inMoment.isValid() ||
+      !outMoment.isValid() ||
+      outMoment.isBefore(inMoment)
+    ) {
+      return "--:--"
+    }
+    const duration = moment.duration(outMoment.diff(inMoment))
+    const hours = Math.floor(duration.asHours()).toString().padStart(2, "0")
+    const minutes = duration.minutes().toString().padStart(2, "0")
+    return `${hours}:${minutes}`
+  }
+
+  const fetchEmployees = async (
     page = currentPage,
     itemsPerPage = perPage,
     sortDir = sortDirection,
@@ -44,63 +76,63 @@ export default function ViewAttendance() {
     start = startDate,
     end = endDate
   ) => {
+    if (!token) {
+      setError("No authentication token available")
+      setLoading(false)
+      return
+    }
+
     let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
 
     if (start && end) url += `&startdate=${start}&enddate=${end}`
 
-    fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch employee data")
+    try {
+      setLoading(true)
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         }
-        return response.json()
       })
-      .then(data => {
-        setEmployees(data.data || [])
-        setTotalPages(data?.extraData?.totalPages || 1)
-        setCurrentPage(data?.extraData?.currentPage || 1)
-        setPerPage(data?.extraData?.perPage || 10)
-        setTotalItems(data?.extraData?.total || 0)
-        setLoading(false)
-      })
-      .catch(error => {
-        setError(error.message)
-        setLoading(false)
-      })
+
+      const result = response.data
+      if (result.success && Array.isArray(result.data)) {
+        setEmployees(result.data)
+        setTotalPages(result?.extraData?.totalPages || 1)
+        setCurrentPage(result?.extraData?.currentPage || 1)
+        setPerPage(result?.extraData?.perPage || 10)
+        setTotalItems(result?.extraData?.total || 0)
+        setError(null)
+      } else {
+        setEmployees([])
+        setError("No attendance data available")
+      }
+    } catch (error) {
+      setError(error.message || "Failed to fetch employee data")
+      setEmployees([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => {
-    setLoading(true)
-    fetchEmployees()
-  }, [token, API_URL])
-
+  // Consolidated useEffect to prevent double API calls
   useEffect(() => {
     fetchEmployees()
-  }, [token, API_URL, startDate, endDate])
+  }, [token, API_URL, startDate, endDate, currentPage, perPage, sortDirection, sortOn])
 
-  const handlePageChange = page => {
+  const handlePageChange = (page: number) => {
     setCurrentPage(page)
-    fetchEmployees(page)
   }
 
-  const handlePerPageChange = newPerPage => {
+  const handlePerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage)
     setCurrentPage(1)
-    fetchEmployees(1, newPerPage)
   }
 
-  const handleSortChange = field => {
-    const newSortDirection =
-      sortOn === field && sortDirection === "asc" ? "desc" : "asc"
+  const handleSortChange = (field: string) => {
+    const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc"
     setSortOn(field)
     setSortDirection(newSortDirection)
-    fetchEmployees(currentPage, perPage, newSortDirection, field)
   }
 
   if (loading) {
@@ -156,35 +188,42 @@ export default function ViewAttendance() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-100">
-                      <TableHead className="text-[#1F2328]">
-                        Employee Name
+                      <TableHead
+                        className="text-[#1F2328] cursor-pointer"
+                        onClick={() => handleSortChange("name")}
+                      >
+                        Employee Name {sortOn === "name" && (sortDirection === "asc" ? "↑" : "↓")}
                       </TableHead>
                       <TableHead className="text-[#1F2328]">Check In</TableHead>
-                      <TableHead className="text-[#1F2328]">
-                        Check Out
-                      </TableHead>
-                      <TableHead className="text-[#1F2328]">
-                        Total Punch
-                      </TableHead>
+                      <TableHead className="text-[#1F2328]">Check Out</TableHead>
+                      <TableHead className="text-[#1F2328]">Duration</TableHead>
+                      <TableHead className="text-[#1F2328]">Total Punch</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {employees.map((employee, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="text-[#1F2328]">
-                          {employee.name}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328]">
-                          {`${formatDateTime(employee.check_in_time)}`}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328]">
-                          {`${formatDateTime(employee.check_out_time)}`}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328]">
-                          {employee.total_punch}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {employees.map((employee, index) => {
+                      const checkIn = formatDateTime(employee.check_in_time)
+                      const checkOut = formatDateTime(employee.check_out_time)
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="text-[#1F2328]">
+                            {employee.name}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
+                            {checkIn}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
+                            {checkOut}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
+                            {calculateDuration(checkIn, checkOut)}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328]">
+                            {employee.total_punch}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
 
@@ -193,9 +232,7 @@ export default function ViewAttendance() {
                     <span>Show</span>
                     <select
                       value={perPage}
-                      onChange={e =>
-                        handlePerPageChange(Number(e.target.value))
-                      }
+                      onChange={e => handlePerPageChange(Number(e.target.value))}
                       className="border border-gray-300 rounded-md p-1"
                     >
                       <option value={10}>10</option>

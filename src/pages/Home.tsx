@@ -21,20 +21,17 @@ interface AttendanceRecord {
 interface ApiAttendanceRecord {
   id: number
   employee_id: number
-  check_in_time: string
-  check_out_time: string
+  check_in_time: string | null
+  check_out_time: string | null
   total_punch: string
   created_at: string
-  updated_at: string
 }
 
 export default function Home() {
   const user = useSelector((state: RootState) => state.auth.user)
   const { userToken } = useSelector((state: RootState) => state.auth)
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([])
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    AttendanceRecord[]
-  >([])
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
   const API_BASE_URL = import.meta.env.VITE_API_URL
 
   const today = new Date().toISOString().split("T")[0]
@@ -67,7 +64,6 @@ export default function Home() {
           result.data.length > 0
         ) {
           const apiData = result.data[0]
-          console.log(apiData)
           const leaveBalances: LeaveBalance[] = [
             {
               type: "Annual",
@@ -77,12 +73,11 @@ export default function Home() {
             {
               type: "Sick",
               current: apiData.sick_leave_balance?.toString() || "0",
-              startOfYear: "0" // No start-of-year data for sick leave in API
+              startOfYear: "0"
             }
           ]
           setLeaveBalances(leaveBalances)
         } else {
-          // Default to showing Annual and Sick with 0 balances if API data is invalid
           setLeaveBalances([
             { type: "Annual", current: "0", startOfYear: "0" },
             { type: "Sick", current: "0", startOfYear: "0" }
@@ -90,7 +85,6 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Leave balance fetch error:", error)
-        // Default to showing Annual and Sick with 0 balances on error
         setLeaveBalances([
           { type: "Annual", current: "0", startOfYear: "0" },
           { type: "Sick", current: "0", startOfYear: "0" }
@@ -120,30 +114,32 @@ export default function Home() {
         })
 
         const result = response.data
-        console.log(result)
         if (result.success && Array.isArray(result.data)) {
           const apiData: ApiAttendanceRecord[] = result.data
           const processedRecords: AttendanceRecord[] = apiData.map(record => {
-            const inMoment = moment
-              .tz(record.created_at, "UTC")
-              .tz("Asia/Dhaka")
-            const outMoment = moment
-              .tz(record.check_out_time, "UTC")
-              .tz("Asia/Dhaka")
-            const dateStr =
-              record.created_at && inMoment.isValid()
-                ? inMoment.format("ddd DD")
-                : "--:--"
-            const inTime =
-              record.check_in_time && inMoment.isValid()
-                ? inMoment.format("HH:mm")
-                : "--:--"
-            const outTime =
-              record.check_out_time &&
-              outMoment.isValid() &&
-              outMoment.isAfter(inMoment)
-                ? outMoment.format("HH:mm")
-                : "--:--"
+            // Use check_in_time for date, fall back to created_at if null
+            const dateMoment = record.check_in_time
+              ? moment.tz(record.check_in_time, "UTC").tz("Asia/Dhaka")
+              : moment.tz(record.created_at, "UTC").tz("Asia/Dhaka")
+            
+            // Convert check_in_time and check_out_time to Asia/Dhaka
+            const inMoment = record.check_in_time
+              ? moment.tz(record.check_in_time, "UTC").tz("Asia/Dhaka")
+              : null
+            const outMoment = record.check_out_time
+              ? moment.tz(record.check_out_time, "UTC").tz("Asia/Dhaka")
+              : null
+
+            const dateStr = dateMoment.isValid()
+              ? dateMoment.format("ddd DD")
+              : "--:--"
+            const inTime = inMoment && inMoment.isValid()
+              ? inMoment.format("HH:mm")
+              : "--:--"
+            const outTime = outMoment && outMoment.isValid()
+              ? outMoment.format("HH:mm")
+              : "--:--"
+
             return { date: dateStr, in: inTime, out: outTime }
           })
           setAttendanceRecords(processedRecords)
@@ -240,9 +236,6 @@ export default function Home() {
                     <th className="py-3 px-4 text-center text-sm font-medium text-slate-600">
                       Current Balance
                     </th>
-                    {/* <th className="py-3 px-4 text-center text-sm font-medium text-slate-600">
-                      Beginning of Year
-                    </th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -262,18 +255,12 @@ export default function Home() {
                             {leave.current || "0"}
                           </span>
                         </td>
-                        {/* <td className="py-3 px-4 text-center text-sm text-slate-600">
-                          {leave.startOfYear || "0"}
-                        </td> */}
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td className="py-3 px-4 text-sm text-slate-700">
                         Not Specified
-                      </td>
-                      <td className="py-3 px-4 text-center text-sm text-slate-700">
-                        0
                       </td>
                       <td className="py-3 px-4 text-center text-sm text-slate-700">
                         0
