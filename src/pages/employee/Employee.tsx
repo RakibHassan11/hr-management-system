@@ -188,11 +188,11 @@ export default function Employee() {
       <div className="bg-white shadow-md rounded-xl p-4 border border-gray-200 mb-3 transition-all hover:shadow-lg">
         <div className="w-full flex flex-col space-y-2">
           <div className="flex items-center space-x-3">
-            <div className="relative flex-1">
+            <div className="relative flex-1 max-w-xs">
               <Input
                 id="employee-search"
                 placeholder="Search by name..."
-                className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-8"
                 value={employeeData.name}
                 onChange={handleSearchChange}
                 onKeyDown={e => {
@@ -203,25 +203,28 @@ export default function Employee() {
                 }}
               />
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <FaSearch size={14} />
+                <FaSearch size={12} />
               </div>
             </div>
-            <Select
-              value={birthMonth}
-              onValueChange={handleBirthMonthChange}
-            >
-              <SelectTrigger className="w-[180px] p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <SelectValue placeholder="Birth Month" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-300 shadow-md">
-                <SelectItem value="all">All Months</SelectItem>
-                {monthOptions.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-2">
+              <label className="text-gray-400 text-sm">Select birth month:</label>
+              <Select
+                value={birthMonth}
+                onValueChange={handleBirthMonthChange}
+              >
+                <SelectTrigger className="w-[180px] p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <SelectValue placeholder="Birth Month" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300 shadow-md">
+                  <SelectItem value="all">All Months</SelectItem>
+                  {monthOptions.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
