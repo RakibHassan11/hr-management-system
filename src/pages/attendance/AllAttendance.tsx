@@ -54,12 +54,11 @@ export default function AllAttendance() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [sortOn, setSortOn] = useState<string>("name")
   const [query, setQuery] = useState("")
-  const debouncedQuery = useDebounce(query, 500) 
+  const debouncedQuery = useDebounce(query, 500) // 500ms debounce delay
 
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
-
 
   // State for export file type (CSV or EXCEL)
   const [exportType, setExportType] = useState("CSV")
@@ -70,6 +69,24 @@ export default function AllAttendance() {
     // Parse time as UTC and convert to Dhaka time (UTC+6) using moment-timezone
     const momentTime = moment.utc(time).tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
+  }
+
+  // Function to calculate duration between check-in and check-out in Dhaka time
+  const calculateDuration = (inTime: string, outTime: string) => {
+    if (inTime === "--:--" || outTime === "--:--") return "--:--"
+    const inMoment = moment(inTime, "HH:mm")
+    const outMoment = moment(outTime, "HH:mm")
+    if (
+      !inMoment.isValid() ||
+      !outMoment.isValid() ||
+      outMoment.isBefore(inMoment)
+    ) {
+      return "--:--"
+    }
+    const duration = moment.duration(outMoment.diff(inMoment))
+    const hours = Math.floor(duration.asHours()).toString().padStart(2, "0")
+    const minutes = duration.minutes().toString().padStart(2, "0")
+    return `${hours}:${minutes}`
   }
 
   const fetchEmployees = async (
@@ -193,6 +210,7 @@ export default function AllAttendance() {
             <TableHead className="text-[#1F2328] text-center">Date</TableHead>
             <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
             <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
+            <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
             <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
             <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
           </TableRow>
@@ -205,6 +223,9 @@ export default function AllAttendance() {
               </TableCell>
               <TableCell className="text-center">
                 <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
               </TableCell>
               <TableCell className="text-center">
                 <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
@@ -413,6 +434,12 @@ export default function AllAttendance() {
                       </TableHead>
                       <TableHead
                         className="text-[#1F2328] text-center cursor-pointer"
+                        onClick={() => handleSortChange("duration")}
+                      >
+                        Duration {sortOn === "duration" && (sortDirection === "asc" ? "↑" : "↓")}
+                      </TableHead>
+                      <TableHead
+                        className="text-[#1F2328] text-center cursor-pointer"
                         onClick={() => handleSortChange("total_punch")}
                       >
                         Total Punch {sortOn === "total_punch" && (sortDirection === "asc" ? "↑" : "↓")}
@@ -426,28 +453,35 @@ export default function AllAttendance() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {employees.map((employee, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {employee.name}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {formatDate(employee.created_at)}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {formatDhakaTime(employee.check_in_time)}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {formatDhakaTime(employee.check_out_time)}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {employee.total_punch}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center">
-                          {employee.comment || "N/A"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {employees.map((employee, index) => {
+                      const checkIn = formatDhakaTime(employee.check_in_time)
+                      const checkOut = formatDhakaTime(employee.check_out_time)
+                      return (
+                        <TableRow key={index}>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {employee.name}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {formatDate(employee.created_at)}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {checkIn}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {checkOut}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {calculateDuration(checkIn, checkOut)}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {employee.total_punch}
+                          </TableCell>
+                          <TableCell className="text-[#1F2328] text-center">
+                            {employee.comment || "N/A"}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
 
