@@ -31,7 +31,7 @@ export default function Holidays() {
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const recordsPerPage = 8
+  const recordsPerPage = 20
   const { userToken } = useSelector((state: RootState) => state.auth)
   const { permission_value } = useSelector(
     (state: RootState) => state.auth.user
