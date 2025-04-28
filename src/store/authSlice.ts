@@ -107,20 +107,13 @@ export const refreshAccessToken = createAsyncThunk(
     try {
       const state = getState() as { auth: AuthState };
       const refreshToken = isAdmin ? state.auth.adminRefreshToken : state.auth.userRefreshToken;
-      const email = isAdmin ? state.auth.admin.email : state.auth.user.email;
-      const password = isAdmin ? state.auth.admin.password : state.auth.user.password;
-
       if (!refreshToken) {
         return rejectWithValue('No refresh token available');
       }
 
-      const endpoint = isAdmin
-        ? `${import.meta.env.VITE_API_URL}/auth/super-admin/login`
-        : `${import.meta.env.VITE_API_URL}/auth/login`;
-
       const response = await axios.post(
-        endpoint,
-        { email, password }, 
+        `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
+        { refreshToken },
         { headers: { 'Content-Type': 'application/json' } }
       );
 
@@ -128,11 +121,11 @@ export const refreshAccessToken = createAsyncThunk(
         const { access, refresh } = response.data.data;
         if (isAdmin) {
           localStorage.setItem('token', access.token);
-          localStorage.setItem('refreshToken', refresh.token); 
+          localStorage.setItem('refreshToken', refresh.token);
           dispatch(setAdminCredentials({ adminToken: access.token, adminRefreshToken: refresh.token }));
         } else {
           localStorage.setItem('token_user', access.token);
-          localStorage.setItem('refreshToken_user', refresh.token); 
+          localStorage.setItem('refreshToken_user', refresh.token);
           dispatch(setUserCredentials({ userToken: access.token, userRefreshToken: refresh.token }));
         }
         return { token: access.token, refreshToken: refresh.token };

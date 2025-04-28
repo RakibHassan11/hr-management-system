@@ -85,86 +85,18 @@ export default function CreateEmployee() {
   if (errorUpdating)
     return <p className="text-center text-red-500">{errorUpdating}</p>
 
-  // return (
-  //   <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-  //     <h1 className="text-2xl font-bold mb-6">Create Employee</h1>
-
-  //     <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-  //       <div className="space-y-4">
-  //         <div>
-  //           <label className="block text-sm font-medium mb-2">
-  //             Employee ID:
-  //           </label>
-  //           <Input
-  //             type="text"
-  //             placeholder="Enter employee ID..."
-  //             className="w-full border border-gray-300"
-  //             value={employeeId}
-  //             onChange={e => setEmployeeId(e.target.value)}
-  //           />
-  //         </div>
-
-  //         <div>
-  //           <label className="block text-sm font-medium mb-2">Full Name:</label>
-  //           <Input
-  //             type="text"
-  //             placeholder="Enter full name..."
-  //             className="w-full border border-gray-300"
-  //             value={fullName}
-  //             onChange={e => setFullName(e.target.value)}
-  //           />
-  //         </div>
-
-  //         <div>
-  //           <label className="block text-sm font-medium mb-2">Email:</label>
-  //           <Input
-  //             type="email"
-  //             placeholder="Enter email..."
-  //             className="w-full border border-gray-300"
-  //             value={email}
-  //             onChange={e => setEmail(e.target.value)}
-  //           />
-  //         </div>
-
-  //         <div>
-  //           <label className="block text-sm font-medium mb-2">Password:</label>
-  //           <Input
-  //             type="password"
-  //             placeholder="Enter password..."
-  //             className="w-full border border-gray-300"
-  //             value={password}
-  //             onChange={e => setPassword(e.target.value)}
-  //           />
-  //         </div>
-
-  //         <Button disabled={updating} onClick={handleCreateEmployee}>
-  //           {updating ? "Creating Employee..." : "Create Employee"}
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
-
   return (
-    <div className="min-h-screen bg-white text-[#1F2328] p-6 md:p-12">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-700 mb-6 flex items-center gap-2">
-          <User size={24} className="text-sky-600" />
+    <div className="min-h-screen relative  bg-white text-[#1F2328] p-6 md:p-12">
+      <div className="mx-auto">
+        <h1 className="absolute top-0 left-10 m-6 text-2xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+          <User size={24} className="text-[#F97316]" />
           Create New Employee
         </h1>
 
-        <Card className="shadow-lg border-0 overflow-hidden">
-          {/* <CardHeader className="bg-gradient-to-r from-sky-500 to-sky-600 p-6">
-            <h2 className="text-xl font-medium text-white">
-              Employee Information
-            </h2>
-            <p className="text-sky-100 mt-1">
-              Please fill out all fields below
-            </p>
-          </CardHeader> */}
+        <Card className=" ">
 
           <CardContent className="p-6 space-y-5 bg-white">
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-1/2">
               <Label
                 htmlFor="employee-id"
                 className="text-sm font-medium text-gray-700"
@@ -186,7 +118,7 @@ export default function CreateEmployee() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-1/2">
               <Label
                 htmlFor="full-name"
                 className="text-sm font-medium text-gray-700"
@@ -208,7 +140,7 @@ export default function CreateEmployee() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-1/2">
               <Label
                 htmlFor="email"
                 className="text-sm font-medium text-gray-700"
@@ -230,7 +162,7 @@ export default function CreateEmployee() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-1/2">
               <Label
                 htmlFor="password"
                 className="text-sm font-medium text-gray-700"
@@ -254,13 +186,11 @@ export default function CreateEmployee() {
                 Password must be at least 8 characters
               </p>
             </div>
-          </CardContent>
 
-          <CardFooter className="px-6 py-4 bg-gray-50 flex justify-end">
             <Button
               disabled={updating}
               onClick={handleCreateEmployee}
-              className="bg-sky-600 hover:bg-sky-700 text-white px-6 py-2 rounded-md transition-colors"
+              className="bg-[#F97316] hover:bg-[#e06615] text-white px-6 py-2 rounded-md transition-colors"
             >
               {updating ? (
                 <>
@@ -271,10 +201,10 @@ export default function CreateEmployee() {
                 "Create Employee"
               )}
             </Button>
-          </CardFooter>
+          </CardContent>
         </Card>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
+        <p className="text-center text-gray-500 text-sm mt-2">
           All employee information is securely stored and managed according to
           company policy.
         </p>

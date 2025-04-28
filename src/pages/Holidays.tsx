@@ -12,6 +12,7 @@ import { RootState } from "../store"
 import toast from "react-hot-toast"
 import axios from "axios"
 import { API_BASE_URL } from "@/config/api"
+import { Trash2 } from "lucide-react"
 
 interface Holiday {
   id: number
@@ -82,6 +83,36 @@ export default function Holidays() {
 
     fetchHolidays()
   }, [userToken])
+
+  const handleDeleteHoliday = async (id: number) => {
+    const storedToken = localStorage.getItem("token_user") || userToken
+    if (!storedToken) {
+      toast.error("No authentication token found. Please log in.")
+      return
+    }
+
+    try {
+      const response = await axios.delete(
+        `${API_BASE_URL}/Holiday/delete-holiday?id=${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${storedToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      )
+
+      if (response.status === 200 && response.data.success) {
+        toast.success("Holiday deleted successfully")
+        setHolidays(holidays.filter(holiday => holiday.id !== id))
+      } else {
+        toast.error(response.data.message || "Failed to delete holiday")
+      }
+    } catch (error) {
+      console.error("DELETE error:", error)
+      toast.error("Network error: Could not delete holiday")
+    }
+  }
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen)
@@ -191,18 +222,23 @@ export default function Holidays() {
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Title
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Start Date
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   End Date
                 </TableHead>
-                <TableHead className="w-1/4 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Total Days
                 </TableHead>
+                {permission_value == 1 && (
+                  <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                    Action
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -212,26 +248,37 @@ export default function Holidays() {
                     key={holiday.id}
                     className="hover:bg-gray-50 transition-colors border-b border-gray-100"
                   >
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] font-medium truncate">
+                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] font-medium truncate">
                       {holiday.title}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
+                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.start_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate">
+                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate">
                       {holiday.end_date}
                     </TableCell>
-                    <TableCell className="w-1/4 py-3 px-6 text-[#1F2328] truncate text-sm font-semibold">
+                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate text-sm font-semibold">
                       <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
                         {holiday.total_days ?? "N/A"}
                       </span>
                     </TableCell>
+                    {permission_value == 1 && (
+                      <TableCell className="w-1/5 py-3 px-6 text-[#1F2328]">
+                        <button
+                          onClick={() => handleDeleteHoliday(holiday.id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete Holiday"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={permission_value == 1 ? 5 : 4}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     Loading...
@@ -240,7 +287,7 @@ export default function Holidays() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={permission_value == 1 ? 5 : 4}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     No holidays available

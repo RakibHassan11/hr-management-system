@@ -10,12 +10,13 @@
 │   ├── orangetoolz-logo-orange.png
 │   └── placeholder.svg
 ├── eslint.config.js
-├── folder_structure.txt
+├── folder-structure.txt
 ├── index.html
 ├── package.json
 ├── package-lock.json
 ├── postcss.config.js
 ├── public
+│   ├── icon.png
 │   ├── orangetoolz-logo-orange.png
 │   └── placeholder.svg
 ├── README.md
@@ -100,6 +101,7 @@
 │   ├── lib
 │   │   └── utils.ts
 │   ├── lovable-uploads
+│   │   ├── icon.png
 │   │   ├── orangetoolz-logo-orange.png
 │   │   └── pet.jpg
 │   ├── main.tsx
@@ -149,4 +151,4 @@
 ├── tsconfig.node.json
 └── vite.config.ts
 
-23 directories, 127 files
+23 directories, 129 files

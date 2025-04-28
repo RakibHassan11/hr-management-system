@@ -27,6 +27,7 @@ interface ApiAttendanceRecord {
   created_at: string
 }
 
+
 export default function Home() {
   const user = useSelector((state: RootState) => state.auth.user)
   const { userToken } = useSelector((state: RootState) => state.auth)
@@ -174,7 +175,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-blue-100 p-2 md:p-2">
+    <div className="min-h-screen  p-2 md:p-2">
       <div className="max-w-7xl mx-auto space-y-8">
         <h1 className="text-2xl font-bold text-slate-800">
           Dashboard
@@ -182,8 +183,8 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Profile Card */}
-          <div className="overflow-hidden rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="bg-gradient-to-r from-violet-400 to-cyan-100 h-24"></div>
+          <div className="overflow-hidden rounded-lg  bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className=" h-24"></div>
             <div className="p-6 pt-0 -mt-12">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div className="relative">

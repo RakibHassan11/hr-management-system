@@ -109,8 +109,8 @@ export default function TimeUpdate() {
                   <SelectValue placeholder="-- Select --" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
-                  <SelectItem value="IN">Clock In</SelectItem>
-                  <SelectItem value="OUT">Clock Out</SelectItem>
+                  <SelectItem value="IN">Check In</SelectItem>
+                  <SelectItem value="OUT">Check Out</SelectItem>
                 </SelectContent>
               </Select>
             </div>
