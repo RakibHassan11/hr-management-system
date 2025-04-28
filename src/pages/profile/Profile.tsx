@@ -124,7 +124,7 @@ function Profile() {
           axios.get(`${API_URL}/sub-departments/list`, config),
           axios.get(`${API_URL}/units/list`, config),
           axios.get(
-            `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}&needPagination=true`,
+            `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}&perPage=20`,
             config
           )
         ])
