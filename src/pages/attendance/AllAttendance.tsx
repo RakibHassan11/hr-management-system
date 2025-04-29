@@ -172,6 +172,10 @@ export default function AllAttendance() {
       setError(error.message || "Failed to export attendance data")
     }
   }
+  // Default value search Page
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
 
   useEffect(() => {
     setLoading(true)
@@ -180,7 +184,7 @@ export default function AllAttendance() {
 
   useEffect(() => {
     fetchEmployees(currentPage, perPage, sortDirection, sortOn, debouncedQuery, startDate, endDate)
-  }, [token, API_URL, debouncedQuery, startDate, endDate])
+  }, [token, API_URL, debouncedQuery, startDate, endDate, currentPage, perPage, sortDirection, sortOn]) 
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
