@@ -182,45 +182,33 @@ export default function Home() {
         </h1>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Profile Card with diagonal half-shading */}
-        <div className="relative overflow-hidden rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
-          {/* Diagonal overlay: top-left triangle shaded */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundColor: "rgba(173, 216, 230, 0.2)",
-              }}
-            />
-          </div>
-
-          {/* Content above the overlay */}
-          <div className="relative z-10 h-24"></div>
-          <div className="relative z-10 p-6 pt-0 -mt-12">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md">
-                  <img
-                    src={ima}
-                    alt="Profile"
-                    className="w-full h-full rounded-full object-cover border-2 border-white"
-                  />
+          {/* Profile Card */}
+          <div className="overflow-hidden rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-gradient-to-r from-violet-400 to-cyan-100 h-24"></div>
+            <div className="p-6 pt-0 -mt-12">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-white p-1 shadow-md">
+                    <img
+                      src={ima}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover border-2 border-white"
+                    />
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white" />
-              </div>
-              <div className="text-center sm:text-left mt-3">
-                <h2 className="text-2xl font-bold text-slate-800">
-                  {user?.name || "Unknown"}
-                </h2>
-                <p className="text-lg text-slate-600 font-medium">
-                  {user?.designation || "N/A"}
-                </p>
-                <p className="text-slate-500">{user?.department || "N/A"}</p>
+                <div className="text-center sm:text-left mt-3">
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    {user?.name || "Unknown"}
+                  </h2>
+                  <p className="text-lg text-slate-600 font-medium">
+                    {user?.designation || "N/A"}
+                  </p>
+                  <p className="text-slate-500">{user?.department || "N/A"}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-          {/* Profile Card End */}
 
           {/* Leave Balance Card */}
           <div className="p-3 rounded-lg bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
