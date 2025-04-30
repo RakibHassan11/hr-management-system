@@ -84,7 +84,6 @@ export function Sidebar({ isCollapsed = false, toggleCollapse = () => {} }: Side
   const user = useSelector((state: RootState) => state.auth.user || null);
 
   // Debug user and menu items
-  console.log('Sidebar User:', user);
   const filteredMenuItems = menuItems.filter(item => {
     try {
       return !item.hideCondition(user);
@@ -93,7 +92,6 @@ export function Sidebar({ isCollapsed = false, toggleCollapse = () => {} }: Side
       return false; // Hide item if condition fails
     }
   });
-  console.log('Filtered Menu Items:', filteredMenuItems);
 
   return (
     <div className="flex flex-col h-full">
