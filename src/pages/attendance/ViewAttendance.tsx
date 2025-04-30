@@ -44,17 +44,16 @@ export default function ViewAttendance() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [statsError, setStatsError] = useState<string | null>(null)
-  const [totalRecords, setTotalRecords] = useState(0) // Store dynamic total
+  const [totalRecords, setTotalRecords] = useState(0) // Store dynamic total from extraData
   const [lastFetchedRange, setLastFetchedRange] = useState<string | null>(null) // Track last date range
   const API_URL = "https://hrm-api.orangetoolz.com/api/otz-hrm"
   const token = useSelector((state: RootState) => state.auth.userToken)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(15) // Default to 15 as per API response
+  const [perPage, setPerPage] = useState(15) // Default to 15 for fetchEmployees
   const [totalItems, setTotalItems] = useState(0)
 
   // Set default startDate and endDate to current month
@@ -135,11 +134,11 @@ export default function ViewAttendance() {
       const result = response.data
       if (result.success && Array.isArray(result.data.attendanceRecords)) {
         setEmployees(result.data.attendanceRecords)
-        setTotalPages(result.extraData.totalPages || 1)
-        setCurrentPage(result.extraData.currentPage || 1)
-        setPerPage(result.extraData.perPage || 15)
-        setTotalItems(result.extraData.total || 0)
-        setTotalRecords(result.extraData.total || 0) // Store dynamic total
+        setTotalPages(result.extraData.totalPages)
+        setCurrentPage(result.extraData.currentPage)
+        setPerPage(result.extraData.perPage )
+        setTotalItems(result.extraData.total)
+        setTotalRecords(result.extraData.total) // Dynamically set totalRecords
         setError(null)
       } else {
         setEmployees([])
@@ -160,7 +159,15 @@ export default function ViewAttendance() {
   const fetchStatistics = async (start: string, end: string, total: number) => {
     if (!token) {
       setStatsError("No authentication token available")
-      setStatsLoading(false)
+      setLoading(false)
+      return
+    }
+
+    // Skip if total is invalid or zero
+    if (!total || total <= 0) {
+      setStatsError("Invalid total records count")
+      setLoading(false)
+      setStatistics(null)
       return
     }
 
@@ -177,7 +184,7 @@ export default function ViewAttendance() {
     }
 
     try {
-      setStatsLoading(true)
+      setLoading(true)
       const response = await axios({
         method: "GET",
         url: url,
@@ -200,16 +207,16 @@ export default function ViewAttendance() {
       setStatsError(error.message || "Failed to fetch statistics data")
       setStatistics(null)
     } finally {
-      setStatsLoading(false)
+      setLoading(false)
     }
   }
 
-  // Fetch employees when token, API_URL, startDate, endDate, or perPage changes
+  // Fetch employees when token, API_URL, startDate, endDate, perPage, or currentPage changes
   useEffect(() => {
     fetchEmployees()
   }, [token, API_URL, startDate, endDate, perPage, currentPage])
 
-  // Fetch statistics only when startDate or endDate changes
+  // Fetch statistics only when startDate, endDate, or totalRecords changes
   useEffect(() => {
     if (totalRecords > 0) {
       fetchStatistics(startDate, endDate, totalRecords)
@@ -300,48 +307,6 @@ export default function ViewAttendance() {
     )
   }
 
-  if (loading) {
-    return (
-      <div className="p-6 bg-white text-[#1F2328] min-h-screen">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold text-gray-800">View Attendance</h1>
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex gap-3">
-              <div className="relative flex-1 md:flex-none">
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-              </div>
-              <div className="relative flex-1 md:flex-none">
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
-          <StatisticsSkeletonLoader />
-        </div>
-        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Records</h2>
-          <SkeletonLoader />
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return <p className="text-center text-red-500">{error}</p>
-  }
-
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -370,7 +335,7 @@ export default function ViewAttendance() {
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
-        {statsLoading ? (
+        {loading ? (
           <StatisticsSkeletonLoader />
         ) : statsError ? (
           <p className="text-center text-red-500">{statsError}</p>
@@ -402,97 +367,97 @@ export default function ViewAttendance() {
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Records</h2>
-        {!loading && !error && (
+        {loading ? (
+          <SkeletonLoader />
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : employees.length === 0 ? (
+          <p className="text-center text-gray-600">No attendance data available for the current month.</p>
+        ) : (
           <>
-            {employees.length === 0 ? (
-              <p className="text-center text-gray-600">No attendance data available for the current month.</p>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-100">
-                      <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Date</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
-                      <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-100">
+                  <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Date</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
+                  <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {employees.map((employee, index) => {
+                  const checkIn = formatDateTime(employee.check_in_time)
+                  const checkOut = formatDateTime(employee.check_out_time)
+                  return (
+                    <TableRow key={index}>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {employee.name}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {formatDate(employee.created_at)}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {checkIn}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {checkOut}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {calculateDuration(checkIn, checkOut)}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {employee.total_punch}
+                      </TableCell>
+                      <TableCell className="text-[#1F2328] text-center">
+                        {employee.comment || "N/A"}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {employees.map((employee, index) => {
-                      const checkIn = formatDateTime(employee.check_in_time)
-                      const checkOut = formatDateTime(employee.check_out_time)
-                      return (
-                        <TableRow key={index}>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {employee.name}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {formatDate(employee.created_at)}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {checkIn}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {checkOut}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {calculateDuration(checkIn, checkOut)}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {employee.total_punch}
-                          </TableCell>
-                          <TableCell className="text-[#1F2328] text-center">
-                            {employee.comment || "N/A"}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                  )
+                })}
+              </TableBody>
+            </Table>
 
-                <div className="mt-6 flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <span>Show</span>
-                    <select
-                      value={perPage}
-                      onChange={e => handlePerPageChange(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md p-1"
-                    >
-                      <option value={15}>15</option>
-                      <option value={30}>30</option>
-                      <option value={60}>60</option>
-                      <option value={120}>120</option>
-                    </select>
-                    <span>per page</span>
-                  </div>
+            <div className="mt-6 flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <span>Show</span>
+                <select
+                  value={perPage}
+                  onChange={e => handlePerPageChange(Number(e.target.value))}
+                  className="border border-gray-300 rounded-md p-1"
+                >
+                  <option value={15}>15</option>
+                  <option value={30}>30</option>
+                  <option value={60}>60</option>
+                  <option value={120}>120</option>
+                </select>
+                <span>per page</span>
+              </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                    >
-                      Previous
-                    </Button>
-                    <span>
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                    >
-                      Next
-                    </Button>
-                  </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                >
+                  Previous
+                </Button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="bg-[#F97316] text-white hover:bg-[#e06615]"
+                >
+                  Next
+                </Button>
+              </div>
 
-                  <span>Total: {totalItems} attendances</span>
-                </div>
-              </>
-            )}
+              <span>Total: {totalItems} attendances</span>
+            </div>
           </>
         )}
       </div>
