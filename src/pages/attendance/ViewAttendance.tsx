@@ -19,6 +19,8 @@ interface Employee {
   id: number
   employee_id: number
   name: string
+  email: string
+  designation: string
   check_in_time: string | null
   check_out_time: string | null
   total_punch: string
@@ -26,16 +28,33 @@ interface Employee {
   comment: string
 }
 
+// Define interface for statistics data
+interface Statistics {
+  present: number
+  absent: number
+  halfDay: number
+  lateIn: number
+  earlyOut: number
+  sickLeave: number
+  annualLeave: number
+  holiday: number
+}
+
 export default function ViewAttendance() {
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const API_URL = import.meta.env.VITE_API_URL
+  const [statsError, setStatsError] = useState<string | null>(null)
+  const [totalRecords, setTotalRecords] = useState(0) // Store dynamic total
+  const [lastFetchedRange, setLastFetchedRange] = useState<string | null>(null) // Track last date range
+  const API_URL = "https://hrm-api.orangetoolz.com/api/otz-hrm"
   const token = useSelector((state: RootState) => state.auth.userToken)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(30)
+  const [perPage, setPerPage] = useState(15) // Default to 15 as per API response
   const [totalItems, setTotalItems] = useState(0)
 
   // Set default startDate and endDate to current month
@@ -47,7 +66,6 @@ export default function ViewAttendance() {
   // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
   const formatDateTime = (time: string | null) => {
     if (!time) return "--:--"
-    // Parse time as UTC and convert to Dhaka time (UTC+6)
     const momentTime = moment.tz(time, "UTC").tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
   }
@@ -77,6 +95,14 @@ export default function ViewAttendance() {
     return `${hours}:${minutes}`
   }
 
+  // Function to format statistics keys for display
+  const formatStatKey = (key: string) => {
+    return key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, str => str.toUpperCase())
+      .trim()
+  }
+
   const fetchEmployees = async (
     page = currentPage,
     itemsPerPage = perPage,
@@ -89,14 +115,16 @@ export default function ViewAttendance() {
       return
     }
 
-    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}`
-
-    if (start && end) url += `&startdate=${start}&enddate=${end}`
+    // Attendance API with pagination
+    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${itemsPerPage}&page=${page}`
+    if (start && end) {
+      url += `&startdate=${start}&enddate=${end}`
+    }
 
     try {
       setLoading(true)
       const response = await axios({
-        method: 'GET',
+        method: "GET",
         url: url,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -105,32 +133,96 @@ export default function ViewAttendance() {
       })
 
       const result = response.data
-      if (result.success && Array.isArray(result.data)) {
-        setEmployees(result.data)
-        setTotalPages(result?.extraData?.totalPages || 1)
-        setCurrentPage(result?.extraData?.currentPage || 1)
-        setPerPage(result?.extraData?.perPage || 30)
-        setTotalItems(result?.extraData?.total || 0)
+      if (result.success && Array.isArray(result.data.attendanceRecords)) {
+        setEmployees(result.data.attendanceRecords)
+        setTotalPages(result.extraData.totalPages || 1)
+        setCurrentPage(result.extraData.currentPage || 1)
+        setPerPage(result.extraData.perPage || 15)
+        setTotalItems(result.extraData.total || 0)
+        setTotalRecords(result.extraData.total || 0) // Store dynamic total
         setError(null)
       } else {
         setEmployees([])
+        setStatistics(null)
+        setTotalRecords(0)
         setError("No attendance data available")
       }
     } catch (error) {
       setError(error.message || "Failed to fetch employee data")
       setEmployees([])
+      setStatistics(null)
+      setTotalRecords(0)
     } finally {
       setLoading(false)
     }
   }
 
-  // Consolidated useEffect to prevent double API calls
+  const fetchStatistics = async (start: string, end: string, total: number) => {
+    if (!token) {
+      setStatsError("No authentication token available")
+      setStatsLoading(false)
+      return
+    }
+
+    // Skip if already fetched for this date range
+    const currentRange = `${start}-${end}`
+    if (lastFetchedRange === currentRange && statistics) {
+      return
+    }
+
+    // Statistics API to fetch all records (perPage=total)
+    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${total}`
+    if (start && end) {
+      url += `&startdate=${start}&enddate=${end}`
+    }
+
+    try {
+      setStatsLoading(true)
+      const response = await axios({
+        method: "GET",
+        url: url,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      const result = response.data
+      if (result.success && result.data.statistics) {
+        setStatistics(result.data.statistics)
+        setStatsError(null)
+        setLastFetchedRange(currentRange) // Update last fetched range
+      } else {
+        setStatistics(null)
+        setStatsError("No statistics data available")
+      }
+    } catch (error) {
+      setStatsError(error.message || "Failed to fetch statistics data")
+      setStatistics(null)
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
+  // Fetch employees when token, API_URL, startDate, endDate, or perPage changes
   useEffect(() => {
     fetchEmployees()
-  }, [token, API_URL, startDate, endDate, currentPage, perPage])
+  }, [token, API_URL, startDate, endDate, perPage, currentPage])
+
+  // Fetch statistics only when startDate or endDate changes
+  useEffect(() => {
+    if (totalRecords > 0) {
+      fetchStatistics(startDate, endDate, totalRecords)
+    } else {
+      setStatistics(null)
+      setStatsError("No records available to fetch statistics")
+    }
+  }, [startDate, endDate, totalRecords])
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
   }
 
   const handlePerPageChange = (newPerPage: number) => {
@@ -138,7 +230,7 @@ export default function ViewAttendance() {
     setCurrentPage(1)
   }
 
-  // Skeleton Loader Component
+  // Skeleton Loader Component for Attendance Table
   const SkeletonLoader = () => {
     return (
       <Table>
@@ -184,6 +276,30 @@ export default function ViewAttendance() {
     )
   }
 
+  // Skeleton Loader Component for Statistics Table
+  const StatisticsSkeletonLoader = () => {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-gray-100">
+            {["Present", "Absent", "Half Day", "Late In", "Early Out", "Sick Leave", "Annual Leave", "Holiday"].map((title) => (
+              <TableHead key={title} className="text-[#1F2328] text-center">{title}</TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            {[...Array(8)].map((_, index) => (
+              <TableCell key={index} className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mx-auto animate-pulse"></div>
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableBody>
+      </Table>
+    )
+  }
+
   if (loading) {
     return (
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
@@ -197,7 +313,6 @@ export default function ViewAttendance() {
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                   className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  disabled
                 />
               </div>
               <div className="relative flex-1 md:flex-none">
@@ -206,13 +321,17 @@ export default function ViewAttendance() {
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                   className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  disabled
                 />
               </div>
             </div>
           </div>
         </div>
+        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
+          <StatisticsSkeletonLoader />
+        </div>
         <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Records</h2>
           <SkeletonLoader />
         </div>
       </div>
@@ -227,7 +346,6 @@ export default function ViewAttendance() {
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">View Attendance</h1>
-
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex gap-3">
             <div className="relative flex-1 md:flex-none">
@@ -238,7 +356,6 @@ export default function ViewAttendance() {
                 className="pl-3 pr-3 py-2 w-full border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
             </div>
-
             <div className="relative flex-1 md:flex-none">
               <Input
                 type="date"
@@ -251,13 +368,44 @@ export default function ViewAttendance() {
         </div>
       </div>
 
+      <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
+        {statsLoading ? (
+          <StatisticsSkeletonLoader />
+        ) : statsError ? (
+          <p className="text-center text-red-500">{statsError}</p>
+        ) : statistics ? (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                {Object.keys(statistics).map((key) => (
+                  <TableHead key={key} className="text-[#1F2328] text-center">
+                    {formatStatKey(key)}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                {Object.values(statistics).map((value, index) => (
+                  <TableCell key={index} className="text-[#1F2328] text-center">
+                    {value}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="text-center text-gray-600">No statistics data available for the current month.</p>
+        )}
+      </div>
+
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Records</h2>
         {!loading && !error && (
           <>
             {employees.length === 0 ? (
-              <p className="text-center text-gray-600">
-                No attendance data available.
-              </p>
+              <p className="text-center text-gray-600">No attendance data available for the current month.</p>
             ) : (
               <>
                 <Table>
@@ -313,6 +461,7 @@ export default function ViewAttendance() {
                       onChange={e => handlePerPageChange(Number(e.target.value))}
                       className="border border-gray-300 rounded-md p-1"
                     >
+                      <option value={15}>15</option>
                       <option value={30}>30</option>
                       <option value={60}>60</option>
                       <option value={120}>120</option>
