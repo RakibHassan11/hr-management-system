@@ -16,7 +16,6 @@ import api from "@/axiosConfig";
 import moment from "moment-timezone"
 import { formatDate } from "@/components/utils/dateHelper"
 
-// Define interface for employee data
 interface Employee {
   id: number
   employee_id: number
@@ -523,6 +522,7 @@ export default function AllAttendance() {
                       Next
                     </Button>
                   </div>
+                  
 
                   <span>Total: {totalItems} attendances</span>
                 </div>
