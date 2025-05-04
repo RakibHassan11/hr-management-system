@@ -208,7 +208,7 @@ const EmployeeAttendanceRecords = () => {
   return (
     <div className="bg-white text-[#1F2328] p-3">
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-3xl font-bold text-[#1F2328]">Employee Attendance Records</h1>
+        <h1 className="text-2xl font-bold text-[#1F2328]">Employee Attendance Records</h1>
 
         {/* Filter by Status */}
         <div className="flex items-center space-x-2">

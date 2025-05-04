@@ -58,6 +58,7 @@ export default function AllAttendance() {
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
+  const [comment, setComment] = useState("All") // New state for comment filter
 
   // State for export file type (CSV or EXCEL)
   const [exportType, setExportType] = useState("CSV")
@@ -95,7 +96,8 @@ export default function AllAttendance() {
     sortField = sortOn,
     searchQuery = debouncedQuery,
     start = startDate,
-    end = endDate
+    end = endDate,
+    commentFilter = comment
   ) => {
     if (!token) {
       setError("No authentication token available")
@@ -107,6 +109,7 @@ export default function AllAttendance() {
 
     if (searchQuery) url += `&query=${encodeURIComponent(searchQuery)}`
     if (start && end) url += `&startdate=${start}&enddate=${end}`
+    if (commentFilter !== "All") url += `&comment=${encodeURIComponent(commentFilter)}`
 
     try {
       setLoading(true)
@@ -145,6 +148,7 @@ export default function AllAttendance() {
 
     if (debouncedQuery) exportUrl += `&query=${encodeURIComponent(debouncedQuery)}`
     if (startDate && endDate) exportUrl += `&startdate=${startDate}&enddate=${endDate}`
+    if (comment !== "All") exportUrl += `&comment=${encodeURIComponent(comment)}`
     exportUrl += `&type=${exportType}`
 
     try {
@@ -171,19 +175,16 @@ export default function AllAttendance() {
       setError(error.message || "Failed to export attendance data")
     }
   }
-  // Default value search Page
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query]);
 
+  // Reset current page when query or comment changes
   useEffect(() => {
-    setLoading(true)
-    fetchEmployees()
-  }, [token, API_URL])
+    setCurrentPage(1)
+  }, [query, comment])
 
+  // Fetch employees when dependencies change
   useEffect(() => {
-    fetchEmployees(currentPage, perPage, sortDirection, sortOn, debouncedQuery, startDate, endDate)
-  }, [token, API_URL, debouncedQuery, startDate, endDate, currentPage, perPage, sortDirection, sortOn]) 
+    fetchEmployees(currentPage, perPage, sortDirection, sortOn, debouncedQuery, startDate, endDate, comment)
+  }, [token, API_URL, debouncedQuery, startDate, endDate, comment, currentPage, perPage, sortDirection, sortOn])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -261,7 +262,7 @@ export default function AllAttendance() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search employees..."
-                className="pl-9 pr-4 py-2 w-full md:w-auto border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+                className="pl-9 pr-4 py-2 w-46 md:w-40 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 <Search size={16} />
@@ -273,7 +274,7 @@ export default function AllAttendance() {
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+                  className="py-2 w-36 md:w-36 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
                   disabled
                 />
               </div>
@@ -282,12 +283,21 @@ export default function AllAttendance() {
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
-                  className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+                  className="py-2 w-36 md:w-36 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
                   disabled
                 />
               </div>
             </div>
             <div className="flex gap-3">
+              <select
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316]"
+              >
+                <option value="All">All</option>
+                <option value="Others">Others</option>
+                <option value="Absent">Absent</option>
+              </select>
               <select
                 value={exportType}
                 onChange={e => setExportType(e.target.value)}
@@ -309,6 +319,7 @@ export default function AllAttendance() {
                   setQuery("")
                   setStartDate(today)
                   setEndDate(today)
+                  setComment("All")
                   setExportType("CSV")
                 }}
                 className="bg-[#F97316] text-white hover:bg-[#e06615]"
@@ -342,7 +353,7 @@ export default function AllAttendance() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search employees..."
-              className="pl-9 pr-4 py-2 w-full md:w-auto border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+              className="pl-9 pr-4 py-2 w-40 md:w-40 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               <Search size={16} />
@@ -355,7 +366,7 @@ export default function AllAttendance() {
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
-                className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+                className="py-2 w-36 md:w-36 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
             </div>
 
@@ -364,12 +375,21 @@ export default function AllAttendance() {
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                className="py-2 w-full border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
+                className="py-2 w-36 md:w-36 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
             </div>
           </div>
 
           <div className="flex gap-3">
+            <select
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316]"
+            >
+              <option value="All">All</option>
+              <option value="Others">Others</option>
+              <option value="Absent">Absent</option>
+            </select>
             <select
               value={exportType}
               onChange={e => setExportType(e.target.value)}
@@ -389,6 +409,7 @@ export default function AllAttendance() {
                 setQuery("")
                 setStartDate(today)
                 setEndDate(today)
+                setComment("All")
                 setExportType("CSV")
               }}
               className="bg-[#F97316] text-white hover:bg-[#e06615]"
@@ -522,7 +543,6 @@ export default function AllAttendance() {
                       Next
                     </Button>
                   </div>
-                  
 
                   <span>Total: {totalItems} attendances</span>
                 </div>

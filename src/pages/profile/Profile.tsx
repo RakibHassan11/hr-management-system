@@ -9,7 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import axios from "axios"
+import api from "@/axiosConfig";
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -119,11 +119,11 @@ function Profile() {
           unitsRes,
           lineRes
         ] = await Promise.all([
-          axios.get(`${API_URL}/divisions/list`, config),
-          axios.get(`${API_URL}/departments/list`, config),
-          axios.get(`${API_URL}/sub-departments/list`, config),
-          axios.get(`${API_URL}/units/list`, config),
-          axios.get(
+          api.get(`${API_URL}/divisions/list`, config),
+          api.get(`${API_URL}/departments/list`, config),
+          api.get(`${API_URL}/sub-departments/list`, config),
+          api.get(`${API_URL}/units/list`, config),
+          api.get(
             `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}&perPage=20`,
             config
           )
@@ -234,11 +234,11 @@ function Profile() {
 
   return (
     <Fragment>
-      {employee !== null ? (
-        <div className="animate-fadeIn">
-          <div className="mb-6">
+      <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#1F2328]">User Profile</h1>
           </div>
+      {employee !== null ? (
+        <div className="animate-fadeIn">
 
           <div className="bg-white rounded-lg shadow p-6">
             <Tabs
@@ -1015,7 +1015,42 @@ function Profile() {
           </div>
         </div>
       ) : (
-        <p className="text-center text-gray-600">Loading profile...</p>
+        <div className="space-y-6 animate-pulse">
+      <div className="bg-white rounded-lg shadow p-6 space-y-6">
+      {/* Placeholder for TabsList */}
+      <div className="w-full bg-gray-100 p-2 flex justify-evenly rounded-lg">
+        {[...Array(5)].map((_, index) => (
+          <div
+            key={index}
+            className="flex-1 h-10 bg-gray-300 rounded text-center mx-1"
+          ></div>
+        ))}
+      </div>
+
+      {/* Placeholder for TabsContent */}
+      <div className="space-y-6">
+        {/* Basic Tab: 2 columns, 7 fields each */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, colIndex) => (
+            <div key={colIndex} className="space-y-4">
+              {[...Array(7)].map((__, fieldIndex) => (
+                <div key={fieldIndex} className="space-y-2">
+                  <div className="h-4 w-1/3 bg-gray-300 rounded"></div>
+                  <div className="h-10 w-full bg-gray-200 rounded"></div>
+                </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Placeholder for Save Profile button */}
+    <div className="flex justify-end mt-6">
+      <div className="h-10 w-36 bg-gray-300 rounded"></div>
+    </div>
+  </div>
+        </div>
+
       )}
     </Fragment>
   )
