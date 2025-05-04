@@ -12,7 +12,7 @@ import { RootState } from "@/store";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
-import axios from "axios";
+import api from "@/axiosConfig";
 import moment from "moment-timezone";
 
 interface LeaveRecord {
@@ -101,7 +101,7 @@ const TeamLeaveRecords = () => {
         : `${API_BASE_URL}/team/leave-records?line_manager_id=${managerId}`;
 
       try {
-        const response = await axios.get(url, {
+        const response = await api.get(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
             "Content-Type": "application/json",
@@ -172,7 +172,7 @@ const TeamLeaveRecords = () => {
     };
 
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `${API_BASE_URL}/employee/update-leave-status`,
         payload,
         {

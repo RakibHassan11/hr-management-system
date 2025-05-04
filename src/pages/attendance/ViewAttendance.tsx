@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import axios from "axios"
+import api from "@/axiosConfig";
 import moment from "moment-timezone"
 
 // Define interface for employee data
@@ -46,7 +46,7 @@ export default function ViewAttendance() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [totalRecords, setTotalRecords] = useState(0)
-  const API_URL = "https://hrm-api.orangetoolz.com/api/otz-hrm"
+  const API_URL = import.meta.env.VITE_API_URL
   const token = useSelector((state: RootState) => state.auth.userToken)
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -120,7 +120,7 @@ export default function ViewAttendance() {
 
     try {
       setLoading(true)
-      const response = await axios({
+      const response = await api({
         method: "GET",
         url: url,
         headers: {

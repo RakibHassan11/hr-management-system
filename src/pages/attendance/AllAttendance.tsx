@@ -12,7 +12,7 @@ import { Search, Download, RefreshCcw } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import axios from "axios"
+import api from "@/axiosConfig";
 import moment from "moment-timezone"
 import { formatDate } from "@/components/utils/dateHelper"
 
@@ -111,7 +111,7 @@ export default function AllAttendance() {
 
     try {
       setLoading(true)
-      const response = await axios({
+      const response = await api({
         method: 'GET',
         url: url,
         headers: {
@@ -149,7 +149,7 @@ export default function AllAttendance() {
     exportUrl += `&type=${exportType}`
 
     try {
-      const response = await axios({
+      const response = await api({
         method: 'GET',
         url: exportUrl,
         headers: {

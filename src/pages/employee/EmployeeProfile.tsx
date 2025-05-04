@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import axios from "axios";
+import api from "@/axiosConfig";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -143,7 +143,7 @@ function EmployeeProfile() {
   const queryParams = new URLSearchParams(search);
   const idFromUrl = queryParams.get("id");
 
-  // Function to get employee ID dynamically from Axios response or URL
+  // Function to get employee ID dynamically from response or URL
   const getEmployeeId = (): number | null => {
     const id = employee?.id || Number(idFromUrl);
     return isNaN(id) ? null : id;
@@ -172,15 +172,15 @@ function EmployeeProfile() {
           lineRes,
           profileRes,
         ] = await Promise.all([
-          axios.get(`${API_URL}/divisions/list`, config),
-          axios.get(`${API_URL}/divisions/list`, config),
-          axios.get(`${API_URL}/sub-departments/list`, config),
-          axios.get(`${API_URL}/units/list`, config),
-          axios.get(
+          api.get(`${API_URL}/divisions/list`, config),
+          api.get(`${API_URL}/divisions/list`, config),
+          api.get(`${API_URL}/sub-departments/list`, config),
+          api.get(`${API_URL}/units/list`, config),
+          api.get(
             `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}&perPage=20`,
             config
           ),
-          axios.get(
+          api.get(
             `${API_URL}/employee/my-profile?id=${idFromUrl || ""}`,
             config
           ),
@@ -243,7 +243,7 @@ function EmployeeProfile() {
       }
 
       try {
-        const response = await axios.get(
+        const response = await api.get(
           `${API_URL}/employee/employee-leave-balance-by-id?id=${employeeId}`,
           config
         );
@@ -320,7 +320,7 @@ function EmployeeProfile() {
     try {
       setUpdating(true);
       const toastId = toast.loading("Saving profile...");
-      const response = await axios.put(
+      const response = await api.put(
         `${API_URL}/employee/update-profile-by-id`,
         req_body,
         {
@@ -416,7 +416,7 @@ function EmployeeProfile() {
     try {
       setUpdating(true);
       const toastId = toast.loading("Updating leave balances...");
-      const response = await axios.put(
+      const response = await api.put(
         `${API_URL}/employee/update-employee-leave-balance?id=${employeeId}`,
         req_body,
         {

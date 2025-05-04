@@ -1,25 +1,25 @@
+// src/axiosConfig.ts
 import axios from "axios";
 import { store } from "./store";
 import { logoutUser, logoutAdmin } from "./store/authSlice";
 
-// Set up Axios interceptor
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      const { dispatch } = store;
-      const state = store.getState();
-      const { isAuthenticatedUser, isAuthenticatedAdmin } = state.auth;
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  headers: { "Content-Type": "application/json" },
+});
 
-      // Dispatch logout based on user type
-      if (isAuthenticatedUser) {
-        dispatch(logoutUser());
-      } else if (isAuthenticatedAdmin) {
-        dispatch(logoutAdmin());
-      }
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      const { dispatch } = store;
+      const { isAuthenticatedUser, isAuthenticatedAdmin } = store.getState().auth;
+      if (isAuthenticatedUser) dispatch(logoutUser());
+      else if (isAuthenticatedAdmin) dispatch(logoutAdmin());
+      window.location.href = "/login";
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 
-export default axios;
+export default api;

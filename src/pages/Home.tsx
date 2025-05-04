@@ -3,7 +3,7 @@ import ima from "../lovable-uploads/pet.jpg";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import moment from "moment-timezone";
-import axios from "axios";
+import api from "@/axiosConfig";
 
 interface LeaveBalance {
   type: string;
@@ -75,14 +75,12 @@ export default function Home() {
   const [statisticsRecords, setStatisticsRecords] = useState<AttendanceStatisticsRecord[]>([]);
   const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  const today = new Date().toISOString().split("T")[0];
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Last 7 days including today
-  const startDateAttendance = sevenDaysAgo.toISOString().split("T")[0];
+  const today = moment().format("YYYY-MM-DD");
+  const startDateAttendance = moment().subtract(6, "days").format("YYYY-MM-DD");
 
-  const beginningOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const beginningOfMonth = moment().startOf("month").format("YYYY-MM-DD");
+
+
 
   useEffect(() => {
     const fetchLeaveBalances = async () => {
@@ -93,7 +91,7 @@ export default function Home() {
 
       try {
         const url = `${API_BASE_URL}/employee/leave-balance`;
-        const response = await axios.get(url, {
+        const response = await api.get(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
             "Content-Type": "application/json",
@@ -144,7 +142,7 @@ export default function Home() {
 
       try {
         const url = `${API_BASE_URL}/employee-attendance/attendance-list?needPagination=true&perPage=30&startdate=${startDate}&enddate=${endDate}`;
-        const response = await axios.get<ApiResponse>(url, {
+        const response = await api.get<ApiResponse>(url, {
           headers: {
             Authorization: `Bearer ${storedToken}`,
             "Content-Type": "application/json",
