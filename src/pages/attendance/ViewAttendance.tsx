@@ -45,22 +45,20 @@ export default function ViewAttendance() {
   const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [statsError, setStatsError] = useState<string | null>(null)
-  const [totalRecords, setTotalRecords] = useState(0) // Store dynamic total from extraData
-  const [lastFetchedRange, setLastFetchedRange] = useState<string | null>(null) // Track last date range
+  const [totalRecords, setTotalRecords] = useState(0)
   const API_URL = "https://hrm-api.orangetoolz.com/api/otz-hrm"
   const token = useSelector((state: RootState) => state.auth.userToken)
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(15) // Default to 15 for fetchEmployees
+  const [perPage, setPerPage] = useState(30) // Default to 30 as requested
   const [totalItems, setTotalItems] = useState(0)
 
-  // Set default startDate and endDate to current month
-  const currentMonthStart = moment().startOf("month").format("YYYY-MM-DD")
-  const currentMonthEnd = moment().endOf("month").format("YYYY-MM-DD")
-  const [startDate, setStartDate] = useState(currentMonthStart)
-  const [endDate, setEndDate] = useState(currentMonthEnd)
+  // Set default startDate and endDate to last one month
+  const lastMonthStart = moment().subtract(1, "month").format("YYYY-MM-DD")
+  const today = moment().format("YYYY-MM-DD")
+  const [startDate, setStartDate] = useState(lastMonthStart)
+  const [endDate, setEndDate] = useState(today)
 
   // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
   const formatDateTime = (time: string | null) => {
@@ -102,7 +100,7 @@ export default function ViewAttendance() {
       .trim()
   }
 
-  const fetchEmployees = async (
+  const fetchAttendanceData = async (
     page = currentPage,
     itemsPerPage = perPage,
     start = startDate,
@@ -114,7 +112,7 @@ export default function ViewAttendance() {
       return
     }
 
-    // Attendance API with pagination
+    // Single API call for both attendance and statistics
     let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${itemsPerPage}&page=${page}`
     if (start && end) {
       url += `&startdate=${start}&enddate=${end}`
@@ -132,22 +130,27 @@ export default function ViewAttendance() {
       })
 
       const result = response.data
-      if (result.success && Array.isArray(result.data.attendanceRecords)) {
+      if (
+        result.success &&
+        Array.isArray(result.data.attendanceRecords) &&
+        result.data.statistics
+      ) {
         setEmployees(result.data.attendanceRecords)
+        setStatistics(result.data.statistics)
         setTotalPages(result.extraData.totalPages)
         setCurrentPage(result.extraData.currentPage)
-        setPerPage(result.extraData.perPage )
+        setPerPage(result.extraData.perPage)
         setTotalItems(result.extraData.total)
-        setTotalRecords(result.extraData.total) // Dynamically set totalRecords
+        setTotalRecords(result.extraData.total)
         setError(null)
       } else {
         setEmployees([])
         setStatistics(null)
         setTotalRecords(0)
-        setError("No attendance data available")
+        setError("No attendance or statistics data available")
       }
     } catch (error) {
-      setError(error.message || "Failed to fetch employee data")
+      setError(error.message || "Failed to fetch attendance data")
       setEmployees([])
       setStatistics(null)
       setTotalRecords(0)
@@ -156,75 +159,10 @@ export default function ViewAttendance() {
     }
   }
 
-  const fetchStatistics = async (start: string, end: string, total: number) => {
-    if (!token) {
-      setStatsError("No authentication token available")
-      setLoading(false)
-      return
-    }
-
-    // Skip if total is invalid or zero
-    if (!total || total <= 0) {
-      setStatsError("Invalid total records count")
-      setLoading(false)
-      setStatistics(null)
-      return
-    }
-
-    // Skip if already fetched for this date range
-    const currentRange = `${start}-${end}`
-    if (lastFetchedRange === currentRange && statistics) {
-      return
-    }
-
-    // Statistics API to fetch all records (perPage=total)
-    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${total}`
-    if (start && end) {
-      url += `&startdate=${start}&enddate=${end}`
-    }
-
-    try {
-      setLoading(true)
-      const response = await axios({
-        method: "GET",
-        url: url,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      const result = response.data
-      if (result.success && result.data.statistics) {
-        setStatistics(result.data.statistics)
-        setStatsError(null)
-        setLastFetchedRange(currentRange) // Update last fetched range
-      } else {
-        setStatistics(null)
-        setStatsError("No statistics data available")
-      }
-    } catch (error) {
-      setStatsError(error.message || "Failed to fetch statistics data")
-      setStatistics(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Fetch employees when token, API_URL, startDate, endDate, perPage, or currentPage changes
+  // Fetch data when token, API_URL, startDate, endDate, perPage, or currentPage changes
   useEffect(() => {
-    fetchEmployees()
+    fetchAttendanceData()
   }, [token, API_URL, startDate, endDate, perPage, currentPage])
-
-  // Fetch statistics only when startDate, endDate, or totalRecords changes
-  useEffect(() => {
-    if (totalRecords > 0) {
-      fetchStatistics(startDate, endDate, totalRecords)
-    } else {
-      setStatistics(null)
-      setStatsError("No records available to fetch statistics")
-    }
-  }, [startDate, endDate, totalRecords])
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -337,8 +275,6 @@ export default function ViewAttendance() {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
         {loading ? (
           <StatisticsSkeletonLoader />
-        ) : statsError ? (
-          <p className="text-center text-red-500">{statsError}</p>
         ) : statistics ? (
           <Table>
             <TableHeader>
@@ -361,7 +297,7 @@ export default function ViewAttendance() {
             </TableBody>
           </Table>
         ) : (
-          <p className="text-center text-gray-600">No statistics data available for the current month.</p>
+          <p className="text-center text-gray-600">No statistics data available for the selected period.</p>
         )}
       </div>
 
@@ -372,7 +308,7 @@ export default function ViewAttendance() {
         ) : error ? (
           <p className="text-center text-red-500">{error}</p>
         ) : employees.length === 0 ? (
-          <p className="text-center text-gray-600">No attendance data available for the current month.</p>
+          <p className="text-center text-gray-600">No attendance data available for the selected period.</p>
         ) : (
           <>
             <Table>

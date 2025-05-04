@@ -1,46 +1,43 @@
-import { Toaster } from "@/components/ui/toaster"
-import { Toaster as Sonner } from "@/components/ui/sonner"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { Provider } from "react-redux"
-import { store } from "./store"
-import Home from "./pages/Home"
-import Profile from "./pages/profile/Profile.tsx"
-import ViewAttendance from "./pages/attendance/ViewAttendance.tsx"
-import AllAttendance from "./pages/attendance/AllAttendance.tsx"
-import TimeUpdate from "./pages/time_update/TimeUpdate"
-import ViewLeave from "./pages/ViewLeave"
-import ApplyLeave from "./pages/apply_leave/ApplyLeave"
-import Holidays from "./pages/Holidays"
-import MacAddress from "./pages/MacAddress"
-import ImportantLinks from "./pages/ImportantLinks"
-import Employee from "./pages/employee/Employee"
-import Team from "./pages/Team"
-import Login from "./pages/Login"
-import SuperAdminLogin from "./pages/SuperAdminLogin"
-import NotFound from "./pages/NotFound"
-import PrivateRoute from "@/components/PrivateRoute"
-import { Layout } from "@/components/Layout"
-import { AdminLayout } from "@/components/Admin/AdminLayout"
-import AdminHome from "./components/Admin/Home"
-import AdminEmployee from "./components/Admin/AdminEmployee"
-import EmployeeProfile from "./pages/employee/EmployeeProfile"
-import LeaveRecords from "./pages/apply_leave/LeaveRecords"
-import TimeUpdatesList from "./pages/time_update/TimeUpdatesList"
-import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx"
-import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx"
-import { useSessionTimeout } from "./utils/useSessionTimeout.ts"
-import EmployeeLeaveRecords from "./pages/HR/EmployeeLeaveRecords.tsx"
-import EmployeeAttendanceRecords from "./pages/HR/EmployeeAttendanceRecords.tsx"
-import ChangePassword from "./pages/profile/ChangePassword.tsx"
-import CreateEmployee from "./pages/employee/CreateEmployee.tsx"
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import Home from "./pages/Home";
+import Profile from "./pages/profile/Profile.tsx";
+import ViewAttendance from "./pages/attendance/ViewAttendance.tsx";
+import AllAttendance from "./pages/attendance/AllAttendance.tsx";
+import TimeUpdate from "./pages/time_update/TimeUpdate";
+import ViewLeave from "./pages/ViewLeave";
+import ApplyLeave from "./pages/apply_leave/ApplyLeave";
+import Holidays from "./pages/Holidays";
+import MacAddress from "./pages/MacAddress";
+import ImportantLinks from "./pages/ImportantLinks";
+import Employee from "./pages/employee/Employee";
+import Team from "./pages/Team";
+import Login from "./pages/Login";
+import SuperAdminLogin from "./pages/SuperAdminLogin";
+import NotFound from "./pages/NotFound";
+import PrivateRoute from "@/components/PrivateRoute";
+import { Layout } from "@/components/Layout";
+import { AdminLayout } from "@/components/Admin/AdminLayout";
+import AdminHome from "./components/Admin/Home";
+import AdminEmployee from "./components/Admin/AdminEmployee";
+import EmployeeProfile from "./pages/employee/EmployeeProfile";
+import LeaveRecords from "./pages/apply_leave/LeaveRecords";
+import TimeUpdatesList from "./pages/time_update/TimeUpdatesList";
+import TeamLeaveRecords from "./pages/TeamManager/TeamLeaveRecords.tsx";
+import TeamAttendanceRecords from "./pages/TeamManager/TeamAttendanceRecord.tsx";
+import EmployeeLeaveRecords from "./pages/HR/EmployeeLeaveRecords.tsx";
+import EmployeeAttendanceRecords from "./pages/HR/EmployeeAttendanceRecords.tsx";
+import ChangePassword from "./pages/profile/ChangePassword.tsx";
+import CreateEmployee from "./pages/employee/CreateEmployee.tsx";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 const App = () => {
-  useSessionTimeout()
-
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
@@ -96,8 +93,8 @@ const App = () => {
         </TooltipProvider>
       </Provider>
     </QueryClientProvider>
-  )
-}
+  );
+};
 
 const UserRoutes = () => (
   <Routes>
@@ -127,7 +124,7 @@ const UserRoutes = () => (
     <Route path="team/attendance-records" element={<TeamAttendanceRecords />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
-)
+);
 
 const AdminRoutes = () => (
   <Routes>
@@ -135,6 +132,6 @@ const AdminRoutes = () => (
     <Route path="employee" element={<AdminEmployee />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
-)
+);
 
-export default App
+export default App;
