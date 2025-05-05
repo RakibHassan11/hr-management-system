@@ -131,21 +131,23 @@ export default function MyAttendance() {
         return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
       case 'total punch':
         return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+
       case 'check in':
-      case 'check out':
+      case 'check out':{
         if (!employee?.check_in_time || !employee?.check_out_time) {
           return { textClass: '', bgClass: '' };
         }
       
-        const isOnTime =
-        key.toLowerCase() === 'check in'
-          ? isCheckInOnTime(employee.check_in_time)
-          : isCheckOutLate(employee.check_out_time);
+          const isOnTime =
+          key.toLowerCase() === 'check in' 
+            ? isCheckInOnTime(employee.check_in_time)
+            : isCheckOutLate(employee.check_out_time);
 
       
         return isOnTime
           ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
           : { textClass: 'text-red-800', bgClass: 'bg-red-100' };
+      }
           
       case 'duration':
         if (!employee?.check_in_time || !employee?.check_out_time) {
@@ -355,7 +357,22 @@ export default function MyAttendance() {
       </div>
 
       <div className="bg-white shadow-lg rounded-xl  p-6 border border-gray-300 mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
+        
+        <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+        <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2 text-blue-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                clipRule="evenodd"
+              />
+            </svg>
+          Attendance Statistics</h2>
+        
         {loading ? (
           <StatisticsSkeletonLoader />
         ) : statistics ? (
@@ -387,11 +404,24 @@ export default function MyAttendance() {
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Records</h2>
+        <h2 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+        <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2 text-blue-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clipRule="evenodd"
+              />
+            </svg>
+          Attendance Records</h2>
         {loading ? (
           <SkeletonLoader />
         ) : error ? (
-          <p className="text-center text-red-500">{error}</p>
+          <p className="text-center">{error}</p>
         ) : employees.length === 0 ? (
           <p className="text-center text-gray-600">No attendance data available for the selected period.</p>
         ) : (
