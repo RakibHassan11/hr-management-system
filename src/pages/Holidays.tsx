@@ -13,6 +13,7 @@ import toast from "react-hot-toast"
 import axios from "axios"
 import { API_BASE_URL } from "@/config/api"
 import { Trash2 } from "lucide-react"
+import { formatDate, formatTimeToUTC } from "@/components/utils/dateHelper"  
 
 interface Holiday {
   id: number
@@ -21,6 +22,13 @@ interface Holiday {
   end_date: string
   active: boolean
   total_days?: number
+}
+
+// Helper function to get the day of the week from a date string
+const getDayOfWeek = (dateString: string): string => {
+  const date = new Date(dateString)
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  return days[date.getDay()]
 }
 
 export default function Holidays() {
@@ -218,24 +226,27 @@ export default function Holidays() {
           )}
         </div>
 
-        <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
+        <div className="bg-white shadow-md rounded-xl p-6 border text-gray-700 font-semibold border-gray-200">
           <Table className="w-full table-fixed">
             <TableHeader>
               <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Title
                 </TableHead>
-                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                  Day
+                </TableHead>
+                <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Start Date
                 </TableHead>
-                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   End Date
                 </TableHead>
-                <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Total Days
                 </TableHead>
                 {permission_value == 1 && (
-                  <TableHead className="w-1/5 py-4 px-6 text-left font-semibold text-[#1F2328]">
+                  <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                     Action
                   </TableHead>
                 )}
@@ -248,22 +259,27 @@ export default function Holidays() {
                     key={holiday.id}
                     className="hover:bg-gray-50 transition-colors border-b border-gray-100"
                   >
-                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] font-medium truncate">
+                    <TableCell className="w-1/6 py-3 px-6 text-gray-700 font-semibold truncate">
                       {holiday.title}
                     </TableCell>
-                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate">
-                      {holiday.start_date}
+                      <TableCell className=" text-blue-800">
+                        <span className={`px-2 py-1  rounded-xl bg-blue-100`}>
+                        {getDayOfWeek(holiday.start_date)}
+                        </span>
                     </TableCell>
-                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate">
-                      {holiday.end_date}
+                    <TableCell className="w-1/6 py-3 px-6 text-gray-700 truncate">
+                      {formatDate(holiday.start_date)}
                     </TableCell>
-                    <TableCell className="w-1/5 py-3 px-6 text-[#1F2328] truncate text-sm font-semibold">
+                    <TableCell className="w-1/6 py-3 px-6 text-gray-700 truncate">
+                      {formatDate(holiday.end_date)}
+                    </TableCell>
+                    <TableCell className="w-1/6 py-3 px-6 text-[#1F2328] truncate text-sm font-semibold">
                       <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
                         {holiday.total_days ?? "N/A"}
                       </span>
                     </TableCell>
                     {permission_value == 1 && (
-                      <TableCell className="w-1/5 py-3 px-6 text-[#1F2328]">
+                      <TableCell className="w-1/6 py-3 px-6 text-[#1F2328]">
                         <button
                           onClick={() => handleDeleteHoliday(holiday.id)}
                           className="text-red-600 hover:text-red-800"
@@ -278,7 +294,7 @@ export default function Holidays() {
               ) : isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={permission_value == 1 ? 5 : 4}
+                    colSpan={permission_value == 1 ? 6 : 5}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     Loading...
@@ -287,7 +303,7 @@ export default function Holidays() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={permission_value == 1 ? 5 : 4}
+                    colSpan={permission_value == 1 ? 6 : 5}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     No holidays available

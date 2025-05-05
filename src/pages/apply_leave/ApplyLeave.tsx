@@ -26,12 +26,34 @@ export default function ApplyLeave() {
   const API_URL = import.meta.env.VITE_API_URL
   const navigate = useNavigate()
 
+  // Reset form fields
   const resetForm = () => {
     setLeaveType("")
     setStartDate("")
     setEndDate("")
     setDays("")
     setDescription("")
+  }
+
+  // Handle leave type change
+  const handleLeaveTypeChange = (value: string) => {
+    setLeaveType(value)
+    if (value === "HALF_DAY") {
+      setDays("0.5") // Set days to 0.5 for HALF-DAY
+      if (startDate) {
+        setEndDate(startDate) // Set endDate to match startDate
+      }
+    } else {
+      setDays("") // Clear days for other leave types
+    }
+  }
+
+  // Handle start date change
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value)
+    if (leaveType === "HALF_DAY") {
+      setEndDate(value) // Ensure endDate matches startDate for HALF-DAY
+    }
   }
 
   const handleApplyLeave = async () => {
@@ -107,7 +129,7 @@ export default function ApplyLeave() {
               </label>
               <Select
                 value={leaveType}
-                onValueChange={value => setLeaveType(value)}
+                onValueChange={handleLeaveTypeChange}
               >
                 <SelectTrigger className="w-full border border-gray-300 bg-white">
                   <SelectValue placeholder="-- Select Type --" />
@@ -115,6 +137,7 @@ export default function ApplyLeave() {
                 <SelectContent className="bg-white border border-gray-300 shadow-md">
                   <SelectItem value="ANNUAL">ANNUAL</SelectItem>
                   <SelectItem value="SICK">SICK</SelectItem>
+                  <SelectItem value="HALF_DAY">HALF DAY</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -126,7 +149,7 @@ export default function ApplyLeave() {
                 type="date"
                 className="w-full border border-gray-300"
                 value={startDate}
-                onChange={e => setStartDate(e.target.value)}
+                onChange={e => handleStartDateChange(e.target.value)}
               />
             </div>
             <div>
@@ -138,6 +161,7 @@ export default function ApplyLeave() {
                 className="w-full border border-gray-300"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
+                disabled={leaveType === "HALF_DAY"} // Disable end date for HALF-DAY
               />
             </div>
           </div>
@@ -146,10 +170,11 @@ export default function ApplyLeave() {
             <label className="block text-sm font-medium mb-2">Days:</label>
             <Input
               type="text"
-              placeholder="How many days..."
+              placeholder={leaveType === "HALF_DAY" ? "0.5 (Fixed)" : "How many days..."}
               className="w-full border border-gray-300"
               value={days}
               onChange={e => setDays(e.target.value)}
+              disabled={leaveType === "HALF_DAY"} // Disable days input for HALF-DAY
             />
           </div>
 

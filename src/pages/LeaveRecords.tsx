@@ -12,7 +12,7 @@ import { useSelector } from "react-redux";
 import { formatDate, formatText } from "@/components/utils/dateHelper";
 import { FaArrowRotateRight } from "react-icons/fa6";
 
-export default function ViewLeave() {
+export default function LeaveRecords() {
   const [leaveData, setLeaveData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -150,11 +150,11 @@ export default function ViewLeave() {
                 {formatDate(leave.end_date)}
               </TableCell>
               <TableCell className="text-[#1F2328] capitalize font-semibold text-sm">
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full whitespace-nowrap">
                   {formatText(leave.type)}
                 </span>
               </TableCell>
-              <TableCell className="text-[#1F2328] font-medium">
+              <TableCell className="text-[#1F2328] font-medium whitespace-nowrap">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-semibold ${
                     leave.status === "APPROVED_BY_LINE_MANAGER" ||
@@ -181,7 +181,7 @@ export default function ViewLeave() {
   return (
     <div className="p-6 bg-white text-[#1F2328] min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Leave Record</h1>
+        <h1 className="text-2xl font-bold">Leave Records</h1>
       </div>
 
       <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300">

@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
-import api from "@/axiosConfig";
+import api from "@/axiosConfig"
 import moment from "moment-timezone"
+import { formatDate, formatTimeToUTC } from "@/components/utils/dateHelper"
 
 // Define interface for employee data
 interface Employee {
@@ -40,7 +41,7 @@ interface Statistics {
   holiday: number
 }
 
-export default function ViewAttendance() {
+export default function MyAttendance() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [statistics, setStatistics] = useState<Statistics | null>(null)
   const [loading, setLoading] = useState(false)
@@ -51,45 +52,58 @@ export default function ViewAttendance() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(30) // Default to 30 as requested
+  const [perPage, setPerPage] = useState(30)
   const [totalItems, setTotalItems] = useState(0)
 
-  // Set default startDate and endDate to last one month
-  const lastMonthStart = moment().subtract(1, "month").format("YYYY-MM-DD")
+  const startOfCurrentMonth = moment().startOf("month").format("YYYY-MM-DD");
   const today = moment().format("YYYY-MM-DD")
-  const [startDate, setStartDate] = useState(lastMonthStart)
+  const [startDate, setStartDate] = useState(startOfCurrentMonth)
   const [endDate, setEndDate] = useState(today)
 
-  // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
-  const formatDateTime = (time: string | null) => {
-    if (!time) return "--:--"
-    const momentTime = moment.tz(time, "UTC").tz("Asia/Dhaka")
-    return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
-  }
-
-  // Function to format created_at to YYYY-MM-DD (no time zone conversion)
-  const formatDate = (createdAt: string) => {
-    if (!createdAt) return "--"
-    const momentDate = moment.tz(createdAt, "UTC")
-    return momentDate.isValid() ? momentDate.format("YYYY-MM-DD") : "--"
-  }
-
-  // Function to calculate duration between check-in and check-out in Dhaka time
-  const calculateDuration = (inTime: string, outTime: string) => {
-    if (inTime === "--:--" || outTime === "--:--") return "--:--"
-    const inMoment = moment(inTime, "HH:mm")
-    const outMoment = moment(outTime, "HH:mm")
-    if (
-      !inMoment.isValid() ||
-      !outMoment.isValid() ||
-      outMoment.isBefore(inMoment)
-    ) {
-      return "--:--"
+  // Function to calculate duration and check if above 9 hours
+  const calculateDuration = (inTime: string | null, outTime: string | null) => {
+    if (!inTime || !outTime || inTime === "Invalid date" || outTime === "Invalid date") {
+      return { duration: "--:--", isAbove9Hours: false }
     }
+  
+    const inMoment = moment.tz(inTime, "UTC").tz("Asia/Dhaka")
+    const outMoment = moment.tz(outTime, "UTC").tz("Asia/Dhaka")
+  
+    if (!inMoment.isValid() || !outMoment.isValid() || outMoment.isBefore(inMoment)) {
+      return { duration: "--:--", isAbove9Hours: false }
+    }
+  
     const duration = moment.duration(outMoment.diff(inMoment))
-    const hours = Math.floor(duration.asHours()).toString().padStart(2, "0")
+    const hours = Math.floor(duration.asHours())
     const minutes = duration.minutes().toString().padStart(2, "0")
-    return `${hours}:${minutes}`
+    const isAbove9Hours = duration.asHours() > 8.75
+  
+    return {
+      duration: `${hours}:${minutes}`,
+      isAbove9Hours
+    }
+  }
+
+  // Function to check if check-in is at or before 10:15 AM
+  const isCheckInOnTime = (time: string | null): boolean => {
+    if (!time || time === "Invalid date") return false
+    const checkIn = moment.tz(time, "UTC").tz("Asia/Dhaka")
+    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 15 })
+    return checkIn.isValid() && checkIn.isSameOrBefore(threshold)
+  }
+
+  // Function to check if check-out is after 7:00 PM
+  const isCheckOutLate = (time: string | null): boolean => {
+    if (!time || time === "Invalid date") return false
+    const checkOut = moment.tz(time, "UTC").tz("Asia/Dhaka")
+    const threshold = moment.tz(checkOut.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 19, minute: 0 })
+    return checkOut.isValid() && checkOut.isAfter(threshold)
+  }
+
+  // Function to check if date is a weekend (Saturday or Sunday)
+  const isWeekend = (date: string): boolean => {
+    const momentDate = moment.tz(date, "UTC").tz("Asia/Dhaka")
+    return momentDate.isValid() && [6, 0].includes(momentDate.day()) // 6 = Saturday, 0 = Sunday
   }
 
   // Function to format statistics keys for display
@@ -98,6 +112,79 @@ export default function ViewAttendance() {
       .replace(/([A-Z])/g, " $1")
       .replace(/^./, str => str.toUpperCase())
       .trim()
+  }
+
+  // Function to determine text and background classes for values
+  const getValueStyles = (key: string, value?: string | number | boolean, employee?: Employee) => {
+    switch (key.toLowerCase()) {
+      case 'present':
+      case 'holiday':
+        return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+      case 'sickleave':
+      case 'annualleave':
+        return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+      case 'absent':
+        return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+      case 'halfday':
+      case 'latein':
+      case 'earlyout':
+        return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
+      case 'total punch':
+        return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+      case 'check in':
+      case 'check out':
+        if (!employee?.check_in_time || !employee?.check_out_time) {
+          return { textClass: '', bgClass: '' };
+        }
+      
+        const isOnTime =
+        key.toLowerCase() === 'check in'
+          ? isCheckInOnTime(employee.check_in_time)
+          : isCheckOutLate(employee.check_out_time);
+
+      
+        return isOnTime
+          ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+          : { textClass: 'text-red-800', bgClass: 'bg-red-100' };
+          
+      case 'duration':
+        if (!employee?.check_in_time || !employee?.check_out_time) {
+          return { textClass: '', bgClass: '' }; 
+        }
+        return employee && calculateDuration(employee.check_in_time, employee.check_out_time).isAbove9Hours
+          ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+          : { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+      case 'date':
+        return isWeekend(employee?.created_at)
+          ? { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+          : { textClass: '', bgClass: '' }
+      case 'comment':
+        if (typeof value === 'string') {
+          switch (value.toLowerCase()) {
+            case 'present':
+            case 'holiday':
+              return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+            case 'sick leave':
+            case 'annual leave':
+              return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+            case 'weekend':
+              return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }  
+            case 'absent':
+              return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+            case 'half day':
+            case 'late in':
+            case 'early out':
+              return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
+            default:
+              return { textClass: '', bgClass: '' }
+          }
+        }
+        return { textClass: '', bgClass: '' }
+      case 'employee name':
+        return { textClass: '', bgClass: '' }
+      default:
+        return { textClass: '', bgClass: '' }
+    }
   }
 
   const fetchAttendanceData = async (
@@ -112,7 +199,6 @@ export default function ViewAttendance() {
       return
     }
 
-    // Single API call for both attendance and statistics
     let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${itemsPerPage}&page=${page}`
     if (start && end) {
       url += `&startdate=${start}&enddate=${end}`
@@ -159,7 +245,6 @@ export default function ViewAttendance() {
     }
   }
 
-  // Fetch data when token, API_URL, startDate, endDate, perPage, or currentPage changes
   useEffect(() => {
     fetchAttendanceData()
   }, [token, API_URL, startDate, endDate, perPage, currentPage])
@@ -175,7 +260,6 @@ export default function ViewAttendance() {
     setCurrentPage(1)
   }
 
-  // Skeleton Loader Component for Attendance Table
   const SkeletonLoader = () => {
     return (
       <Table>
@@ -221,7 +305,6 @@ export default function ViewAttendance() {
     )
   }
 
-  // Skeleton Loader Component for Statistics Table
   const StatisticsSkeletonLoader = () => {
     return (
       <Table>
@@ -236,7 +319,7 @@ export default function ViewAttendance() {
           <TableRow>
             {[...Array(8)].map((_, index) => (
               <TableCell key={index} className="text-center">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mx-auto animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded-xl  w-1/4 mx-auto animate-pulse"></div>
               </TableCell>
             ))}
           </TableRow>
@@ -246,9 +329,9 @@ export default function ViewAttendance() {
   }
 
   return (
-    <div className="p-6 bg-white text-[#1F2328] min-h-screen">
+    <div className="p-6 bg-white text-c min-h-screen">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">View Attendance</h1>
+        <h1 className="text-2xl font-bold text-gray-800">My Attendance</h1>
         <div className="flex flex-col md:flex-row gap-3">
           <div className="flex gap-3">
             <div className="relative flex-1 md:flex-none">
@@ -271,7 +354,7 @@ export default function ViewAttendance() {
         </div>
       </div>
 
-      <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-300 mb-6">
+      <div className="bg-white shadow-lg rounded-xl  p-6 border border-gray-300 mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Attendance Statistics</h2>
         {loading ? (
           <StatisticsSkeletonLoader />
@@ -280,7 +363,7 @@ export default function ViewAttendance() {
             <TableHeader>
               <TableRow className="bg-gray-100">
                 {Object.keys(statistics).map((key) => (
-                  <TableHead key={key} className="text-[#1F2328] text-center">
+                  <TableHead key={key} className="text-[#1F2328] text-center font-semibold">
                     {formatStatKey(key)}
                   </TableHead>
                 ))}
@@ -288,16 +371,18 @@ export default function ViewAttendance() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                {Object.values(statistics).map((value, index) => (
-                  <TableCell key={index} className="text-[#1F2328] text-center">
-                    {value}
+                {Object.entries(statistics).map(([key, value], index) => (
+                  <TableCell key={index} className="text-center font-semibold text-slate-700">
+                    <span className={`px-2 py-1 ${getValueStyles(key, value).textClass} ${getValueStyles(key, value).bgClass} rounded-xl `}>
+                      {value}
+                    </span>
                   </TableCell>
                 ))}
               </TableRow>
             </TableBody>
           </Table>
         ) : (
-          <p className="text-center text-gray-600">No statistics data available for the selected period.</p>
+          <p className="text-center text-red-500">No statistics data available for the selected period.</p>
         )}
       </div>
 
@@ -314,48 +399,60 @@ export default function ViewAttendance() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-100">
-                  <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Date</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Duration</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Total Punch</TableHead>
-                  <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
+                  {["Employee Name", "Date", "Check In", "Check Out", "Duration", "Total Punch", "Comment"].map((header) => (
+                    <TableHead key={header} className="text-[#1F2328] text-center font-semibold">
+                      {header}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {employees.map((employee, index) => {
-                  const checkIn = formatDateTime(employee.check_in_time)
-                  const checkOut = formatDateTime(employee.check_out_time)
+                  const checkIn = formatTimeToUTC(employee.check_in_time)
+                  const checkOut = formatTimeToUTC(employee.check_out_time)
+                  const { duration } = calculateDuration(employee.check_in_time, employee.check_out_time)
                   return (
                     <TableRow key={index}>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.name}
+                      <TableCell className="text-center font-semibold text-gray-700">
+                        <span className={`px-2 py-1 ${getValueStyles('employee name').textClass} ${getValueStyles('employee name').bgClass} rounded-xl `}>
+                          {employee.name}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {formatDate(employee.created_at)}
+                      <TableCell className="text-center font-semibold text-gray-800">
+                          <span className="px-2 py-1 bg-slate-100 rounded-xl">
+                          {formatDate(employee.created_at)}
+                          </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {checkIn}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className={`px-2 py-1 ${getValueStyles('check in', checkIn, employee).textClass} ${getValueStyles('check in', checkIn, employee).bgClass} rounded-xl `}>
+                          {checkIn}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {checkOut}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className={`px-2 py-1 ${getValueStyles('check out', checkOut, employee).textClass} ${getValueStyles('check out', checkOut, employee).bgClass} rounded-xl `}>
+                          {checkOut}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {calculateDuration(checkIn, checkOut)}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className={`px-2 py-1 ${getValueStyles('duration', duration, employee).textClass} ${getValueStyles('duration', duration, employee).bgClass} rounded-xl `}>
+                          {duration}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.total_punch}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className={`px-2 py-1 rounded-xl  ${getValueStyles('total punch').textClass} ${getValueStyles('total punch').bgClass} rounded-xl `}>
+                          {employee.total_punch}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.comment || "N/A"}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className={`px-2 py-1 rounded-xl ${getValueStyles('comment', employee.comment).textClass} ${getValueStyles('comment', employee.comment).bgClass} `}>
+                          {employee.comment || "N/A"}
+                        </span>
                       </TableCell>
                     </TableRow>
                   )
                 })}
               </TableBody>
             </Table>
-
             <div className="mt-6 flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <span>Show</span>
@@ -371,7 +468,6 @@ export default function ViewAttendance() {
                 </select>
                 <span>per page</span>
               </div>
-
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -391,7 +487,6 @@ export default function ViewAttendance() {
                   Next
                 </Button>
               </div>
-
               <span>Total: {totalItems} attendances</span>
             </div>
           </>

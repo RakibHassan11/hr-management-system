@@ -57,6 +57,7 @@ const formatStatus = (status: string) => {
     case "SICK": return "Sick";
     case "ANNUAL": return "Annual";
     case "CASUAL": return "Casual";
+    case "HALF_DAY": return "Half Day";
     default: return status;
   }
 };

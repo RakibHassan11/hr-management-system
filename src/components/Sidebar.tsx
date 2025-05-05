@@ -31,7 +31,7 @@ const menuItems = [
     hideCondition: user => user?.permission_value ? [2, '2', 3, '3'].includes(user.permission_value) : true,
   },
   { icon: FileEdit, label: 'Time Update', path: '/user/time-update', hideCondition: () => false },
-  { icon: Plane, label: 'View Leave', path: '/user/view-leave', hideCondition: () => false },
+  { icon: Plane, label: 'Leave Records', path: '/user/view-leave', hideCondition: () => false },
   { icon: FileEdit, label: 'Apply for Leave', path: '/user/apply-leave', hideCondition: () => false },
   { icon: Calendar, label: 'Holidays', path: '/user/holidays', hideCondition: () => false },
   { icon: HardDrive, label: 'MAC Address', path: '/user/mac-address', hideCondition: () => false },
