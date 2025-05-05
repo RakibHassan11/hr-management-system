@@ -88,7 +88,7 @@ export default function MyAttendance() {
   const isCheckInOnTime = (time: string | null): boolean => {
     if (!time || time === "Invalid date") return false
     const checkIn = moment.tz(time, "UTC").tz("Asia/Dhaka")
-    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 15, second: 0, millisecond: 0 })
+    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 16})
     return checkIn.isValid() && checkIn.isSameOrBefore(threshold)
   }
 
