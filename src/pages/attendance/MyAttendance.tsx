@@ -84,11 +84,11 @@ export default function MyAttendance() {
     }
   }
 
-  // Function to check if check-in is at or before 10:15 AM
+  // Function to check if check-in is at or before 10:16 AM
   const isCheckInOnTime = (time: string | null): boolean => {
     if (!time || time === "Invalid date") return false
     const checkIn = moment.tz(time, "UTC").tz("Asia/Dhaka")
-    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 15 })
+    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 15, second: 0, millisecond: 0 })
     return checkIn.isValid() && checkIn.isSameOrBefore(threshold)
   }
 
@@ -100,10 +100,10 @@ export default function MyAttendance() {
     return checkOut.isValid() && checkOut.isAfter(threshold)
   }
 
-  // Function to check if date is a weekend (Saturday or Sunday)
+  // Function to check if date is a weekend (Saturday or Friday)
   const isWeekend = (date: string): boolean => {
     const momentDate = moment.tz(date, "UTC").tz("Asia/Dhaka")
-    return momentDate.isValid() && [6, 0].includes(momentDate.day()) // 6 = Saturday, 0 = Sunday
+    return momentDate.isValid() && [5, 6].includes(momentDate.day()) // 6 = Saturday, 5 = Friday
   }
 
   // Function to format statistics keys for display
