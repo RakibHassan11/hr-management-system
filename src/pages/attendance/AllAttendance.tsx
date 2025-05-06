@@ -295,7 +295,7 @@ export default function AllAttendance() {
                 className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316]"
               >
                 <option value="All">All</option>
-                <option value="Others">Others</option>
+                <option value="Other">Others</option>
                 <option value="Absent">Absent</option>
               </select>
               <select
