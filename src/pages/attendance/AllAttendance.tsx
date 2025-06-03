@@ -201,7 +201,6 @@ export default function AllAttendance() {
     setSortDirection(newSortDirection)
     fetchEmployees(currentPage, perPage, newSortDirection, field)
   }
-
   // Skeleton Loader Component
   const SkeletonLoader = () => {
     return (
