@@ -275,7 +275,7 @@ export default function Employee() {
                       Sick
                     </TableHead>
                     <TableHead className="text-[#1F2328] w-[15%]">
-                      Action
+                      Edit
                     </TableHead>
                   </TableRow>
                 </TableHeader>

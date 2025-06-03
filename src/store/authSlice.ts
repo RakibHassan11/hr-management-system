@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -13,6 +14,7 @@ interface UserInfo {
   email: string;
   password?: string;
   permission_value?: number;
+  designation?: string;
 }
 
 interface AuthState {

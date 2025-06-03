@@ -15,8 +15,8 @@ import {
   PlaneTakeoff,
   History,
 } from 'lucide-react';
-import { Button } from './ui/button';
-import logo from '../lovable-uploads/orangetoolz-logo-orange.png';
+import { Button } from '../ui/button';
+import logo from '../../lovable-uploads/orangetoolz-logo-orange.png';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 

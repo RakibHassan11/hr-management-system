@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Logo from "../lovable-uploads/orangetoolz-logo-orange.png";
 import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "../store";
 import { loginUser, setUserCredentials } from "../store/authSlice";
 import { RootState } from "../store";
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const { loadingUser, errorUser } = useSelector(
     (state: RootState) => state.auth
@@ -56,7 +59,7 @@ const Login = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <label
                 className="text-sm font-medium text-[#1F2328]"
                 htmlFor="password"
@@ -65,13 +68,21 @@ const Login = () => {
               </label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="border border-[#1F2328]/50 rounded-md px-3 py-2"
                 placeholder="Enter your password"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 hover:text-orange-600"
+              >
+                {showPassword ? <EyeOff size={20} className="opacity-75" /> : <Eye size={20} className="opacity-75" />}
+              </button>
+              <Link className="text-[#F97316] hover:text-[#EA580C] text-sm font-medium" to="/forgot-password">Forgotten Password?</Link>
             </div>
 
             <Button

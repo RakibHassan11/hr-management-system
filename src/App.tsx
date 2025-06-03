@@ -16,12 +16,12 @@ import Holidays from "./pages/Holidays";
 import MacAddress from "./pages/MacAddress";
 import ImportantLinks from "./pages/ImportantLinks";
 import Employee from "./pages/employee/Employee";
-import Team from "./pages/Team";
+import Team from "./pages/TeamManager/Team";
 import Login from "./pages/Login";
 import SuperAdminLogin from "./pages/SuperAdminLogin";
 import NotFound from "./pages/NotFound";
-import PrivateRoute from "@/components/PrivateRoute";
-import { Layout } from "@/components/Layout";
+import PrivateRoute from "@/components/navigationUi/PrivateRoute.tsx";
+import { Layout } from "@/components/navigationUi/Layout";
 import { AdminLayout } from "@/components/Admin/AdminLayout";
 import AdminHome from "./components/Admin/Home";
 import AdminEmployee from "./components/Admin/AdminEmployee";
@@ -34,6 +34,7 @@ import EmployeeLeaveRecords from "./pages/HR/EmployeeLeaveRecords.tsx";
 import EmployeeAttendanceRecords from "./pages/HR/EmployeeAttendanceRecords.tsx";
 import ChangePassword from "./pages/profile/ChangePassword.tsx";
 import CreateEmployee from "./pages/employee/CreateEmployee.tsx";
+import ForgotPassword from "./pages/ForgotPassword/forgotPassword.tsx";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,10 @@ const App = () => {
               <Route
                 path="/login"
                 element={<PrivateRoute element={<Login />} />}
+              />
+              <Route
+                path="/forgot-password"
+                element={<ForgotPassword />}
               />
               <Route
                 path="/adminlogin"

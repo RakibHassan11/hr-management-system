@@ -1,5 +1,5 @@
 
-import { Layout } from '@/components/Layout';
+import { Layout } from '@/components/navigationUi/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';

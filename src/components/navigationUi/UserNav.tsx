@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { logoutUser, logoutAdmin } from "@/store/authSlice"
 import { RootState } from "@/store"
-import drop from "../lovable-uploads/pet.jpg"
+import drop from "../../lovable-uploads/pet.jpg"
 import axios from "axios"
 
 export function UserNav() {

@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { FC } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
+import { RootState } from '../../store/store';
 
 interface PrivateRouteProps {
   element: JSX.Element;

@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Download, RefreshCcw } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store"
 import api from "@/axiosConfig";
@@ -89,7 +89,7 @@ export default function AllAttendance() {
     return `${hours}:${minutes}`
   }
 
-  const fetchEmployees = async (
+  const fetchEmployees = useCallback(async (
     page = currentPage,
     itemsPerPage = perPage,
     sortDir = sortDirection,
@@ -140,33 +140,31 @@ export default function AllAttendance() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [API_URL, comment, currentPage, debouncedQuery, endDate, perPage, sortDirection, sortOn, startDate, token])
 
-  // Function to handle the export API call
+  // Function to export data
   const handleExport = async () => {
-    let exportUrl = `${API_URL}/employee-attendance/attendance-export?needPagination=false&sortDirection=${sortDirection}&sortOn=${sortOn}&status=active`
-
-    if (debouncedQuery) exportUrl += `&query=${encodeURIComponent(debouncedQuery)}`
-    if (startDate && endDate) exportUrl += `&startdate=${startDate}&enddate=${endDate}`
-    if (comment !== "All") exportUrl += `&comment=${encodeURIComponent(comment)}`
-    exportUrl += `&type=${exportType}`
-
+    const type = exportType;
     try {
-      const response = await api({
-        method: 'GET',
-        url: exportUrl,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        responseType: 'blob'
-      })
+      setLoading(true)
+      const formattedStartDate = startDate ? moment(startDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
+      const formattedEndDate = endDate ? moment(endDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
+      
+      const response = await api.get(
+        `${API_URL}/api/admin/attendance/export?format=${type}&start_date=${formattedStartDate}&end_date=${formattedEndDate}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          responseType: "blob"
+        }
+      )
 
       const blob = response.data
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `attendance_${startDate}_to_${endDate}.${exportType.toLowerCase()}`
+      a.download = `attendance_${startDate}_to_${endDate}.${type.toLowerCase()}`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -183,8 +181,8 @@ export default function AllAttendance() {
 
   // Fetch employees when dependencies change
   useEffect(() => {
-    fetchEmployees(currentPage, perPage, sortDirection, sortOn, debouncedQuery, startDate, endDate, comment)
-  }, [token, API_URL, debouncedQuery, startDate, endDate, comment, currentPage, perPage, sortDirection, sortOn])
+    fetchEmployees()
+  }, [fetchEmployees])
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -302,7 +300,6 @@ export default function AllAttendance() {
                 value={exportType}
                 onChange={e => setExportType(e.target.value)}
                 className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316]"
-                disabled
               >
                 <option value="CSV">CSV</option>
                 <option value="EXCEL">Excel</option>
@@ -310,7 +307,6 @@ export default function AllAttendance() {
               <Button
                 onClick={handleExport}
                 className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                disabled
               >
                 <Download size={18} className="text-white hover:text-gray-200" />
               </Button>
@@ -323,7 +319,6 @@ export default function AllAttendance() {
                   setExportType("CSV")
                 }}
                 className="bg-[#F97316] text-white hover:bg-[#e06615]"
-                disabled
               >
                 <RefreshCcw size={18} className="text-white hover:text-gray-200" />
               </Button>
@@ -369,7 +364,6 @@ export default function AllAttendance() {
                 className="py-2 w-36 md:w-36 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
             </div>
-
             <div className="relative flex-1 md:flex-none">
               <Input
                 type="date"
@@ -407,8 +401,8 @@ export default function AllAttendance() {
             <Button
               onClick={() => {
                 setQuery("")
-                setStartDate(today)
-                setEndDate(today)
+                setStartDate(new Date().toISOString().split("T")[0])
+                setEndDate(new Date().toISOString().split("T")[0])
                 setComment("All")
                 setExportType("CSV")
               }}
