@@ -372,7 +372,6 @@ export default function MyAttendance() {
               />
             </svg>
           Attendance Statistics</h2>
-        
         {loading ? (
           <StatisticsSkeletonLoader />
         ) : statistics ? (
