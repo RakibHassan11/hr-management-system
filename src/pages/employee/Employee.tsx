@@ -1,61 +1,89 @@
+
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { FaSearch, FaPlus, FaEdit } from "react-icons/fa"
-import { useEffect, useState, useCallback, useRef } from "react"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
-import { useNavigate } from "react-router-dom"
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { FaSearch, FaPlus, FaEdit, FaSignOutAlt, FaEllipsisV } from "react-icons/fa";
+import toast from "react-hot-toast";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { useNavigate } from "react-router-dom";
+import api from "@/axiosConfig";
 
 // Custom debounce hook
 const useDebounce = (callback: Function, delay: number) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   return useCallback(
     (...args: any[]) => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+        clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        callback(...args)
-      }, delay)
+        callback(...args);
+      }, delay);
     },
     [callback, delay]
-  )
+  );
+};
+
+interface Employee {
+  id: number;
+  employee_id: number;
+  name: string;
+  birthday: string | null;
+  annual_leave_balance: number | null;
+  sick_leave_balance: number | null;
 }
 
 export default function Employee() {
-  const [employees, setEmployees] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const API_URL = import.meta.env.VITE_API_URL
-  const token = useSelector((state: RootState) => state.auth.userToken)
-  const navigate = useNavigate()
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isResignModalOpen, setIsResignModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [resignationDate, setResignationDate] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const API_URL = import.meta.env.VITE_API_URL;
+  const token = useSelector((state: RootState) => state.auth.userToken);
+  const navigate = useNavigate();
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(100)
-  const [totalItems, setTotalItems] = useState(0)
-  const [sortDirection, setSortDirection] = useState("asc")
-  const [sortOn, setSortOn] = useState("employee_id")
-  const [birthMonth, setBirthMonth] = useState("all")
-  const [employeeData, setEmployeeData] = useState({
-    name: ""
-  })
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [perPage, setPerPage] = useState(100);
+  const [totalItems, setTotalItems] = useState(0);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortOn, setSortOn] = useState("employee_id");
+  const [birthMonth, setBirthMonth] = useState("all");
+  const [employeeData, setEmployeeData] = useState({ name: "" });
+
+  const today = new Date().toISOString().split("T")[0];
 
   // Month options for the birth month filter
   const monthOptions = [
@@ -71,106 +99,141 @@ export default function Employee() {
     { label: "October", value: "10" },
     { label: "November", value: "11" },
     { label: "December", value: "12" },
-  ]
+  ];
 
-  // Format birthday to DD MMM, YYYY with enhanced styling
+  // Format birthday to DD MMM, YYYY
   const formatBirthday = (dateString: string): string => {
-    const date = new Date(dateString)
-    const day = date.getDate().toString().padStart(2, "0")
-    const month = date.toLocaleString("default", { month: "short" })
-    const year = date.getFullYear()
-    return `${day} ${month}, ${year}`
-  }
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = date.toLocaleString("default", { month: "short" });
+    const year = date.getFullYear();
+    return `${day} ${month}, ${year}`;
+  };
 
-  const fetchEmployees = (
-    query = employeeData.name,
-    birthMonthFilter = birthMonth,
-    page = currentPage,
-    itemsPerPage = perPage,
-    sortDir = sortDirection,
-    sortField = sortOn
-  ) => {
-    let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
-    if (query) {
-      url += `&query=${query}`
-    }
-    if (birthMonthFilter !== "all") {
-      url += `&birthMonth=${birthMonthFilter}`
-    }
-
-    fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+  const fetchEmployees = useCallback(
+    (
+      query = employeeData.name,
+      birthMonthFilter = birthMonth,
+      page = currentPage,
+      itemsPerPage = perPage,
+      sortDir = sortDirection,
+      sortField = sortOn
+    ) => {
+      if (!token) {
+        setError("No authentication token available");
+        setLoading(false);
+        return;
       }
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch employee data")
-        }
-        return response.json()
-      })
-      .then(data => {
-        setEmployees(data.data)
-        setTotalPages(data.extraData.totalPages)
-        setCurrentPage(data.extraData.currentPage)
-        setPerPage(data.extraData.perPage)
-        setTotalItems(data.extraData.total)
-        setLoading(false)
-      })
-      .catch(error => {
-        setError(error.message)
-        setLoading(false)
-      })
-  }
 
-  // Debounced search handler
+      let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
+      if (query) url += `&query=${encodeURIComponent(query)}`;
+      if (birthMonthFilter !== "all") url += `&birthMonth=${birthMonthFilter}`;
+
+      setLoading(true);
+      api
+        .get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          const data = response.data;
+          if (Array.isArray(data.data)) {
+            setEmployees(data.data);
+            setTotalPages(data.extraData?.totalPages || 1);
+            setCurrentPage(data.extraData?.currentPage || 1);
+            setPerPage(data.extraData?.perPage || 100);
+            setTotalItems(data.extraData?.total || 0);
+            setError(null);
+          } else {
+            setEmployees([]);
+            setError("No employee data available");
+          }
+        })
+        .catch((error) => {
+          setError(error.message || "Failed to fetch employee data");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    },
+    [API_URL, token, employeeData.name, birthMonth, currentPage, perPage, sortDirection, sortOn]
+  );
+
   const debouncedSearch = useDebounce((query: string, birthMonth: string) => {
-    setCurrentPage(1)
-    fetchEmployees(query, birthMonth, 1)
-  }, 500)
-
-  useEffect(() => {
-    setLoading(true)
-    fetchEmployees()
-  }, [token, API_URL])
+    setCurrentPage(1);
+    fetchEmployees(query, birthMonth, 1);
+  }, 500);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
-    setEmployeeData({ ...employeeData, name: newName })
-    debouncedSearch(newName, birthMonth)
-  }
+    const newName = e.target.value;
+    setEmployeeData({ ...employeeData, name: newName });
+    debouncedSearch(newName, birthMonth);
+  };
 
   const handleBirthMonthChange = (value: string) => {
-    setBirthMonth(value)
-    setCurrentPage(1)
-    fetchEmployees(employeeData.name, value, 1)
-  }
+    setBirthMonth(value);
+    setCurrentPage(1);
+    fetchEmployees(employeeData.name, value, 1);
+  };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    fetchEmployees(employeeData.name, birthMonth, page)
-  }
+    setCurrentPage(page);
+    fetchEmployees(employeeData.name, birthMonth, page);
+  };
 
   const handleSortChange = (field: string) => {
-    const newSortDirection =
-      sortOn === field && sortDirection === "asc" ? "desc" : "asc"
-    setSortOn(field)
-    setSortDirection(newSortDirection)
-    fetchEmployees(
-      employeeData.name,
-      birthMonth,
-      currentPage,
-      perPage,
-      newSortDirection,
-      field
-    )
-  }
+    const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc";
+    setSortOn(field);
+    setSortDirection(newSortDirection);
+    fetchEmployees(employeeData.name, birthMonth, currentPage, perPage, newSortDirection, field);
+  };
 
-  const handleEditClick = (employee: any) => {
-    navigate(`/user/employee/profile?id=${employee.id}`)
-  }
+  const handleEditClick = (employee: Employee) => {
+    navigate(`/user/employee/profile?id=${employee.id}`);
+  };
+
+  const handleResignClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setResignationDate(today);
+    setIsResignModalOpen(true);
+  };
+
+  const handleResignSubmit = async (employeeId: number, resignationDate: string) => {
+    if (!employeeId || !resignationDate) {
+      toast.error("Employee ID and resignation date are required");
+      return;
+    }
+
+    try {
+      const response = await api.put(`${API_URL}/employee/resign-employee`, {
+        id: employeeId,
+       "resignation_date": resignationDate,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.data.success) {
+        throw new Error("Failed to process resignation");
+      }
+
+      toast.success("Employee resignation processed successfully");
+      setIsResignModalOpen(false);
+      setSelectedEmployee(null);
+      setResignationDate("");
+      fetchEmployees();
+    } catch (error) {
+      toast.error(error.message || "Failed to process resignation");
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   return (
     <div className="bg-white text-[#1F2328] p-3">
@@ -178,7 +241,7 @@ export default function Employee() {
         <h1 className="text-3xl font-bold text-[#1F2328]">Employee List</h1>
         <Button
           onClick={() => navigate("/user/employee/create")}
-          className="font-medium rounded-md flex items-center gap-2 transition-colors"
+          className="font-medium rounded-md flex items-center gap-2 bg-[#F97316] text-white hover:bg-[#e06615]"
         >
           <FaPlus size={14} />
           Create Employee
@@ -192,13 +255,13 @@ export default function Employee() {
               <Input
                 id="employee-search"
                 placeholder="Search by name..."
-                className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-8"
+                className="p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-[#F97316] text-sm h-8"
                 value={employeeData.name}
                 onChange={handleSearchChange}
-                onKeyDown={e => {
+                onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    setCurrentPage(1)
-                    fetchEmployees(employeeData.name, birthMonth, 1)
+                    setCurrentPage(1);
+                    fetchEmployees(employeeData.name, birthMonth, 1);
                   }
                 }}
               />
@@ -208,11 +271,8 @@ export default function Employee() {
             </div>
             <div className="flex items-center space-x-2">
               <label className="text-gray-400 text-sm">Select birth month:</label>
-              <Select
-                value={birthMonth}
-                onValueChange={handleBirthMonthChange}
-              >
-                <SelectTrigger className="w-[180px] p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <Select value={birthMonth} onValueChange={handleBirthMonthChange}>
+                <SelectTrigger className="w-[180px] p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-[#F97316]">
                   <SelectValue placeholder="Birth Month" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-300 shadow-md">
@@ -231,17 +291,42 @@ export default function Employee() {
 
       <div className="bg-white rounded-lg shadow-lg border border-gray-300 p-4">
         {loading && (
-          <div className="divide-y rounded-md border border-gray-300">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center p-4 space-x-4 animate-pulse">
-                <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
-                <div className="h-3 w-1/4 bg-gray-200 rounded"></div>
-                <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
-                <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
-                <div className="h-3 w-1/6 bg-gray-200 rounded"></div>
-              </div>
-            ))}
-          </div>
+          <Table className="table-fixed w-full">
+            <TableHeader>
+              <TableRow className="bg-gray-100">
+                <TableHead className="text-[#1F2328] w-[15%]">Employee ID</TableHead>
+                <TableHead className="text-[#1F2328] w-[20%]">Name</TableHead>
+                <TableHead className="text-[#1F2328] w-[20%]">Birthday</TableHead>
+                <TableHead className="text-[#1F2328] w-[15%]">Annual</TableHead>
+                <TableHead className="text-[#1F2328] w-[15%]">Sick</TableHead>
+                <TableHead className="text-[#1F2328] w-[15%]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-3/4 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-3/4 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-1/2 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-1/3 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-1/3 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-3 w-1/3 bg-gray-200 rounded mx-auto animate-pulse"></div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
         {error && <div className="p-6 text-center text-red-600">{error}</div>}
 
@@ -262,27 +347,18 @@ export default function Employee() {
                       className="text-[#1F2328] cursor-pointer w-[20%]"
                       onClick={() => handleSortChange("name")}
                     >
-                      Name{" "}
-                      {sortOn === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                      Name {sortOn === "name" && (sortDirection === "asc" ? "↑" : "↓")}
                     </TableHead>
-                    <TableHead className="text-[#1F2328] w-[20%]">
-                      Birthday
-                    </TableHead>
-                    <TableHead className="text-[#1F2328] w-[15%]">
-                      Annual
-                    </TableHead>
-                    <TableHead className="text-[#1F2328] w-[15%]">
-                      Sick
-                    </TableHead>
-                    <TableHead className="text-[#1F2328] w-[15%]">
-                      Edit
-                    </TableHead>
+                    <TableHead className="text-[#1F2328] w-[20%]">Birthday</TableHead>
+                    <TableHead className="text-[#1F2328] w-[15%]">Annual</TableHead>
+                    <TableHead className="text-[#1F2328] w-[15%]">Sick</TableHead>
+                    <TableHead className="text-[#1F2328] w-[15%]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
               )}
               <TableBody>
                 {employees.length > 0 ? (
-                  employees.map(employee => (
+                  employees.map((employee) => (
                     <TableRow key={employee.employee_id}>
                       <TableCell className="text-[#1F2328] whitespace-nowrap w-[15%]">
                         {employee.employee_id}
@@ -306,13 +382,29 @@ export default function Employee() {
                         </span>
                       </TableCell>
                       <TableCell className="text-[#1F2328] font-medium whitespace-nowrap w-[15%]">
-                        <button
-                          className="border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-md p-1.5 transition-colors"
-                          title="Edit"
-                          onClick={() => handleEditClick(employee)}
-                        >
-                          <FaEdit size={12} />
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className="text-gray-600 hover:bg-gray-50 rounded-md p-1.5 transition-colors"
+                              title="Actions"
+                            >
+                              <FaEllipsisV size={16} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleEditClick(employee)}>
+                              <FaEdit className="mr-2" size={12} />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleResignClick(employee)}
+                              className="text-red-600"
+                            >
+                              <FaSignOutAlt className="mr-2" size={12} />
+                              Resignation
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -327,27 +419,73 @@ export default function Employee() {
             </Table>
 
             <div className="flex justify-between items-center p-4">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              <Button
+                className="px-4 py-2 bg-gray-300 text-gray-800 hover:bg-gray-400 disabled:opacity-50"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 Previous
-              </button>
+              </Button>
               <span className="text-[#1F2328]">
                 Page {currentPage} of {totalPages}
               </span>
-              <button
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              <Button
+                className="px-4 py-2 bg-gray-300 text-gray-800 hover:bg-gray-400 disabled:opacity-50"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 Next
-              </button>
+              </Button>
             </div>
           </>
         )}
       </div>
+
+      <Dialog open={isResignModalOpen} onOpenChange={(open) => {
+        setIsResignModalOpen(open);
+        if (!open) {
+          setSelectedEmployee(null);
+          setResignationDate("");
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Resignation</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <label
+              htmlFor="resignationDate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Resignation Date
+            </label>
+            <Input
+              id="resignationDate"
+              type="date"
+              value={resignationDate}
+              onChange={(e) => setResignationDate(e.target.value)}
+              className="border border-gray-300 rounded-md p-2 text-[#1F2328] focus:border-[#F97316] w-full"
+              aria-label="Resignation date"
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setIsResignModalOpen(false)}
+              className="bg-gray-300 text-gray-800 hover:bg-gray-400"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedEmployee && handleResignSubmit(selectedEmployee.id, resignationDate)}
+              className="bg-[#F97316] text-white hover:bg-[#e06615]"
+              disabled={!resignationDate}
+            >
+              Confirm Resignation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  )
+  );
 }

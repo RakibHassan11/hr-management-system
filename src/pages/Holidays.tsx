@@ -14,6 +14,7 @@ import axios from "axios"
 import { API_BASE_URL } from "@/config/api"
 import { Trash2 } from "lucide-react"
 import { formatDate, formatTimeToUTC } from "@/components/utils/dateHelper"  
+import api from "@/axiosConfig"
 
 interface Holiday {
   id: number
@@ -56,7 +57,7 @@ export default function Holidays() {
       }
 
       try {
-        const response = await axios.get(
+        const response = await api.get(
           `${API_BASE_URL}/Holiday/holiday-list`,
           {
             headers: {

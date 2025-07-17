@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/profile/Profile.tsx";
 import ViewAttendance from "./pages/attendance/MyAttendance.tsx";
 import AllAttendance from "./pages/attendance/AllAttendance.tsx";
+import DailyAttendance from "./pages/attendance/DailyAttendance.tsx";
 import TimeUpdate from "./pages/time_update/TimeUpdate";
 import ViewLeave from "./pages/LeaveRecords.tsx";
 import ApplyLeave from "./pages/apply_leave/ApplyLeave";
@@ -106,6 +107,7 @@ const UserRoutes = () => (
     <Route path="home" element={<Home />} />
     <Route path="profile" element={<Profile />} />
     <Route path="view-attendance" element={<ViewAttendance />} />
+    <Route path="daily-attendance" element={<DailyAttendance />} />
     <Route path="all-attendance" element={<AllAttendance />} />
     <Route path="time-update" element={<TimeUpdate />} />
     <Route path="time-update/time-update-list" element={<TimeUpdatesList />} />

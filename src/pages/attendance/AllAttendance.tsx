@@ -146,12 +146,11 @@ export default function AllAttendance() {
   const handleExport = async () => {
     const type = exportType;
     try {
-      setLoading(true)
       const formattedStartDate = startDate ? moment(startDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
       const formattedEndDate = endDate ? moment(endDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
       
       const response = await api.get(
-        `${API_URL}/api/admin/attendance/export?format=${type}&start_date=${formattedStartDate}&end_date=${formattedEndDate}`,
+        `${API_URL}/employee-attendance/attendance-export?query=${query}&startdate=${formattedStartDate}&enddate=${formattedEndDate}&type=${type}`,  
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -252,7 +251,7 @@ export default function AllAttendance() {
       <div className="p-6 bg-white text-[#1F2328] min-h-screen">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold text-gray-800">All Attendance</h1>
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="flex flex-col md:flex-row">
             <div className="relative">
               <Input
                 type="text"
@@ -261,7 +260,7 @@ export default function AllAttendance() {
                 placeholder="Search employees..."
                 className="pl-9 pr-4 py-2 w-46 md:w-40 border-gray-300 focus:ring-2 focus:ring-[#F97316] focus:border-[#F97316] transition-all"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <div className="absolute top-1/2 transform -translate-y-1/2 text-gray-400">
                 <Search size={16} />
               </div>
             </div>
