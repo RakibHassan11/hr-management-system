@@ -31,6 +31,7 @@ interface FormData {
   joining_date?: string;
   confirmed?: number;
   confirmation_date?: string;
+  
   permission_value?: string | null;
   gender?: string;
   religion?: string;
@@ -60,6 +61,7 @@ interface FormData {
   beef: number;
   fish: number;
   id?: number;
+  resign_date?: string | null;
 }
 
 // Define LeaveFormData interface for leave balance data
@@ -659,6 +661,52 @@ function EmployeeProfile() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-[#1F2328]">
+                        Employment Type
+                      </label>
+                      <Select
+                        value={
+                          formData?.permission_value === "1"
+                            ? "HR"
+                            : formData?.permission_value === "2"
+                            ? "TEAM LEAD"
+                            : formData?.permission_value === "3"
+                            ? "GENERAL"
+                            : ""
+                        }
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            permission_value:
+                              value === "HR"
+                                ? "1"
+                                : value === "TEAM LEAD"
+                                ? "2"
+                                : value === "GENERAL"
+                                ? "3"
+                                : null,
+                          })
+                        }
+                        disabled={permission_value === 2 || permission_value === 3}
+                      >
+                        <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
+                          <SelectValue placeholder="-- Select Type --" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-300 shadow-md">
+                          {[
+                            { label: "HR", value: "1" },
+                            { label: "TEAM LEAD", value: "2" },
+                            { label: "GENERAL", value: "3" },
+                          ].map((type) => (
+                            <SelectItem key={type.value} value={type.label}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -814,48 +862,23 @@ function EmployeeProfile() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-[#1F2328]">
-                        Employment Type
+                        Resignation Date
                       </label>
-                      <Select
+                      <Input
+                        type="date"
                         value={
-                          formData?.permission_value === "1"
-                            ? "HR"
-                            : formData?.permission_value === "2"
-                            ? "TEAM LEAD"
-                            : formData?.permission_value === "3"
-                            ? "GENERAL"
+                          formData?.resign_date
+                            ? formData.resign_date.split("T")[0]
                             : ""
                         }
-                        onValueChange={(value) =>
+                        onChange={(e) =>
                           setFormData({
                             ...formData,
-                            permission_value:
-                              value === "HR"
-                                ? "1"
-                                : value === "TEAM LEAD"
-                                ? "2"
-                                : value === "GENERAL"
-                                ? "3"
-                                : null,
+                            resign_date: e.target.value,
                           })
                         }
                         disabled={permission_value === 2 || permission_value === 3}
-                      >
-                        <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
-                          <SelectValue placeholder="-- Select Type --" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-300 shadow-md">
-                          {[
-                            { label: "HR", value: "1" },
-                            { label: "TEAM LEAD", value: "2" },
-                            { label: "GENERAL", value: "3" },
-                          ].map((type) => (
-                            <SelectItem key={type.value} value={type.label}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      />
                     </div>
                   </div>
                 </div>

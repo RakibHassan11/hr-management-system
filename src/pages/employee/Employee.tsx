@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -61,6 +60,7 @@ interface Employee {
   birthday: string | null;
   annual_leave_balance: number | null;
   sick_leave_balance: number | null;
+  status: string;
 }
 
 export default function Employee() {
@@ -81,6 +81,7 @@ export default function Employee() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [sortOn, setSortOn] = useState("employee_id");
   const [birthMonth, setBirthMonth] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [employeeData, setEmployeeData] = useState({ name: "" });
 
   const today = new Date().toISOString().split("T")[0];
@@ -101,6 +102,13 @@ export default function Employee() {
     { label: "December", value: "12" },
   ];
 
+  // Status options for the status filter
+  const statusOptions = [
+    { label: "All Statuses", value: "all" },
+    { label: "Active", value: "ACTIVE" },
+    { label: "Inactive", value: "INACTIVE" },
+  ];
+
   // Format birthday to DD MMM, YYYY
   const formatBirthday = (dateString: string): string => {
     const date = new Date(dateString);
@@ -114,6 +122,7 @@ export default function Employee() {
     (
       query = employeeData.name,
       birthMonthFilter = birthMonth,
+      statusFilterValue = statusFilter,
       page = currentPage,
       itemsPerPage = perPage,
       sortDir = sortDirection,
@@ -128,6 +137,7 @@ export default function Employee() {
       let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
       if (query) url += `&query=${encodeURIComponent(query)}`;
       if (birthMonthFilter !== "all") url += `&birthMonth=${birthMonthFilter}`;
+      if (statusFilterValue !== "all") url += `&status=${statusFilterValue}`;
 
       setLoading(true);
       api
@@ -158,36 +168,42 @@ export default function Employee() {
           setLoading(false);
         });
     },
-    [API_URL, token, employeeData.name, birthMonth, currentPage, perPage, sortDirection, sortOn]
+    [API_URL, token, employeeData.name, birthMonth, statusFilter, currentPage, perPage, sortDirection, sortOn]
   );
 
-  const debouncedSearch = useDebounce((query: string, birthMonth: string) => {
+  const debouncedSearch = useDebounce((query: string, birthMonth: string, status: string) => {
     setCurrentPage(1);
-    fetchEmployees(query, birthMonth, 1);
+    fetchEmployees(query, birthMonth, status, 1);
   }, 500);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     setEmployeeData({ ...employeeData, name: newName });
-    debouncedSearch(newName, birthMonth);
+    debouncedSearch(newName, birthMonth, statusFilter);
   };
 
   const handleBirthMonthChange = (value: string) => {
     setBirthMonth(value);
     setCurrentPage(1);
-    fetchEmployees(employeeData.name, value, 1);
+    fetchEmployees(employeeData.name, value, statusFilter, 1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+    fetchEmployees(employeeData.name, birthMonth, value, 1);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    fetchEmployees(employeeData.name, birthMonth, page);
+    fetchEmployees(employeeData.name, birthMonth, statusFilter, page);
   };
 
   const handleSortChange = (field: string) => {
     const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc";
     setSortOn(field);
     setSortDirection(newSortDirection);
-    fetchEmployees(employeeData.name, birthMonth, currentPage, perPage, newSortDirection, field);
+    fetchEmployees(employeeData.name, birthMonth, statusFilter, currentPage, perPage, newSortDirection, field);
   };
 
   const handleEditClick = (employee: Employee) => {
@@ -209,7 +225,7 @@ export default function Employee() {
     try {
       const response = await api.put(`${API_URL}/employee/resign-employee`, {
         id: employeeId,
-       "resignation_date": resignationDate,
+        resignation_date: resignationDate,
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -261,7 +277,7 @@ export default function Employee() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     setCurrentPage(1);
-                    fetchEmployees(employeeData.name, birthMonth, 1);
+                    fetchEmployees(employeeData.name, birthMonth, statusFilter, 1);
                   }
                 }}
               />
@@ -280,6 +296,21 @@ export default function Employee() {
                   {monthOptions.map((month) => (
                     <SelectItem key={month.value} value={month.value}>
                       {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="text-gray-400 text-sm">Select status:</label>
+              <Select value={statusFilter} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-[180px] p-2 border border-gray-300 rounded-md bg-white text-[#1F2328] focus:outline-none focus:ring-2 focus:ring-[#F97316]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-300 shadow-md">
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -396,13 +427,15 @@ export default function Employee() {
                               <FaEdit className="mr-2" size={12} />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleResignClick(employee)}
-                              className="text-red-600"
-                            >
-                              <FaSignOutAlt className="mr-2" size={12} />
-                              Resignation
-                            </DropdownMenuItem>
+                            {statusFilter !== "INACTIVE" && (
+                              <DropdownMenuItem
+                                onClick={() => handleResignClick(employee)}
+                                className="text-red-600"
+                              >
+                                <FaSignOutAlt className="mr-2" size={12} />
+                                Resignation
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

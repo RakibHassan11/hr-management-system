@@ -1,3 +1,4 @@
+
 import {
   Table,
   TableBody,
@@ -12,8 +13,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import api from "@/axiosConfig";
-import moment from "moment-timezone";
-import { formatDate } from "@/components/utils/dateHelper";
 import { Input } from "@/components/ui/input";
 
 interface Employee {
@@ -22,12 +21,12 @@ interface Employee {
   name: string;
   check_in_time: string | null;
   check_out_time: string | null;
-  total_punch: string;
   created_at: string;
   comment: string;
 }
 
 export default function DailyAttendance() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,11 +36,34 @@ export default function DailyAttendance() {
 
   const today = new Date().toISOString().split("T")[0];
   const [selectedDate, setSelectedDate] = useState(today);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [sortOn, setSortOn] = useState<string>("name");
   const [query, setQuery] = useState("");
   const [comment, setComment] = useState("All");
   const [exportType, setExportType] = useState("CSV");
+
+  // Function to determine text and background classes for values
+  const getValueStyles = (key: string, value?: string | number | boolean) => {
+    if (key.toLowerCase() === "comment" && typeof value === "string") {
+      switch (value.toLowerCase()) {
+        case "present":
+        case "holiday":
+          return { textClass: "text-green-800", bgClass: "bg-green-100" };
+        case "sick leave":
+        case "annual leave":
+          return { textClass: "text-blue-700", bgClass: "bg-blue-50" };
+        case "weekend":
+          return { textClass: "text-blue-700", bgClass: "bg-blue-50" };
+        case "absent":
+          return { textClass: "text-red-800", bgClass: "bg-red-100" };
+        case "half day":
+        case "late in":
+        case "early out":
+          return { textClass: "text-orange-800", bgClass: "bg-orange-100" };
+        default:
+          return { textClass: "", bgClass: "" };
+      }
+    }
+    return { textClass: "", bgClass: "" };
+  };
 
   const fetchEmployees = useCallback(
     async (commentFilter = comment) => {
@@ -70,13 +92,12 @@ export default function DailyAttendance() {
         setApiResponse(data);
 
         if (Array.isArray(data.data)) {
-          const formattedData = data.data.map((emp: any) => ({
+          const formattedData = data.data.map((emp) => ({
             id: emp.employee_id,
             employee_id: emp.employee_id,
             name: emp.name,
             check_in_time: emp.CheckInTime || null,
             check_out_time: emp.CheckOutTime || null,
-            total_punch: emp.total_punch || "0",
             created_at: selectedDate,
             comment: emp.comment,
           }));
@@ -113,12 +134,12 @@ export default function DailyAttendance() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `attendance_${selectedDate}.${type.toLowerCase()}`;
+      a.download = `attendance_${selectedDate}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message || "Failed to export attendance data");
     }
   };
@@ -127,22 +148,16 @@ export default function DailyAttendance() {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  const handleSortChange = (field: string) => {
-    const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc";
-    setSortOn(field);
-    setSortDirection(newSortDirection);
-  };
-
   const SkeletonLoader = () => {
     return (
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-100">
-            <TableHead className="text-[#1F2328] text-center">Employee ID</TableHead>
-            <TableHead className="text-[#1F2328] text-center">Employee Name</TableHead>
-            <TableHead className="text-[#1F2328] text-center">Check In</TableHead>
-            <TableHead className="text-[#1F2328] text-center">Check Out</TableHead>
-            <TableHead className="text-[#1F2328] text-center">Comment</TableHead>
+            <TableHead className="text-[#1F2328] text-center font-semibold">Employee ID</TableHead>
+            <TableHead className="text-[#1F2328] text-center font-semibold">Employee Name</TableHead>
+            <TableHead className="text-[#1F2328] text-center font-semibold">Check In</TableHead>
+            <TableHead className="text-[#1F2328] text-center font-semibold">Check Out</TableHead>
+            <TableHead className="text-[#1F2328] text-center font-semibold">Comment</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -155,13 +170,13 @@ export default function DailyAttendance() {
                 <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto animate-pulse"></div>
               </TableCell>
               <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
+              </TableCell>
+              <TableCell className="text-center">
                 <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="h-4 bg-gray-200 rounded w-1/3 mx-auto animate-pulse"></div>
               </TableCell>
             </TableRow>
           ))}
@@ -248,6 +263,17 @@ export default function DailyAttendance() {
             >
               <Download size={18} className="text-white hover:text-gray-200" />
             </Button>
+            <Button
+              onClick={() => {
+                setQuery("");
+                setComment("All");
+                setExportType("CSV");
+                setSelectedDate(today);
+              }}
+              className="bg-[#F97316] text-white hover:bg-[#e06615]"
+            >
+              <RefreshCcw size={18} className="text-white hover:text-gray-200" />
+            </Button>
           </div>
         </div>
       </div>
@@ -255,8 +281,9 @@ export default function DailyAttendance() {
         {!loading && !error && (
           <>
             <div className="mb-6 flex justify-start gap-5 items-center">
-              <p>Present: {apiResponse?.summary?.present || 0}</p>
-              <p>Absent: {apiResponse?.summary?.absent || 0}</p>
+            <span className="px-2 py-1 rounded-2xl bg-green-50"><p className="text-green-800 text-center font-semibold">Present: {apiResponse?.summary?.present || 0}</p>
+            </span>
+             <span className="px-2 py-1 rounded-2xl bg-red-50"> <p className="text-red-800 text-center font-semibold">Absent: {apiResponse?.summary?.absent || 0}</p></span>
             </div>
             {employees.length === 0 ? (
               <p className="text-center text-gray-600">
@@ -266,49 +293,44 @@ export default function DailyAttendance() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-100">
-                    <TableHead className="text-[#1F2328] text-center cursor-pointer">
-                      Employee ID
-                    </TableHead>
-                    <TableHead
-                      className="text-[#1F2328] text-center cursor-pointer"
-                      onClick={() => handleSortChange("name")}
-                    >
-                      Employee Name
-                    </TableHead>
-                    <TableHead
-                      className="text-[#1F2328] text-center cursor-pointer"
-                      onClick={() => handleSortChange("check_in_time")}
-                    >
-                      Check In {sortOn === "check_in_time" && (sortDirection === "asc" ? "↑" : "↓")}
-                    </TableHead>
-                    <TableHead
-                      className="text-[#1F2328] text-center cursor-pointer"
-                      onClick={() => handleSortChange("check_out_time")}
-                    >
-                      Check Out {sortOn === "check_out_time" && (sortDirection === "asc" ? "↑" : "↓")}
-                    </TableHead>
-                    <TableHead className="text-[#1F2328] text-center cursor-pointer">
-                      Comment
-                    </TableHead>
+                    <TableHead className="text-[#1F2328] text-center font-semibold">Employee ID</TableHead>
+                    <TableHead className="text-[#1F2328] text-center font-semibold">Employee Name</TableHead>
+                    <TableHead className="text-[#1F2328] text-center font-semibold">Check In</TableHead>
+                    <TableHead className="text-[#1F2328] text-center font-semibold">Check Out</TableHead>
+                    <TableHead className="text-[#1F2328] text-center font-semibold">Comment</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {employees.map((employee, index) => (
                     <TableRow key={index}>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.employee_id}
+                      <TableCell className="text-center font-semibold text-gray-700">
+                        <span className="px-2 py-1 rounded-xl">
+                          {employee.employee_id}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.name}
+                      <TableCell className="text-center font-semibold text-gray-700">
+                        <span className="px-2 py-1 rounded-xl">
+                          {employee.name}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.check_in_time || "--:--"}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className="px-2 py-1 rounded-xl">
+                          {employee.check_in_time || "--:--"}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.check_out_time || "--:--"}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span className="px-2 py-1 rounded-xl">
+                          {employee.check_out_time || "--:--"}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-[#1F2328] text-center">
-                        {employee.comment || "N/A"}
+                      <TableCell className="text-center font-semibold text-slate-700">
+                        <span
+                          className={`px-2 py-1 rounded-xl ${getValueStyles("comment", employee.comment).textClass} ${
+                            getValueStyles("comment", employee.comment).bgClass
+                          }`}
+                        >
+                          {employee.comment || "N/A"}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}

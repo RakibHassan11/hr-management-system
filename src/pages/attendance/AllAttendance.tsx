@@ -150,7 +150,7 @@ export default function AllAttendance() {
       const formattedEndDate = endDate ? moment(endDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
       
       const response = await api.get(
-        `${API_URL}/employee-attendance/attendance-export?query=${query}&startdate=${formattedStartDate}&enddate=${formattedEndDate}&type=${type}`,  
+        `${API_URL}/employee-attendance/attendance-export?query=${query}&startdate=${formattedStartDate}&enddate=${formattedEndDate}&type=${type}&comment=${comment}`, 
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -163,7 +163,7 @@ export default function AllAttendance() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `attendance_${startDate}_to_${endDate}.${type.toLowerCase()}`
+      a.download = `attendance_${startDate}_to_${endDate}`
       document.body.appendChild(a)
       a.click()
       a.remove()

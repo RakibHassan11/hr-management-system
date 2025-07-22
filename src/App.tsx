@@ -36,6 +36,7 @@ import EmployeeAttendanceRecords from "./pages/HR/EmployeeAttendanceRecords.tsx"
 import ChangePassword from "./pages/profile/ChangePassword.tsx";
 import CreateEmployee from "./pages/employee/CreateEmployee.tsx";
 import ForgotPassword from "./pages/ForgotPassword/forgotPassword.tsx";
+import MonthlySummary from "./pages/attendance/MonthlySummary.tsx";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +110,7 @@ const UserRoutes = () => (
     <Route path="view-attendance" element={<ViewAttendance />} />
     <Route path="daily-attendance" element={<DailyAttendance />} />
     <Route path="all-attendance" element={<AllAttendance />} />
+    <Route path="montlhy-summary" element={<MonthlySummary/>}/>
     <Route path="time-update" element={<TimeUpdate />} />
     <Route path="time-update/time-update-list" element={<TimeUpdatesList />} />
     <Route path="view-leave" element={<ViewLeave />} />

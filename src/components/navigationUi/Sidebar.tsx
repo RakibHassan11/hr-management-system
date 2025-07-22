@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react';
+import { CalendarDays, ChevronLeft } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Home,
@@ -13,7 +13,10 @@ import {
   UserRoundSearch,
   CalendarClock,
   PlaneTakeoff,
+  PlaneLanding,
   History,
+  CalendarFold,
+  ClockArrowUp,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import logo from '../../lovable-uploads/orangetoolz-logo-orange.png';
@@ -31,14 +34,20 @@ const menuItems = [
     hideCondition: user => user?.permission_value ? [2, '2', 3, '3'].includes(user.permission_value) : true,
   },
   {
-    icon: CalendarClock,
+    icon: CalendarDays,
     label: 'All Attendance',
     path: '/user/all-attendance',
     hideCondition: user => user?.permission_value ? [2, '2', 3, '3'].includes(user.permission_value) : true,
   },
-  { icon: FileEdit, label: 'Time Update', path: '/user/time-update', hideCondition: () => false },
+  {
+    icon: CalendarFold,
+    label: 'Monthly Summary',
+    path: '/user/montlhy-summary',
+    hideCondition: user => user?.permission_value ? [2, '2', 3, '3'].includes(user.permission_value) : true,
+  },
+  { icon: ClockArrowUp, label: 'Time Update', path: '/user/time-update', hideCondition: () => false },
   { icon: Plane, label: 'My Leave Records', path: '/user/view-leave', hideCondition: () => false },
-  { icon: FileEdit, label: 'Apply for Leave', path: '/user/apply-leave', hideCondition: () => false },
+  { icon: PlaneTakeoff, label: 'Apply for Leave', path: '/user/apply-leave', hideCondition: () => false },
   { icon: Calendar, label: 'Holidays', path: '/user/holidays', hideCondition: () => false },
   { icon: HardDrive, label: 'MAC Address', path: '/user/mac-address', hideCondition: () => false },
   { icon: LinkIcon, label: 'Important Links', path: '/user/important-links', hideCondition: () => false },
@@ -49,7 +58,7 @@ const menuItems = [
     hideCondition: user => user?.permission_value ? [3, '3', 2, '2'].includes(user.permission_value) : true,
   },
   {
-    icon: PlaneTakeoff,
+    icon: PlaneLanding,
     label: 'Leave Records',
     path: '/user/employee/leave-records',
     hideCondition: user => user?.permission_value ? [3, '3', 2, '2'].includes(user.permission_value) : true,
