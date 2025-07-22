@@ -135,7 +135,7 @@ import {
   
     const SkeletonLoader = () => {
       return (
-        <Table className="min-w-full divide-y divide-gray-200">
+        <Table className="min-w-full">
                 <TableHeader className="bg-gray-100 sticky top-0 z-10">
                   {/* Group Titles Row */}
                   <TableRow>
@@ -171,70 +171,20 @@ import {
                     <TableHead className="text-[#1F2328] text-center font-semibold py-2 px-2 border border-gray-300">Joining/Resign</TableHead>
                   </TableRow>
                 </TableHeader>
-
-                <TableBody className="divide-y divide-gray-200">
-                  {summaries.map((summary, index) => (
-                    <TableRow
-                    key={index}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      index === 0 ? "border-b-0" : ""
-                    }`}
-                  >
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.employee_id}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.name}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.calendar_days_in_month}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.present_days}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.weekly_govt_holidays}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.al}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.med_l}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.ml}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.patnity}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.lwp}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.monthly_present}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.absent}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.late_in_early_out}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.late_deduction_day}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.joining_resign_gap}
-                        </TableCell> 
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.total_deduction}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.payable}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <TableBody>
+          {[...Array(10)].map((_, rowIndex) => (
+            <TableRow key={rowIndex} className="border-b border-gray-200 animate-pulse">
+              {[...Array(17)].map((_, cellIndex) => (
+                <TableCell key={cellIndex} className="text-center py-3 px-2 border border-gray-300">
+                  <div className={`h-4 bg-gray-200 rounded mx-auto ${
+                    [0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(cellIndex) ? 'w-10' : 'w-16'
+                  }`}></div>
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+        </Table>
       )
     }
   
@@ -352,10 +302,10 @@ import {
                   No monthly summary data available for the selected period.
                 </p>
               ) : (
-                <Table className="min-w-full divide-y divide-gray-200">
-                <TableHeader className="bg-gray-100 sticky top-0 z-10">
+                <Table className="min-w-full">
+                <TableHeader className="bg-gray-50 sticky top- z-20 ">
                   {/* Group Titles Row */}
-                  <TableRow>
+                  <TableRow className="border-b ">
                     <TableHead className="text-[#1F2328] text-center font-semibold py-2 px-2 border  border-gray-300" rowSpan={2}>ID</TableHead>
                     <TableHead className="text-[#1F2328] text-center font-semibold py-2 px-2 border border-gray-300" rowSpan={2}>Name</TableHead>
                     <TableHead className="text-[#1F2328] text-center font-semibold py-2 px-2 border border-gray-300" rowSpan={2}>Total Days</TableHead>
@@ -389,13 +339,10 @@ import {
                   </TableRow>
                 </TableHeader>
 
-                <TableBody className="divide-y divide-gray-200">
+                <TableBody>
                   {summaries.map((summary, index) => (
-                    <TableRow
+                    <TableRow className="border-gray-300"
                     key={index}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      index === 0 ? "border-0" : ""
-                    }`}
                   >
                         <TableCell className="text-[#1F2328] text-center py-3 px-2">
                           {summary.employee_id}
@@ -419,16 +366,16 @@ import {
                           {summary.med_l}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.ml}
-                        </TableCell>
-                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
                           {summary.patnity}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center py-3 px-2">
-                          {summary.lwp}
+                          {summary.ml}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center py-3 px-2">
                           {summary.monthly_present}
+                        </TableCell>
+                        <TableCell className="text-[#1F2328] text-center py-3 px-2">
+                          {summary.lwp}
                         </TableCell>
                         <TableCell className="text-[#1F2328] text-center py-3 px-2">
                           {summary.absent}
