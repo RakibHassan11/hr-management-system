@@ -81,7 +81,7 @@ export default function Employee() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [sortOn, setSortOn] = useState("employee_id");
   const [birthMonth, setBirthMonth] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [employeeData, setEmployeeData] = useState({ name: "" });
 
   const today = new Date().toISOString().split("T")[0];
@@ -104,7 +104,7 @@ export default function Employee() {
 
   // Status options for the status filter
   const statusOptions = [
-    { label: "All Statuses", value: "all" },
+    { label: "All Statuses", value: "ALL" },
     { label: "Active", value: "ACTIVE" },
     { label: "Inactive", value: "INACTIVE" },
   ];
@@ -137,7 +137,9 @@ export default function Employee() {
       let url = `${API_URL}/employee/list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`;
       if (query) url += `&query=${encodeURIComponent(query)}`;
       if (birthMonthFilter !== "all") url += `&birthMonth=${birthMonthFilter}`;
-      if (statusFilterValue !== "all") url += `&status=${statusFilterValue}`;
+      // Always send status parameter, default to "ALL" if not specified
+      const statusToSend = statusFilterValue === "ALL" || !statusFilterValue ? "ALL" : statusFilterValue;
+      url += `&status=${statusToSend}`;
 
       setLoading(true);
       api
@@ -189,9 +191,11 @@ export default function Employee() {
   };
 
   const handleStatusChange = (value: string) => {
-    setStatusFilter(value);
+    // If "All Statuses" is selected, set statusFilter to "ALL"
+    const newStatus = value === "ALL" ? "ALL" : value;
+    setStatusFilter(newStatus);
     setCurrentPage(1);
-    fetchEmployees(employeeData.name, birthMonth, value, 1);
+    fetchEmployees(employeeData.name, birthMonth, newStatus, 1);
   };
 
   const handlePageChange = (page: number) => {
