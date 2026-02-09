@@ -1,10 +1,8 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import toast from "react-hot-toast"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
+import { useChangePassword } from "@/features/auth/hooks/useChangePassword"
 
 const PasswordInput = ({
   id,
@@ -14,7 +12,7 @@ const PasswordInput = ({
   placeholder,
   showPassword,
   toggleShowPassword
-}) => {
+}: any) => {
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block text-sm font-medium text-[#1F2328]">
@@ -53,12 +51,10 @@ const ChangePassword = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const navigate = useNavigate()
-  const token = useSelector((state: RootState) => state.auth.userToken)
-  const API_URL = import.meta.env.VITE_API_URL
 
-  const handleSubmit = async e => {
+  const { changePassword, loading } = useChangePassword();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (
@@ -89,45 +85,16 @@ const ChangePassword = () => {
       return
     }
 
-    setIsSubmitting(true)
+    const success = await changePassword({
+      old_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword
+    });
 
-    try {
-      const response = await fetch(`${API_URL}/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          old_password: currentPassword,
-          new_password: newPassword,
-          confirm_password: confirmPassword
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to change password")
-      }
-
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-      toast.success("Password has been changed successfully", {
-        position: "top-center",
-        duration: 3000
-      })
-      // navigate("/user/home");
-    } catch (error) {
-      toast.error(
-        error.message || "An error occurred while changing the password",
-        {
-          position: "top-center",
-          duration: 3000
-        }
-      )
-    } finally {
-      setIsSubmitting(false)
+    if (success) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
   }
 
@@ -145,7 +112,7 @@ const ChangePassword = () => {
                 id="current-password"
                 label="Current Password"
                 value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
+                onChange={(e: any) => setCurrentPassword(e.target.value)}
                 placeholder="Enter your current password"
                 showPassword={showCurrentPassword}
                 toggleShowPassword={() =>
@@ -157,7 +124,7 @@ const ChangePassword = () => {
                 id="new-password"
                 label="New Password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={(e: any) => setNewPassword(e.target.value)}
                 placeholder="Enter your new password"
                 showPassword={showNewPassword}
                 toggleShowPassword={() => setShowNewPassword(!showNewPassword)}
@@ -167,7 +134,7 @@ const ChangePassword = () => {
                 id="confirm-password"
                 label="Confirm New Password"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onChange={(e: any) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your new password"
                 showPassword={showConfirmPassword}
                 toggleShowPassword={() =>
@@ -178,9 +145,9 @@ const ChangePassword = () => {
               <Button
                 type="submit"
                 className="w-full mt-4"
-                disabled={isSubmitting}
+                disabled={loading}
               >
-                {isSubmitting ? (
+                {loading ? (
                   <span className="flex items-center justify-center">
                     <svg
                       className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

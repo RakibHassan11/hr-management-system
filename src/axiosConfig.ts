@@ -1,25 +1,36 @@
-// src/axiosConfig.ts
-import axios from "axios";
-import { store } from "./store";
-import { logoutUser, logoutAdmin } from "./store/authSlice";
+import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: { "Content-Type": "application/json" },
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401 || err.response?.status === 403) {
-      const { dispatch } = store;
-      const { isAuthenticatedUser, isAuthenticatedAdmin } = store.getState().auth;
-      if (isAuthenticatedUser) dispatch(logoutUser());
-      else if (isAuthenticatedAdmin) dispatch(logoutAdmin());
-      window.location.href = "/login";
+// Add a request interceptor
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token_user');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return Promise.reject(err);
-  }
+);
+
+// Add a response interceptor
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Handle unauthorized access (e.g., redirect to login)
+            // window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
 );
 
 export default api;

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { authApi } from '@/features/auth/api';
 import { jwtDecode } from 'jwt-decode';
 
 interface Admin {
@@ -55,23 +55,22 @@ export const loginSuperAdmin = createAsyncThunk(
   'auth/loginSuperAdmin',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const endpoint = `${import.meta.env.VITE_API_URL}/auth/super-admin/login`;
-      const response = await axios.post(endpoint, credentials, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (response.data.success) {
-        const { access, refresh, admin } = response.data.data;
-        localStorage.setItem('adminInfo', JSON.stringify(admin));
+      const response = await authApi.loginAdmin(credentials);
+
+      if (response.success) {
+        const { access, refresh, admin } = response.data;
+        if (admin) {
+          localStorage.setItem('adminInfo', JSON.stringify(admin));
+        }
         localStorage.setItem('token', access.token);
         localStorage.setItem('refreshToken', refresh.token);
         return { admin, token: access.token, refreshToken: refresh.token };
       } else {
-        return rejectWithValue(response.data.message || 'Failed to log in');
+        return rejectWithValue(response.message || 'Failed to log in');
       }
     } catch (error: any) {
-      console.error('Login error:', error.response ? error.response.data : error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to log in');
+      console.error('Login error:', error);
+      return rejectWithValue('Failed to log in');
     }
   }
 );
@@ -80,25 +79,22 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/login`,
-        credentials,
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      if (response.data.success) {
-        const { access, refresh, profile: user } = response.data.data;
-        localStorage.setItem('userInfo', JSON.stringify(user));
+      const response = await authApi.loginUser(credentials);
+
+      if (response.success) {
+        const { access, refresh, profile: user } = response.data;
+        if (user) {
+          localStorage.setItem('userInfo', JSON.stringify(user));
+        }
         localStorage.setItem('token_user', access.token);
         localStorage.setItem('refreshToken_user', refresh.token);
         return { user, token: access.token, refreshToken: refresh.token };
       } else {
-        return rejectWithValue(response.data.message || 'Failed to log in');
+        return rejectWithValue(response.message || 'Failed to log in');
       }
     } catch (error: any) {
-      console.error('Login error:', error.response ? error.response.data : error);
-      return rejectWithValue(
-        error.response?.data?.message || 'Failed to log in'
-      );
+      console.error('Login error:', error);
+      return rejectWithValue('Failed to log in');
     }
   }
 );
@@ -113,14 +109,10 @@ export const refreshAccessToken = createAsyncThunk(
         return rejectWithValue('No refresh token available');
       }
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
-        { refreshToken },
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      const response = await authApi.refreshToken();
 
-      if (response.data.success) {
-        const { access, refresh } = response.data.data;
+      if (response.success) {
+        const { access, refresh } = response.data;
         if (isAdmin) {
           localStorage.setItem('token', access.token);
           localStorage.setItem('refreshToken', refresh.token);
@@ -132,11 +124,11 @@ export const refreshAccessToken = createAsyncThunk(
         }
         return { token: access.token, refreshToken: refresh.token };
       } else {
-        return rejectWithValue(response.data.message || 'Failed to refresh token');
+        return rejectWithValue(response.message || 'Failed to refresh token');
       }
     } catch (error: any) {
-      console.error('Refresh token error:', error.response ? error.response.data : error);
-      return rejectWithValue(error.response?.data?.message || 'Failed to refresh token');
+      console.error('Refresh token error:', error);
+      return rejectWithValue('Failed to refresh token');
     }
   }
 );
