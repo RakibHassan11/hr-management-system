@@ -1,29 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '@/features/auth/api';
 import { jwtDecode } from 'jwt-decode';
 
-interface Admin {
-  id: number;
-  full_name: string;
-  email: string;
-}
-
 interface UserInfo {
+  id?: number;
   username: string;
   email: string;
   password?: string;
-  permission_value?: number;
+  role?: 'superadmin' | 'teamlead' | 'hr' | 'user';
   designation?: string;
+  name?: string;
+  full_name?: string;
+  department?: string;
 }
 
 interface AuthState {
-  admin: Admin | null;
-  adminToken: string | null;
-  adminRefreshToken: string | null;
-  isAuthenticatedAdmin: boolean;
-  loadingAdmin: boolean;
-  errorAdmin: string | null;
   user: UserInfo | null;
   userToken: string | null;
   userRefreshToken: string | null;
@@ -33,14 +24,6 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  admin: localStorage.getItem('adminInfo')
-    ? JSON.parse(localStorage.getItem('adminInfo')!)
-    : null,
-  adminToken: localStorage.getItem('token') || null,
-  adminRefreshToken: localStorage.getItem('refreshToken') || null,
-  isAuthenticatedAdmin: !!localStorage.getItem('token'),
-  loadingAdmin: false,
-  errorAdmin: null,
   user: localStorage.getItem('userInfo')
     ? JSON.parse(localStorage.getItem('userInfo')!)
     : null,
@@ -51,36 +34,11 @@ const initialState: AuthState = {
   errorUser: null,
 };
 
-export const loginSuperAdmin = createAsyncThunk(
-  'auth/loginSuperAdmin',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
-    try {
-      const response = await authApi.loginAdmin(credentials);
-
-      if (response.success) {
-        const { access, refresh, admin } = response.data;
-        if (admin) {
-          localStorage.setItem('adminInfo', JSON.stringify(admin));
-        }
-        localStorage.setItem('token', access.token);
-        localStorage.setItem('refreshToken', refresh.token);
-        return { admin, token: access.token, refreshToken: refresh.token };
-      } else {
-        return rejectWithValue(response.message || 'Failed to log in');
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      return rejectWithValue('Failed to log in');
-    }
-  }
-);
-
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (credentials: { email: string; password?: string; mockRoles?: string }, { rejectWithValue }) => {
     try {
       const response = await authApi.loginUser(credentials);
-
       if (response.success) {
         const { access, refresh, profile: user } = response.data;
         if (user) {
@@ -101,10 +59,10 @@ export const loginUser = createAsyncThunk(
 
 export const refreshAccessToken = createAsyncThunk(
   'auth/refreshAccessToken',
-  async ({ isAdmin }: { isAdmin: boolean }, { rejectWithValue, getState, dispatch }) => {
+  async (_, { rejectWithValue, getState, dispatch }) => {
     try {
       const state = getState() as { auth: AuthState };
-      const refreshToken = isAdmin ? state.auth.adminRefreshToken : state.auth.userRefreshToken;
+      const refreshToken = state.auth.userRefreshToken;
       if (!refreshToken) {
         return rejectWithValue('No refresh token available');
       }
@@ -113,15 +71,9 @@ export const refreshAccessToken = createAsyncThunk(
 
       if (response.success) {
         const { access, refresh } = response.data;
-        if (isAdmin) {
-          localStorage.setItem('token', access.token);
-          localStorage.setItem('refreshToken', refresh.token);
-          dispatch(setAdminCredentials({ adminToken: access.token, adminRefreshToken: refresh.token }));
-        } else {
-          localStorage.setItem('token_user', access.token);
-          localStorage.setItem('refreshToken_user', refresh.token);
-          dispatch(setUserCredentials({ userToken: access.token, userRefreshToken: refresh.token }));
-        }
+        localStorage.setItem('token_user', access.token);
+        localStorage.setItem('refreshToken_user', refresh.token);
+        dispatch(setUserCredentials({ userToken: access.token, userRefreshToken: refresh.token }));
         return { token: access.token, refreshToken: refresh.token };
       } else {
         return rejectWithValue(response.message || 'Failed to refresh token');
@@ -152,19 +104,18 @@ const isTokenValid = (token: string | null): boolean => {
 
 export const validateAuthState = createAsyncThunk(
   'auth/validateAuthState',
-  async ({ isAdmin }: { isAdmin: boolean }, { dispatch, getState }) => {
+  async (_, { dispatch, getState }) => {
     const state = getState() as { auth: AuthState };
-    const token = isAdmin ? state.auth.adminToken : state.auth.userToken;
-    const refreshToken = isAdmin ? state.auth.adminRefreshToken : state.auth.userRefreshToken;
+    const token = state.auth.userToken;
+    const refreshToken = state.auth.userRefreshToken;
 
     if (!token || !isTokenValid(token)) {
       if (refreshToken) {
-        await dispatch(refreshAccessToken({ isAdmin }));
+        await dispatch(refreshAccessToken());
         const newState = getState() as { auth: AuthState };
-        const newToken = isAdmin ? newState.auth.adminToken : newState.auth.userToken;
-        return !!newToken;
+        return !!newState.auth.userToken;
       }
-      dispatch(isAdmin ? logoutAdmin() : logoutUser());
+      dispatch(logoutUser());
       return false;
     }
     return true;
@@ -175,28 +126,11 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAdminCredentials: (state, action) => {
-      state.admin = action.payload.admin || null;
-      state.adminToken = action.payload.adminToken || null;
-      state.adminRefreshToken = action.payload.adminRefreshToken || null;
-      state.isAuthenticatedAdmin = !!action.payload.adminToken;
-    },
     setUserCredentials: (state, action) => {
       state.user = action.payload.user || null;
       state.userToken = action.payload.userToken || null;
       state.userRefreshToken = action.payload.userRefreshToken || null;
       state.isAuthenticatedUser = !!action.payload.userToken;
-    },
-    logoutAdmin: (state) => {
-      state.admin = null;
-      state.adminToken = null;
-      state.adminRefreshToken = null;
-      state.isAuthenticatedAdmin = false;
-      state.loadingAdmin = false;
-      state.errorAdmin = null;
-      localStorage.removeItem('adminInfo');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
     },
     logoutUser: (state) => {
       state.user = null;
@@ -212,29 +146,13 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loginSuperAdmin.pending, (state) => {
-        state.loadingAdmin = true;
-        state.errorAdmin = null;
-      })
-      .addCase(loginSuperAdmin.fulfilled, (state, action) => {
-        state.loadingAdmin = false;
-        state.admin = action.payload.admin;
-        state.adminToken = action.payload.token;
-        state.adminRefreshToken = action.payload.refreshToken;
-        state.isAuthenticatedAdmin = true;
-        state.errorAdmin = null;
-      })
-      .addCase(loginSuperAdmin.rejected, (state, action) => {
-        state.loadingAdmin = false;
-        state.errorAdmin = action.payload as string;
-      })
       .addCase(loginUser.pending, (state) => {
         state.loadingUser = true;
         state.errorUser = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loadingUser = false;
-        state.user = action.payload.user;
+        state.user = action.payload.user as UserInfo;
         state.userToken = action.payload.token;
         state.userRefreshToken = action.payload.refreshToken;
         state.isAuthenticatedUser = true;
@@ -244,58 +162,30 @@ const authSlice = createSlice({
         state.loadingUser = false;
         state.errorUser = action.payload as string;
       })
-      .addCase(refreshAccessToken.pending, (state, action) => {
-        const isAdmin = action.meta.arg.isAdmin;
-        if (isAdmin) {
-          state.loadingAdmin = true;
-          state.errorAdmin = null;
-        } else {
-          state.loadingUser = true;
-          state.errorUser = null;
-        }
+      .addCase(refreshAccessToken.pending, (state) => {
+        state.loadingUser = true;
+        state.errorUser = null;
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
-        const isAdmin = action.meta.arg.isAdmin;
-        if (isAdmin) {
-          state.loadingAdmin = false;
-          state.adminToken = action.payload.token;
-          state.adminRefreshToken = action.payload.refreshToken;
-          state.isAuthenticatedAdmin = true;
-          state.errorAdmin = null;
-        } else {
-          state.loadingUser = false;
-          state.userToken = action.payload.token;
-          state.userRefreshToken = action.payload.refreshToken;
-          state.isAuthenticatedUser = true;
-          state.errorUser = null;
-        }
+        state.loadingUser = false;
+        state.userToken = action.payload.token;
+        state.userRefreshToken = action.payload.refreshToken;
+        state.isAuthenticatedUser = true;
+        state.errorUser = null;
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
-        const isAdmin = action.meta.arg.isAdmin;
-        if (isAdmin) {
-          state.loadingAdmin = false;
-          state.errorAdmin = action.payload as string;
-          state.admin = null;
-          state.adminToken = null;
-          state.adminRefreshToken = null;
-          state.isAuthenticatedAdmin = false;
-          localStorage.removeItem('adminInfo');
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-        } else {
-          state.loadingUser = false;
-          state.errorUser = action.payload as string;
-          state.user = null;
-          state.userToken = null;
-          state.userRefreshToken = null;
-          state.isAuthenticatedUser = false;
-          localStorage.removeItem('userInfo');
-          localStorage.removeItem('token_user');
-          localStorage.removeItem('refreshToken_user');
-        }
+        state.loadingUser = false;
+        state.errorUser = action.payload as string;
+        state.user = null;
+        state.userToken = null;
+        state.userRefreshToken = null;
+        state.isAuthenticatedUser = false;
+        localStorage.removeItem('userInfo');
+        localStorage.removeItem('token_user');
+        localStorage.removeItem('refreshToken_user');
       });
   },
 });
 
-export const { setAdminCredentials, setUserCredentials, logoutAdmin, logoutUser } = authSlice.actions;
+export const { setUserCredentials, logoutUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -18,8 +18,8 @@ export default function ImportantLinks() {
       url: "https://www.charteredlifebd.com/GID_PORTALS/ClaimStatus.aspx"
     },
     {
-      description: "OrangeToolz",
-      url: "https://orangetoolz.com/"
+      description: "People Flow",
+      url: "https://peopleflow.com/"
     },
     {
       description: "Aamra Networks Limited MRTG",

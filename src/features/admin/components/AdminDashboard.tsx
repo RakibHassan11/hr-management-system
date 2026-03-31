@@ -1,7 +1,7 @@
 // src/components/AdminHome.tsx
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import { RootState } from '@/app/store';
 import ama from '../../../assets/pet.jpg';
 import {
   Table,
@@ -16,9 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AdminHome = () => {
-  // Retrieve admin info from Redux state
   const auth = useSelector((state: RootState) => state.auth);
-  const admin = auth?.admin;
+  const admin = auth?.user;
 
   return (
     <div className="animate-fadeIn p-6 bg-white text-[#1F2328] min-h-screen">

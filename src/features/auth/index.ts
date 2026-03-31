@@ -2,7 +2,6 @@
 
 // Components
 export { default as LoginPage } from './components/LoginPage';
-export { default as SuperAdminLoginPage } from './components/SuperAdminLoginPage';
 export { default as ForgotPasswordPage } from './components/ForgotPasswordPage';
 
 // Hooks
@@ -10,7 +9,7 @@ export { useAuth } from './hooks/useAuth';
 export { useChangePassword } from './hooks/useChangePassword';
 
 // Types
-export type { User, Admin, AuthResponse, ChangePasswordRequest } from './types';
+export type { User, AuthResponse, ChangePasswordRequest } from './types';
 
 // API (if needed directly)
 // export * from './api';

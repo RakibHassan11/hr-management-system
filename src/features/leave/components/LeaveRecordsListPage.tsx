@@ -6,48 +6,13 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import { Fragment, useEffect, useState } from "react"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
+import { Fragment } from "react"
 import { formatDate, formatText } from "@/components/utils/dateHelper"
 
+import { useLeaveRecords } from "@/features/leave/hooks/useLeaveRecords"
+
 export default function LeaveRecords() {
-  const [records, setRecords] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const API_URL = import.meta.env.VITE_API_URL
-  const token = useSelector((state: RootState) => state.auth.userToken)
-
-  const fetchRecords = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const response = await fetch(`${API_URL}/employee/leave-record-list`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch leave records")
-      }
-
-      const data = await response.json()
-      setRecords(data.data || [])
-    } catch (err) {
-      setError(err.message)
-      setRecords([])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchRecords()
-  }, [API_URL, token])
+  const { leaveRecords: records, loading: isLoading, error } = useLeaveRecords();
 
   if (isLoading) {
     return (

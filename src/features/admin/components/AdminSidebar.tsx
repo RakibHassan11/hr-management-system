@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Building2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/orangetoolz-logo-orange.png';
+import logo from '@/assets/people-flow-logo.png';
 
 const menuItems = [
   { icon: Home, label: 'Home', path: '/admin/home' },

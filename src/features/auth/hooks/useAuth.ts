@@ -1,47 +1,35 @@
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '@/store/store';
-import { loginUser, loginSuperAdmin, logoutUser, logoutAdmin } from '@/store/authSlice';
+import type { RootState, AppDispatch } from '@/app/store';
+import { loginUser, logoutUser } from '@/store/authSlice';
+import { authApi } from '../api';
 
 export const useAuth = () => {
     const dispatch = useDispatch<AppDispatch>();
     const {
         user,
-        admin,
-        isAuthenticatedUser,
-        isAuthenticatedAdmin,
-        loadingUser,
-        loadingAdmin,
-        errorUser,
-        errorAdmin
+        isAuthenticatedUser: isAuthenticated,
+        loadingUser: isLoading,
+        errorUser: error
     } = useSelector((state: RootState) => state.auth);
 
-    const loginAsUser = (credentials: { email: string; password: string }) => {
+    const login = (credentials: { email: string; password?: string }) => {
         return dispatch(loginUser(credentials));
     };
 
-    const loginAsAdmin = (credentials: { email: string; password: string }) => {
-        return dispatch(loginSuperAdmin(credentials));
-    };
-
-    const logoutCurrentUser = () => {
-        dispatch(logoutUser());
-    };
-
-    const logoutCurrentAdmin = () => {
-        dispatch(logoutAdmin());
+    const logout = async () => {
+        try {
+            await authApi.logout();
+        } finally {
+            dispatch(logoutUser());
+        }
     };
 
     return {
         user,
-        admin,
-        isAuthenticated: isAuthenticatedUser || isAuthenticatedAdmin,
-        isAuthenticatedUser,
-        isAuthenticatedAdmin,
-        isLoading: loadingUser || loadingAdmin,
-        error: errorUser || errorAdmin,
-        loginAsUser,
-        loginAsAdmin,
-        logoutUser: logoutCurrentUser,
-        logoutAdmin: logoutCurrentAdmin,
+        isAuthenticated,
+        isLoading,
+        error,
+        login,
+        logout,
     };
 };

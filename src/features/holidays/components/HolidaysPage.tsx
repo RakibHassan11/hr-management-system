@@ -8,7 +8,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { useSelector } from "react-redux"
-import { RootState } from "../store"
+import { RootState } from "@/app/store"
 import toast from "react-hot-toast"
 import { Trash2 } from "lucide-react"
 import { formatDate } from "@/components/utils/dateHelper"
@@ -30,9 +30,8 @@ export default function Holidays() {
   const [isSaving, setIsSaving] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const recordsPerPage = 20
-  const { permission_value } = useSelector(
-    (state: RootState) => state.auth.user
-  )
+  const user = useSelector((state: RootState) => state.auth.user);
+  const role = user?.role;
 
   useEffect(() => {
     fetchHolidays()
@@ -93,7 +92,7 @@ export default function Holidays() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-3xl font-bold">Holidays</h1>
 
-          {permission_value == 1 && (
+          {role === 'hr' && (
             <button
               className="bg-[#F97316] text-white px-4 py-2 rounded-md shadow-md hover:bg-[#EA580C]"
               onClick={toggleModal}
@@ -122,7 +121,7 @@ export default function Holidays() {
                 <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                   Total Days
                 </TableHead>
-                {permission_value == 1 && (
+                {role === 'hr' && (
                   <TableHead className="w-1/6 py-4 px-6 text-left font-semibold text-[#1F2328]">
                     Action
                   </TableHead>
@@ -155,7 +154,7 @@ export default function Holidays() {
                         {holiday.total_days ?? "N/A"}
                       </span>
                     </TableCell>
-                    {permission_value == 1 && (
+                    {role === 'hr' && (
                       <TableCell className="w-1/6 py-3 px-6 text-[#1F2328]">
                         <button
                           onClick={() => handleDeleteHoliday(holiday.id)}
@@ -171,7 +170,7 @@ export default function Holidays() {
               ) : loading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={permission_value == 1 ? 6 : 5}
+                    colSpan={role === 'hr' ? 6 : 5}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     Loading...
@@ -180,7 +179,7 @@ export default function Holidays() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={permission_value == 1 ? 6 : 5}
+                    colSpan={role === 'hr' ? 6 : 5}
                     className="py-6 px-6 text-center text-[#1F2328] font-medium"
                   >
                     No holidays available

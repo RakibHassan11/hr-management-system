@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <UserNav />
         </header>
         {/* Scrollable Main Content */}
-        <main className="pt-20 px-6 pb-6 h-screen overflow-y-auto">
+        <main className="pt-20 px-6 pb-6 h-[calc(100vh)] overflow-y-auto custom-scrollbar">
           {children}
         </main>
       </div>

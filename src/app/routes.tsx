@@ -1,11 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from '@/components/navigationUI/PrivateRoute';
 import { Layout } from '@/components/navigationUI/Layout';
-import { AdminLayout, AdminDashboard, AdminEmployee } from '@/features/admin';
+import { AdminEmployee } from '@/features/admin';
 
 // Auth Pages
 import Login from '@/pages/auth/Login';
-import SuperAdminLogin from '@/pages/auth/SuperAdminLogin';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 
 // User Pages
@@ -37,9 +36,6 @@ import TimeUpdatesList from '@/pages/time-update/TimeUpdatesList';
 import Employee from '@/pages/employee/Employee';
 import CreateEmployee from '@/pages/employee/CreateEmployee';
 import EmployeeProfile from '@/pages/employee/EmployeeProfile';
-// HR Pages - TODO: Create these pages later
-// import EmployeeLeaveRecords from '@/pages/hr/EmployeeLeaveRecords.tsx';
-// import EmployeeAttendanceRecords from '@/pages/hr/EmployeeAttendanceRecords.tsx';
 
 // Shared Pages
 import Holidays from '@/pages/shared/Holidays';
@@ -70,30 +66,18 @@ const UserRoutes = () => (
         <Route path="mac-address" element={<MacAddress />} />
         <Route path="important-links" element={<ImportantLinks />} />
         <Route path="change-password" element={<ChangePassword />} />
+        
+        {/* Universal Employee routes */}
         <Route path="employee" element={<Employee />} />
         <Route path="employee/create" element={<CreateEmployee />} />
         <Route path="employee/profile" element={<EmployeeProfile />} />
-        {/* HR Pages - TODO: Uncomment when created */}
-        {/* <Route path="employee/leave-records" element={<EmployeeLeaveRecords />} /> */}
-        {/* <Route
-            path="employee/attendance-records"
-            element={<EmployeeAttendanceRecords />}
-        /> */}
+        
+        {/* Admin only embedded pages */}
+        <Route path="admin-employee" element={<AdminEmployee />} />
+
         <Route path="team" element={<Team />} />
         <Route path="team/leave-records" element={<TeamLeaveRecords />} />
         <Route path="team/attendance-records" element={<TeamAttendanceRecords />} />
-        <Route path="*" element={<NotFound />} />
-    </Routes>
-);
-
-/**
- * Admin Routes
- * Routes accessible to super admin users
- */
-const AdminRoutes = () => (
-    <Routes>
-        <Route path="AdminHome" element={<AdminDashboard />} />
-        <Route path="employee" element={<AdminEmployee />} />
         <Route path="*" element={<NotFound />} />
     </Routes>
 );
@@ -106,7 +90,7 @@ export function AppRoutes() {
     return (
         <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<PrivateRoute element={<Login />} />} />
             <Route
                 path="/login"
                 element={<PrivateRoute element={<Login />} />}
@@ -114,10 +98,6 @@ export function AppRoutes() {
             <Route
                 path="/forgot-password"
                 element={<ForgotPassword />}
-            />
-            <Route
-                path="/adminlogin"
-                element={<PrivateRoute element={<SuperAdminLogin />} />}
             />
 
             {/* User Routes */}
@@ -130,24 +110,6 @@ export function AppRoutes() {
                             <Layout>
                                 <UserRoutes />
                             </Layout>
-                        }
-                    />
-                }
-            />
-
-            {/* Admin Routes */}
-            <Route
-                path="/admin"
-                element={<Navigate to="/admin/AdminHome" />}
-            />
-            <Route
-                path="/admin/*"
-                element={
-                    <PrivateRoute
-                        element={
-                            <AdminLayout>
-                                <AdminRoutes />
-                            </AdminLayout>
                         }
                     />
                 }

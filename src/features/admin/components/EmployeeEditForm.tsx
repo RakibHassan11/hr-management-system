@@ -162,17 +162,19 @@ export default function EmployeeEditForm({
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Position</label>
+                <label className="text-sm font-medium">Role</label>
                 <Select
-                  value={profile.permission_value?.toString() || '2'}
-                  onValueChange={(val) => setProfile({ ...profile, permission_value: val })}
+                  value={profile.role || 'user'}
+                  onValueChange={(val) => setProfile({ ...profile, role: val as any })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">HR</SelectItem>
-                    <SelectItem value="2">TeamLead</SelectItem>
+                    <SelectItem value="hr">HR</SelectItem>
+                    <SelectItem value="teamlead">Team Lead</SelectItem>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="superadmin">Superadmin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

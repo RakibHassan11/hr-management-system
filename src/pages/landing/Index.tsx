@@ -69,7 +69,7 @@ export default function Index() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-mediumtext-[#1F2328]">Email</label>
-                  <Input defaultValue="rakibul@orangetoolz.com" />
+                  <Input defaultValue="rakibul@peopleflow.com" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[#1F2328]">Phone</label>

@@ -53,7 +53,7 @@ export interface EmployeeProfile extends Employee {
     joining_date?: string;
     confirmed?: number;
     confirmation_date?: string;
-    permission_value?: string | null;
+    role?: 'superadmin' | 'teamlead' | 'hr' | 'user';
     gender?: string;
     religion?: string;
     official_birthday?: string;

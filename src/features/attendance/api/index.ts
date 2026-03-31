@@ -74,5 +74,77 @@ export const attendanceApi = {
                 resolve({ success: true, data: mockTimeUpdateRequests });
             }, DELAY_MS);
         });
+    },
+
+    getMyAttendance: async (params: { startdate?: string; enddate?: string; page?: number; perPage?: number }): Promise<any> => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    success: true,
+                    data: {
+                        attendanceRecords: mockDailyAttendance.map(r => ({
+                           ...r,
+                           check_in_time: r.check_in_time || "2024-03-20T04:00:00.000Z",
+                           check_out_time: r.check_out_time || "2024-03-20T13:00:00.000Z",
+                           total_punch: "2",
+                           created_at: r.date
+                        })),
+                        statistics: {
+                            present: 20,
+                            absent: 2,
+                            halfDay: 1,
+                            lateIn: 3,
+                            earlyOut: 1,
+                            sickLeave: 1,
+                            annualLeave: 2,
+                            holiday: 4
+                        }
+                    },
+                    extraData: {
+                        total: 30,
+                        perPage: params.perPage || 30,
+                        currentPage: params.page || 1,
+                        totalPages: 1
+                    }
+                });
+            }, DELAY_MS);
+        });
+    },
+
+    getAllAttendance: async (params: { 
+        page?: number; 
+        perPage?: number; 
+        sortDirection?: string; 
+        sortOn?: string; 
+        query?: string; 
+        startdate?: string; 
+        enddate?: string; 
+        comment?: string 
+    }): Promise<any> => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                let filtered = [...mockDailyAttendance];
+                if (params.query) {
+                    filtered = filtered.filter(f => f.name.toLowerCase().includes(params.query!.toLowerCase()));
+                }
+                
+                resolve({
+                    success: true,
+                    data: filtered.map(r => ({
+                        ...r,
+                        check_in_time: r.check_in_time || "2024-03-20T04:15:00.000Z",
+                        check_out_time: r.check_out_time || "2024-03-20T13:05:00.000Z",
+                        total_punch: "2",
+                        created_at: r.date
+                    })),
+                    extraData: {
+                        total: filtered.length,
+                        perPage: params.perPage || 30,
+                        currentPage: params.page || 1,
+                        totalPages: Math.ceil(filtered.length / (params.perPage || 30))
+                    }
+                });
+            }, DELAY_MS);
+        });
     }
 };

@@ -386,28 +386,11 @@ function Profile() {
                       Employment Type
                     </label>
                     <Select
-                      value={
-                        // Assuming permission_value 1=HR, 2=TL, 3=GEN. 
-                        // Mapping strings to match Select items
-                        formData?.permission_value == "1"
-                          ? "HR"
-                          : formData?.permission_value == "2"
-                            ? "TEAM LEAD"
-                            : formData?.permission_value == "3"
-                              ? "GENERAL"
-                              : ""
-                      }
+                      value={formData?.role || ""}
                       onValueChange={value =>
                         setFormData({
                           ...formData,
-                          permission_value:
-                            value === "HR"
-                              ? "1"
-                              : value === "TEAM LEAD"
-                                ? "2"
-                                : value === "GENERAL"
-                                  ? "3"
-                                  : null
+                          role: value as 'superadmin' | 'teamlead' | 'hr' | 'user' | null
                         })
                       }
                       disabled
@@ -417,11 +400,11 @@ function Profile() {
                       </SelectTrigger>
                       <SelectContent className="bg-white border-gray-300 shadow-md">
                         {[
-                          { label: "HR", value: 1 },
-                          { label: "TEAM LEAD", value: 2 },
-                          { label: "GENERAL", value: 3 }
+                          { label: "HR", value: "hr" },
+                          { label: "TEAM LEAD", value: "teamlead" },
+                          { label: "USER", value: "user" }
                         ].map(type => (
-                          <SelectItem key={type.value} value={type.label}>
+                          <SelectItem key={type.value} value={type.value}>
                             {type.label}
                           </SelectItem>
                         ))}

@@ -39,7 +39,7 @@ export interface Employee {
     department?: string;
     sub_department?: string;
     unit?: string;
-    permission_value?: string | number | null; // Handle mismatch
+    role?: 'superadmin' | 'teamlead' | 'hr' | 'user';
     username?: string;
     default_shift?: string;
     // Social

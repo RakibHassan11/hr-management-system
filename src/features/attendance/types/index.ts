@@ -3,7 +3,7 @@ export interface AttendanceRecord {
     in: string; // HH:mm
     out: string; // HH:mm
     duration?: string; // HH:mm
-    status?: 'present' | 'absent' | 'late' | 'early_out' | 'weekend';
+    status?: 'present' | 'absent' | 'late' | 'early_out' | 'weekend' | 'sick' | 'annual' | 'casual' | 'holiday';
 }
 
 export interface AttendanceStatistics {
@@ -60,6 +60,8 @@ export interface TimeUpdateRequest {
 }
 
 export interface CreateTimeUpdateRequest {
+    time: any;
+    description: any;
     date: string;
     type: 'CHECK_IN' | 'CHECK_OUT';
     requested_time: string;

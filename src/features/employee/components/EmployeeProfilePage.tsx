@@ -32,7 +32,7 @@ interface FormData {
   confirmed?: number;
   confirmation_date?: string;
 
-  permission_value?: string | null;
+  role?: 'superadmin' | 'teamlead' | 'hr' | 'user' | null;
   gender?: string;
   religion?: string;
   birthday?: string;
@@ -135,11 +135,11 @@ function EmployeeProfile() {
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = useSelector((state: RootState) => state.auth.userToken);
-  const { permission_value } = useSelector(
+  const { role } = useSelector(
     (state: RootState) => state.auth.user || {}
-  ) as { permission_value?: number };
+  ) as { role?: string };
   const [activeTab, setActiveTab] = useState("basic");
-  const list_type = "TEAM LEAD";
+  const list_type = "teamLead";
 
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
@@ -179,7 +179,7 @@ function EmployeeProfile() {
           api.get(`${API_URL}/sub-departments/list`, config),
           api.get(`${API_URL}/units/list`, config),
           api.get(
-            `${API_URL}/employee/employee-list-by-role?permission_value=${list_type}&perPage=20`,
+            `${API_URL}/employee/employee-list-by-role?role=${list_type}&perPage=20`,
             config
           ),
           api.get(
@@ -319,9 +319,10 @@ function EmployeeProfile() {
       }
     });
 
+    let toastId;
     try {
       setUpdating(true);
-      const toastId = toast.loading("Saving profile...");
+      toastId = toast.loading("Saving profile...");
       const response = await api.put(
         `${API_URL}/employee/update-profile-by-id`,
         req_body,
@@ -376,7 +377,7 @@ function EmployeeProfile() {
   };
 
   const handleFocus = (field: keyof LeaveFormData) => {
-    if (permission_value === 2 || permission_value === 3) return;
+    if (role === 'teamlead' || role === 'user') return;
     const currentValue = leaveFormData[field] || "0";
     setInputValues((prev) => ({ ...prev, [field]: currentValue }));
     setInputValidity((prev) => ({ ...prev, [field]: true }));
@@ -482,8 +483,8 @@ function EmployeeProfile() {
   // Determine if Save Leave button should be disabled
   const isSaveLeaveDisabled =
     updating ||
-    permission_value === 2 ||
-    permission_value === 3 ||
+    role === 'teamLead' ||
+    role === 'user' ||
     (!editedFields.annual_leave_balance && !editedFields.sick_leave_balance) ||
     (editedFields.annual_leave_balance && !inputValidity.annual_leave_balance) ||
     (editedFields.sick_leave_balance && !inputValidity.sick_leave_balance);
@@ -667,40 +668,25 @@ function EmployeeProfile() {
                         Employment Type
                       </label>
                       <Select
-                        value={
-                          formData?.permission_value === "1"
-                            ? "HR"
-                            : formData?.permission_value === "2"
-                              ? "TEAM LEAD"
-                              : formData?.permission_value === "3"
-                                ? "GENERAL"
-                                : ""
-                        }
+                        value={formData?.role || ""}
                         onValueChange={(value) =>
                           setFormData({
                             ...formData,
-                            permission_value:
-                              value === "HR"
-                                ? "1"
-                                : value === "TEAM LEAD"
-                                  ? "2"
-                                  : value === "GENERAL"
-                                    ? "3"
-                                    : null,
+                            role: value as 'hr' | 'teamlead' | 'user',
                           })
                         }
-                        disabled={permission_value === 2 || permission_value === 3}
+                        disabled={role === 'teamlead' || role === 'user'}
                       >
                         <SelectTrigger className="w-full border-gray-300 bg-gray-50 hover:bg-gray-100">
                           <SelectValue placeholder="-- Select Type --" />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-gray-300 shadow-md">
                           {[
-                            { label: "HR", value: "1" },
-                            { label: "TEAM LEAD", value: "2" },
-                            { label: "GENERAL", value: "3" },
+                            { label: "HR", value: "hr" },
+                            { label: "Team Lead", value: "teamlead" },
+                            { label: "User", value: "user" },
                           ].map((type) => (
-                            <SelectItem key={type.value} value={type.label}>
+                            <SelectItem key={type.value} value={type.value}>
                               {type.label}
                             </SelectItem>
                           ))}
@@ -777,7 +763,7 @@ function EmployeeProfile() {
                             line_manager_id: value || null,
                           }))
                         }
-                        disabled={permission_value === 2 || permission_value === 3}
+                        disabled={role === 'teamlead' || role === 'user'}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a Line Manager" />
@@ -877,7 +863,7 @@ function EmployeeProfile() {
                             resign_date: e.target.value,
                           })
                         }
-                        disabled={permission_value === 2 || permission_value === 3}
+                        disabled={role === 'teamlead' || role === 'user'}
                       />
                     </div>
                   </div>
@@ -1306,7 +1292,7 @@ function EmployeeProfile() {
                       }
                       onFocus={() => handleFocus("annual_leave_balance")}
                       placeholder={leaveFormData.annual_leave_balance || "0"}
-                      disabled={permission_value === 2 || permission_value === 3}
+                      disabled={role === 'teamlead' || role === 'user'}
                       className={
                         !inputValidity.annual_leave_balance &&
                           inputValues.annual_leave_balance !== ""
@@ -1327,7 +1313,7 @@ function EmployeeProfile() {
                       }
                       onFocus={() => handleFocus("sick_leave_balance")}
                       placeholder={leaveFormData.sick_leave_balance || "0"}
-                      disabled={permission_value === 2 || permission_value === 3}
+                      disabled={role === 'teamlead' || role === 'user'}
                       className={
                         !inputValidity.sick_leave_balance &&
                           inputValues.sick_leave_balance !== ""

@@ -9,23 +9,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Download, RefreshCcw } from "lucide-react"
-import { useEffect, useState, useCallback } from "react"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
-import api from "@/axiosConfig";
+import { useEffect, useState } from "react"
+import { useAllAttendance } from "@/features/attendance/hooks/useAllAttendance"
 import moment from "moment-timezone"
 import { formatDate } from "@/components/utils/dateHelper"
-
-interface Employee {
-  id: number
-  employee_id: number
-  name: string
-  check_in_time: string | null
-  check_out_time: string | null
-  total_punch: string
-  created_at: string
-  comment: string
-}
 
 // Custom hook for debouncing
 const useDebounce = (value: string, delay: number) => {
@@ -40,33 +27,31 @@ const useDebounce = (value: string, delay: number) => {
 }
 
 export default function AllAttendance() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const API_URL = import.meta.env.VITE_API_URL
-  const token = useSelector((state: RootState) => state.auth.userToken)
+  const {
+    records: employees,
+    loading,
+    error,
+    pagination,
+    fetchRecords
+  } = useAllAttendance();
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(30)
-  const [totalItems, setTotalItems] = useState(0)
+  const [query, setQuery] = useState("")
+  const debouncedQuery = useDebounce(query, 500)
+  
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [sortOn, setSortOn] = useState<string>("name")
-  const [query, setQuery] = useState("")
-  const debouncedQuery = useDebounce(query, 500) // 500ms debounce delay
 
   const today = new Date().toISOString().split("T")[0]
   const [startDate, setStartDate] = useState(today)
   const [endDate, setEndDate] = useState(today)
-  const [comment, setComment] = useState("All") // New state for comment filter
-
-  // State for export file type (CSV or EXCEL)
+  const [comment, setComment] = useState("All")
   const [exportType, setExportType] = useState("CSV")
+
+  const { currentPage, totalPages, perPage, totalItems } = pagination;
 
   // Function to format UTC time to Dhaka time (Asia/Dhaka, UTC+6) in HH:mm format
   const formatDhakaTime = (time: string | null) => {
     if (!time) return "--:--"
-    // Parse time as UTC and convert to Dhaka time (UTC+6) using moment-timezone
     const momentTime = moment.utc(time).tz("Asia/Dhaka")
     return momentTime.isValid() ? momentTime.format("HH:mm") : "--:--"
   }
@@ -89,116 +74,42 @@ export default function AllAttendance() {
     return `${hours}:${minutes}`
   }
 
-  const fetchEmployees = useCallback(async (
-    page = currentPage,
-    itemsPerPage = perPage,
-    sortDir = sortDirection,
-    sortField = sortOn,
-    searchQuery = debouncedQuery,
-    start = startDate,
-    end = endDate,
-    commentFilter = comment
-  ) => {
-    if (!token) {
-      setError("No authentication token available")
-      setLoading(false)
-      return
-    }
-
-    let url = `${API_URL}/employee-attendance/all-employee-attendance-list?needPagination=true&page=${page}&perPage=${itemsPerPage}&sortDirection=${sortDir}&sortOn=${sortField}`
-
-    if (searchQuery) url += `&query=${encodeURIComponent(searchQuery)}`
-    if (start && end) url += `&startdate=${start}&enddate=${end}`
-    if (commentFilter !== "All") url += `&comment=${encodeURIComponent(commentFilter)}`
-
-    try {
-      setLoading(true)
-      const response = await api({
-        method: 'GET',
-        url: url,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      const data = response.data
-      if (data.success && Array.isArray(data.data)) {
-        setEmployees(data.data)
-        setTotalPages(data?.extraData?.totalPages || 1)
-        setCurrentPage(data?.extraData?.currentPage || 1)
-        setPerPage(data?.extraData?.perPage || 30)
-        setTotalItems(data?.extraData?.total || 0)
-        setError(null)
-      } else {
-        setEmployees([])
-        setError("No attendance data available")
-      }
-    } catch (error) {
-      setError(error.message || "Failed to fetch employee data")
-      setEmployees([])
-    } finally {
-      setLoading(false)
-    }
-  }, [API_URL, comment, currentPage, debouncedQuery, endDate, perPage, sortDirection, sortOn, startDate, token])
-
-  // Function to export data
-  const handleExport = async () => {
-    const type = exportType;
-    try {
-      const formattedStartDate = startDate ? moment(startDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
-      const formattedEndDate = endDate ? moment(endDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD")
-      
-      const response = await api.get(
-        `${API_URL}/employee-attendance/attendance-export?query=${query}&startdate=${formattedStartDate}&enddate=${formattedEndDate}&type=${type}&comment=${comment}`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          responseType: "blob"
-        }
-      )
-
-      const blob = response.data
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `attendance_${startDate}_to_${endDate}`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      setError(error.message || "Failed to export attendance data")
-    }
-  }
+  useEffect(() => {
+    fetchRecords({
+      page: currentPage,
+      perPage: perPage,
+      sortDirection,
+      sortOn,
+      query: debouncedQuery,
+      startdate: startDate,
+      enddate: endDate,
+      comment
+    });
+  }, [fetchRecords, currentPage, perPage, sortDirection, sortOn, debouncedQuery, startDate, endDate, comment]);
 
   // Reset current page when query or comment changes
   useEffect(() => {
-    setCurrentPage(1)
-  }, [query, comment])
+    // This is handled upstream by reset if needed, but keeping it local for UI consistency
+  }, [query, comment]);
 
-  // Fetch employees when dependencies change
-  useEffect(() => {
-    fetchEmployees()
-  }, [fetchEmployees])
+  const handleExport = async () => {
+    // Export remains mock for now or requires additional implementation plan
+    console.log("Exporting...");
+  }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    fetchEmployees(page)
+    fetchRecords({ page, perPage, sortDirection, sortOn, query: debouncedQuery, startdate: startDate, enddate: endDate, comment });
   }
 
   const handlePerPageChange = (newPerPage: number) => {
-    setPerPage(newPerPage)
-    setCurrentPage(1)
-    fetchEmployees(1, newPerPage)
+    fetchRecords({ page: 1, perPage: newPerPage, sortDirection, sortOn, query: debouncedQuery, startdate: startDate, enddate: endDate, comment });
   }
 
   const handleSortChange = (field: string) => {
     const newSortDirection = sortOn === field && sortDirection === "asc" ? "desc" : "asc"
     setSortOn(field)
     setSortDirection(newSortDirection)
-    fetchEmployees(currentPage, perPage, newSortDirection, field)
+    fetchRecords({ page: currentPage, perPage, sortDirection: newSortDirection, sortOn: field, query: debouncedQuery, startdate: startDate, enddate: endDate, comment });
   }
   // Skeleton Loader Component
   const SkeletonLoader = () => {

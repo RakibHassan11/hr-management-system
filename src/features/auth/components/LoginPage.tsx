@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Logo from '../../../assets/orangetoolz-logo-orange.png';
+import Logo from '@/assets/people-flow-logo.png';
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/store/store";
+import type { AppDispatch, RootState } from "@/app/store";
 import { loginUser, setUserCredentials } from "@/store/authSlice";
 
 import { Eye, EyeOff } from 'lucide-react';
@@ -24,7 +24,7 @@ const Login = () => {
     e.preventDefault();
     try {
       await dispatch(loginUser({ email, password })).unwrap();
-      navigate("/user");
+      navigate("/user/home");
     } catch (err) {
       console.error("User login failed:", err);
     }
@@ -35,7 +35,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-xl border border-[#1F2328]/20 animate-fadeIn">
           <div className="flex justify-center mb-6">
-            <img src={Logo} alt="OrangeToolz" className="h-14" />
+            <img src={Logo} alt="People Flow" className="h-14" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -93,6 +93,44 @@ const Login = () => {
               {loadingUser ? "Logging in..." : "LOGIN"}
             </Button>
           </form>
+
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-center text-gray-500 mb-4 uppercase tracking-wider">Demo Access</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="text-xs font-medium border-orange-200 text-orange-600 hover:bg-[#F97316] hover:text-white transition-colors"
+                onClick={() => { setEmail('user@demo.com'); setPassword('password123'); }}
+                type="button"
+              >
+                Demo User
+              </Button>
+              <Button
+                variant="outline"
+                className="text-xs font-medium border-orange-200 text-orange-600 hover:bg-[#F97316] hover:text-white transition-colors"
+                onClick={() => { setEmail('hr@demo.com'); setPassword('password123'); }}
+                type="button"
+              >
+                Demo HR
+              </Button>
+              <Button
+                variant="outline"
+                className="text-xs font-medium border-orange-200 text-orange-600 hover:bg-[#F97316] hover:text-white transition-colors"
+                onClick={() => { setEmail('teamlead@demo.com'); setPassword('password123'); }}
+                type="button"
+              >
+                Demo Team Lead
+              </Button>
+              <Button
+                variant="outline"
+                className="text-xs font-medium border-orange-200 text-orange-600 hover:bg-[#F97316] hover:text-white transition-colors"
+                onClick={() => { setEmail('superadmin@demo.com'); setPassword('password123'); }}
+                type="button"
+              >
+                Demo Superadmin
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

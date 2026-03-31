@@ -13,26 +13,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { logoutAdmin } from '@/store/authSlice';
+import { logoutUser } from '@/store/authSlice';
 import adminDrop from '../../../assets/pet.jpg';
-import { RootState } from '@/store/store';
+import { RootState } from '@/app/store';
 
 export function AdminUserNav() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const admin = useSelector((state: RootState) => state.auth.admin);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const handleLogout = () => {
     console.log('handleLogout function called');
-    dispatch(logoutAdmin());
-    console.log('Redux state cleared');
-    localStorage.removeItem("token");
-    localStorage.removeItem("userInfo");
-    localStorage.removeItem("mockRole");
-    console.log('localStorage cleared');
+    dispatch(logoutUser());
+    console.log('Redux state and localStorage cleared');
     toast.success("Logged out successfully");
-    navigate("/adminlogin");
-    console.log('Navigating to admin login page');
+    navigate("/login");
+    console.log('Navigating to login page');
   };
 
 
@@ -52,7 +48,7 @@ export function AdminUserNav() {
         <DropdownMenuLabel className="bg-white">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium text-[#1F2328]">
-              {admin?.full_name || 'Admin User'}
+              {user?.full_name || user?.name || 'Admin User'}
             </p>
             <p className="text-xs text-[#1F2328]">Admin Role</p>
           </div>

@@ -10,8 +10,6 @@ interface PermissionModalProps {
   permissionValue: string;
   setPermissionValue: (value: string) => void;
   loading: boolean;
-  error: string | null;
-  success: string | null;
   onClose: () => void;
   onUpdate: () => void;
 }
@@ -22,15 +20,13 @@ export default function PermissionModal({
   permissionValue,
   setPermissionValue,
   loading,
-  error,
-  success,
   onClose,
   onUpdate,
 }: PermissionModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
         <h2 className="text-xl font-bold mb-4">
           Update Permissions for {employee?.name}
@@ -47,13 +43,13 @@ export default function PermissionModal({
                 <SelectValue placeholder="Select permission level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">HR</SelectItem>
-                <SelectItem value="2">TeamLead</SelectItem>
+                <SelectItem value="superadmin">Superadmin</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="teamlead">Team Lead</SelectItem>
+                <SelectItem value="user">User</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {success && <p className="text-green-500 text-sm">{success}</p>}
-          {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
         <div className="mt-6 flex justify-end gap-4">
           <Button
@@ -66,6 +62,7 @@ export default function PermissionModal({
           <Button
             onClick={onUpdate}
             disabled={loading}
+            className="bg-[#F97316] text-white hover:bg-[#e06615]"
           >
             {loading ? 'Updating...' : 'Update Permission'}
           </Button>

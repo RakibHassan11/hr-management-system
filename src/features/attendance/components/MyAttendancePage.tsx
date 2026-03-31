@@ -9,9 +9,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
-import { useSelector } from "react-redux"
-import { RootState } from "@/store"
-import api from "@/axiosConfig"
+import { useMyAttendance } from "@/features/attendance/hooks/useMyAttendance"
 import moment from "moment-timezone"
 import { formatDate, formatTimeToUTC } from "@/components/utils/dateHelper"
 
@@ -29,227 +27,164 @@ interface Employee {
   comment: string
 }
 
-// Define interface for statistics data
-interface Statistics {
-  present: number
-  absent: number
-  halfDay: number
-  lateIn: number
-  earlyOut: number
-  sickLeave: number
-  annualLeave: number
-  holiday: number
+// Function to calculate duration and check if above 9 hours
+const calculateDuration = (inTime: string | null, outTime: string | null) => {
+  if (!inTime || !outTime || inTime === "Invalid date" || outTime === "Invalid date") {
+    return { duration: "--:--", isAbove9Hours: false }
+  }
+
+  const inMoment = moment.tz(inTime, "UTC").tz("Asia/Dhaka")
+  const outMoment = moment.tz(outTime, "UTC").tz("Asia/Dhaka")
+
+  if (!inMoment.isValid() || !outMoment.isValid() || outMoment.isBefore(inMoment)) {
+    return { duration: "--:--", isAbove9Hours: false }
+  }
+
+  const duration = moment.duration(outMoment.diff(inMoment))
+  const hours = Math.floor(duration.asHours())
+  const minutes = duration.minutes().toString().padStart(2, "0")
+  const isAbove9Hours = duration.asHours() > 8.75
+
+  return {
+    duration: `${hours}:${minutes}`,
+    isAbove9Hours
+  }
+}
+
+// Function to check if check-in is at or before 10:16 AM
+const isCheckInOnTime = (time: string | null): boolean => {
+  if (!time || time === "Invalid date") return false
+  const checkIn = moment.tz(time, "UTC").tz("Asia/Dhaka")
+  const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 16 })
+  return checkIn.isValid() && checkIn.isSameOrBefore(threshold)
+}
+
+// Function to check if check-out is after 7:00 PM
+const isCheckOutLate = (time: string | null): boolean => {
+  if (!time || time === "Invalid date") return false
+  const checkOut = moment.tz(time, "UTC").tz("Asia/Dhaka")
+  const threshold = moment.tz(checkOut.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 19, minute: 0 })
+  return checkOut.isValid() && checkOut.isAfter(threshold)
+}
+
+// Function to check if date is a weekend (Saturday or Friday)
+const isWeekend = (date: string): boolean => {
+  const momentDate = moment.tz(date, "UTC").tz("Asia/Dhaka")
+  return momentDate.isValid() && [5, 6].includes(momentDate.day()) // 6 = Saturday, 5 = Friday
+}
+
+// Function to format statistics keys for display
+const formatStatKey = (key: string) => {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, str => str.toUpperCase())
+    .trim()
+}
+
+// Function to determine text and background classes for values
+const getValueStyles = (key: string, value?: string | number | boolean, employee?: Employee) => {
+  switch (key.toLowerCase()) {
+    case 'present':
+    case 'holiday':
+      return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+    case 'sickleave':
+    case 'annualleave':
+      return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+    case 'absent':
+      return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+    case 'halfday':
+    case 'latein':
+    case 'earlyout':
+      return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
+    case 'total punch':
+      return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+
+    case 'check in':
+    case 'check out': {
+      if (!employee?.check_in_time || !employee?.check_out_time) {
+        return { textClass: '', bgClass: '' };
+      }
+
+      const isOnTime =
+        key.toLowerCase() === 'check in'
+          ? isCheckInOnTime(employee.check_in_time)
+          : isCheckOutLate(employee.check_out_time);
+
+
+      return isOnTime
+        ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+        : { textClass: 'text-red-800', bgClass: 'bg-red-100' };
+    }
+
+    case 'duration':
+      if (!employee?.check_in_time || !employee?.check_out_time) {
+        return { textClass: '', bgClass: '' };
+      }
+      return employee && calculateDuration(employee.check_in_time, employee.check_out_time).isAbove9Hours
+        ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+        : { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+    case 'date':
+      return isWeekend(employee?.created_at)
+        ? { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+        : { textClass: '', bgClass: '' }
+    case 'comment':
+      if (typeof value === 'string') {
+        switch (value.toLowerCase()) {
+          case 'present':
+          case 'holiday':
+            return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
+          case 'sick leave':
+          case 'annual leave':
+            return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+          case 'weekend':
+            return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
+          case 'absent':
+            return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
+          case 'half day':
+          case 'late in':
+          case 'early out':
+            return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
+          default:
+            return { textClass: '', bgClass: '' }
+        }
+      }
+      return { textClass: '', bgClass: '' }
+    case 'employee name':
+      return { textClass: '', bgClass: '' }
+    default:
+      return { textClass: '', bgClass: '' }
+  }
 }
 
 export default function MyAttendance() {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [statistics, setStatistics] = useState<Statistics | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [totalRecords, setTotalRecords] = useState(0)
-  const API_URL = import.meta.env.VITE_API_URL
-  const token = useSelector((state: RootState) => state.auth.userToken)
-
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [perPage, setPerPage] = useState(30)
-  const [totalItems, setTotalItems] = useState(0)
-
   const startOfCurrentMonth = moment().startOf("month").format("YYYY-MM-DD");
   const today = moment().format("YYYY-MM-DD")
   const [startDate, setStartDate] = useState(startOfCurrentMonth)
   const [endDate, setEndDate] = useState(today)
 
-  // Function to calculate duration and check if above 9 hours
-  const calculateDuration = (inTime: string | null, outTime: string | null) => {
-    if (!inTime || !outTime || inTime === "Invalid date" || outTime === "Invalid date") {
-      return { duration: "--:--", isAbove9Hours: false }
-    }
-  
-    const inMoment = moment.tz(inTime, "UTC").tz("Asia/Dhaka")
-    const outMoment = moment.tz(outTime, "UTC").tz("Asia/Dhaka")
-  
-    if (!inMoment.isValid() || !outMoment.isValid() || outMoment.isBefore(inMoment)) {
-      return { duration: "--:--", isAbove9Hours: false }
-    }
-  
-    const duration = moment.duration(outMoment.diff(inMoment))
-    const hours = Math.floor(duration.asHours())
-    const minutes = duration.minutes().toString().padStart(2, "0")
-    const isAbove9Hours = duration.asHours() > 8.75
-  
-    return {
-      duration: `${hours}:${minutes}`,
-      isAbove9Hours
-    }
-  }
+  const [currentPage, setCurrentPage] = useState(1)
+  const [perPage, setPerPage] = useState(30)
 
-  // Function to check if check-in is at or before 10:16 AM
-  const isCheckInOnTime = (time: string | null): boolean => {
-    if (!time || time === "Invalid date") return false
-    const checkIn = moment.tz(time, "UTC").tz("Asia/Dhaka")
-    const threshold = moment.tz(checkIn.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 10, minute: 16})
-    return checkIn.isValid() && checkIn.isSameOrBefore(threshold)
-  }
-
-  // Function to check if check-out is after 7:00 PM
-  const isCheckOutLate = (time: string | null): boolean => {
-    if (!time || time === "Invalid date") return false
-    const checkOut = moment.tz(time, "UTC").tz("Asia/Dhaka")
-    const threshold = moment.tz(checkOut.format("YYYY-MM-DD"), "Asia/Dhaka").set({ hour: 19, minute: 0 })
-    return checkOut.isValid() && checkOut.isAfter(threshold)
-  }
-
-  // Function to check if date is a weekend (Saturday or Friday)
-  const isWeekend = (date: string): boolean => {
-    const momentDate = moment.tz(date, "UTC").tz("Asia/Dhaka")
-    return momentDate.isValid() && [5, 6].includes(momentDate.day()) // 6 = Saturday, 5 = Friday
-  }
-
-  // Function to format statistics keys for display
-  const formatStatKey = (key: string) => {
-    return key
-      .replace(/([A-Z])/g, " $1")
-      .replace(/^./, str => str.toUpperCase())
-      .trim()
-  }
-
-  // Function to determine text and background classes for values
-  const getValueStyles = (key: string, value?: string | number | boolean, employee?: Employee) => {
-    switch (key.toLowerCase()) {
-      case 'present':
-      case 'holiday':
-        return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
-      case 'sickleave':
-      case 'annualleave':
-        return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
-      case 'absent':
-        return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
-      case 'halfday':
-      case 'latein':
-      case 'earlyout':
-        return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
-      case 'total punch':
-        return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
-
-      case 'check in':
-      case 'check out':{
-        if (!employee?.check_in_time || !employee?.check_out_time) {
-          return { textClass: '', bgClass: '' };
-        }
-      
-          const isOnTime =
-          key.toLowerCase() === 'check in' 
-            ? isCheckInOnTime(employee.check_in_time)
-            : isCheckOutLate(employee.check_out_time);
-
-      
-        return isOnTime
-          ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
-          : { textClass: 'text-red-800', bgClass: 'bg-red-100' };
-      }
-          
-      case 'duration':
-        if (!employee?.check_in_time || !employee?.check_out_time) {
-          return { textClass: '', bgClass: '' }; 
-        }
-        return employee && calculateDuration(employee.check_in_time, employee.check_out_time).isAbove9Hours
-          ? { textClass: 'text-green-800', bgClass: 'bg-green-100' }
-          : { textClass: 'text-red-800', bgClass: 'bg-red-100' }
-      case 'date':
-        return isWeekend(employee?.created_at)
-          ? { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
-          : { textClass: '', bgClass: '' }
-      case 'comment':
-        if (typeof value === 'string') {
-          switch (value.toLowerCase()) {
-            case 'present':
-            case 'holiday':
-              return { textClass: 'text-green-800', bgClass: 'bg-green-100' }
-            case 'sick leave':
-            case 'annual leave':
-              return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }
-            case 'weekend':
-              return { textClass: 'text-blue-700', bgClass: 'bg-blue-50' }  
-            case 'absent':
-              return { textClass: 'text-red-800', bgClass: 'bg-red-100' }
-            case 'half day':
-            case 'late in':
-            case 'early out':
-              return { textClass: 'text-orange-800', bgClass: 'bg-orange-100' }
-            default:
-              return { textClass: '', bgClass: '' }
-          }
-        }
-        return { textClass: '', bgClass: '' }
-      case 'employee name':
-        return { textClass: '', bgClass: '' }
-      default:
-        return { textClass: '', bgClass: '' }
-    }
-  }
-
-  const fetchAttendanceData = async (
-    page = currentPage,
-    itemsPerPage = perPage,
-    start = startDate,
-    end = endDate
-  ) => {
-    if (!token) {
-      setError("No authentication token available")
-      setLoading(false)
-      return
-    }
-
-    let url = `${API_URL}/employee-attendance/attendance-list?needPagination=true&perPage=${itemsPerPage}&page=${page}`
-    if (start && end) {
-      url += `&startdate=${start}&enddate=${end}`
-    }
-
-    try {
-      setLoading(true)
-      const response = await api({
-        method: "GET",
-        url: url,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      const result = response.data
-      if (
-        result.success &&
-        Array.isArray(result.data.attendanceRecords) &&
-        result.data.statistics
-      ) {
-        setEmployees(result.data.attendanceRecords)
-        setStatistics(result.data.statistics)
-        setTotalPages(result.extraData.totalPages)
-        setCurrentPage(result.extraData.currentPage)
-        setPerPage(result.extraData.perPage)
-        setTotalItems(result.extraData.total)
-        setTotalRecords(result.extraData.total)
-        setError(null)
-      } else {
-        setEmployees([])
-        setStatistics(null)
-        setTotalRecords(0)
-        setError("No attendance or statistics data available")
-      }
-    } catch (error) {
-      setError(error.message || "Failed to fetch attendance data")
-      setEmployees([])
-      setStatistics(null)
-      setTotalRecords(0)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const {
+    records: employees,
+    statistics,
+    loading,
+    error,
+    extraData,
+    fetchRecords
+  } = useMyAttendance();
 
   useEffect(() => {
-    fetchAttendanceData()
-  }, [token, API_URL, startDate, endDate, perPage, currentPage])
+    fetchRecords({
+      startdate: startDate,
+      enddate: endDate,
+      page: currentPage,
+      perPage: perPage
+    });
+  }, [fetchRecords, startDate, endDate, currentPage, perPage]);
+
+  const totalPages = extraData?.totalPages || 1
+  const totalItems = extraData?.total || 0
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -387,10 +322,10 @@ export default function MyAttendance() {
             </TableHeader>
             <TableBody>
               <TableRow>
-                {Object.entries(statistics).map(([key, value], index) => (
+                {Object.entries(statistics as any).map(([key, value], index) => (
                   <TableCell key={index} className="text-center font-semibold text-slate-700">
-                    <span className={`px-2 py-1 ${getValueStyles(key, value).textClass} ${getValueStyles(key, value).bgClass} rounded-xl `}>
-                      {value}
+                    <span className={`px-2 py-1 ${getValueStyles(key, value as any).textClass} ${getValueStyles(key, value as any).bgClass} rounded-xl `}>
+                      {value as any}
                     </span>
                   </TableCell>
                 ))}

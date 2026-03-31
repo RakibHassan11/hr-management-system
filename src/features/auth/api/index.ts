@@ -1,51 +1,40 @@
 import { AuthResponse, ChangePasswordRequest } from '../types';
-import { mockAdmin, mockUser, mockManager } from './mock';
+import { mockAdmin, mockUser, mockManager, mockHR } from './mock';
 
 const DELAY_MS = 800;
 
 export const authApi = {
-    loginAdmin: async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+    loginUser: async (credentials: { email: string; password?: string }): Promise<AuthResponse> => {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                if (credentials.email === 'admin@example.com') { // simplified check
-                    resolve({
-                        success: true,
-                        message: 'Admin login successful',
-                        data: {
-                            access: { token: 'mock-admin-token', expires: '2099-12-31' },
-                            refresh: { token: 'mock-admin-refresh-token', expires: '2099-12-31' },
-                            admin: mockAdmin,
-                        },
-                    });
-                } else {
-                    // Allow login for testing with any credentials if not specific
-                    // But strict check is better for simulation. Let's rely on success for now for easy testing.
-                    resolve({
-                        success: true,
-                        message: 'Admin login successful',
-                        data: {
-                            access: { token: 'mock-admin-token', expires: '2099-12-31' },
-                            refresh: { token: 'mock-admin-refresh-token', expires: '2099-12-31' },
-                            admin: mockAdmin,
-                        },
-                    });
-                    // reject({ response: { data: { message: 'Invalid credentials' } } });
-                }
-            }, DELAY_MS);
-        });
-    },
+                let userProfile = null;
 
-    loginUser: async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const user = credentials.email.includes('manager') ? mockManager : mockUser;
+                if (credentials.email === 'admin@peopleflow.com' || credentials.email === 'superadmin@demo.com') {
+                    userProfile = mockAdmin;
+                } else if (credentials.email === 'manager@peopleflow.com' || credentials.email === 'teamlead@demo.com') {
+                    userProfile = mockManager;
+                } else if (credentials.email === 'hr@peopleflow.com' || credentials.email === 'hr@demo.com') {
+                    userProfile = mockHR;
+                } else if (credentials.email === 'user@peopleflow.com' || credentials.email === 'user@demo.com') {
+                    userProfile = mockUser;
+                } else {
+                    // Fallback to user if no exact match for demo purposes
+                    userProfile = mockUser;
+                }
+
+                // Simulate password check if password provided
+                if (credentials.password && credentials.password !== 'password123' && credentials.password !== 'password') {
+                     reject({ message: 'Invalid credentials' });
+                     return;
+                }
+
                 resolve({
                     success: true,
-                    message: 'User login successful',
+                    message: 'Login successful',
                     data: {
-                        access: { token: 'mock-user-token', expires: '2099-12-31' },
-                        refresh: { token: 'mock-user-refresh-token', expires: '2099-12-31' },
-                        profile: user,
+                        access: { token: 'mock-token', expires: '2099-12-31' },
+                        refresh: { token: 'mock-refresh-token', expires: '2099-12-31' },
+                        profile: userProfile,
                     },
                 });
             }, DELAY_MS);

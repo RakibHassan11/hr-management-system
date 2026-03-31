@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from 'lucide-react';
 import api from '@/axiosConfig';
-import Logo from "../../../assets/orangetoolz-logo-orange.png";
+import Logo from "../../../assets/people-flow-logo.png";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -89,7 +89,7 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-xl border border-[#1F2328]/20 animate-fadeIn">
           <div className="flex justify-center mb-6">
-            <img src={Logo} alt="OrangeToolz" className="h-14" />
+            <img src={Logo} alt="People Flow" className="h-14" />
           </div>
           <div className="space-y-6">
             {error && <p className="text-red-500 text-sm">{error}</p>}

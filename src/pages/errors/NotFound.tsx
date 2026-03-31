@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import Logo from "../../assets/orangetoolz-logo-orange.png";
+import Logo from "../../assets/people-flow-logo.png";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,7 +12,7 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center animate-fadeIn">
-        <img src={Logo} alt="OrangeToolz" className="h-14 mx-auto mb-4" />
+        <img src={Logo} alt="People Flow" className="h-14 mx-auto mb-4" />
         <h1 className="text-4xl font-bold mb-4" aria-label="404 Error">
           404
         </h1>
